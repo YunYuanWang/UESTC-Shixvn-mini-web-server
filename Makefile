@@ -1,7 +1,7 @@
 all: mini_web_server request_worker
 
 mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o
-	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o -lm
+	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o -lm -lpthread
 
 request_worker: obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o
 	gcc -g -o request_worker obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o -lm
