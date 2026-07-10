@@ -10,8 +10,8 @@ make
 ```
 
 编译生成两个可执行文件：
-- `mini_web_server` — 主程序（服务器模式 / 用户管理 / 进程启动器）
-- `request_worker` — 请求处理工作进程（由主程序通过 `execl` 启动）
+- `mini_web_server` — 主程序（服务器模式 / 用户管理 / 多线程请求处理）
+- `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
 
 ## 使用方法
 
@@ -41,25 +41,38 @@ make
 ./mini_web_server load <csv_path>
 ```
 
-### 多进程请求处理（V0.4）
+### 多线程请求处理
 
 ```bash
 ./mini_web_server process
 ```
 
-扫描 `requests/` 目录中所有 `.req` 文件，为每个请求通过 `fork() + execl()` 启动独立的 `request_worker` 子进程。
-子进程处理请求并将结果写入 `outputs/<name>.out`，父进程通过 `waitpid` 等待所有子进程结束并记录结果。
+父线程扫描 `requests/` 目录中所有 `.req` 文件，将任务路径加入共享请求队列，然后创建多个 worker 线程并行处理。
+每个 worker 线程从队列中取出任务，处理请求并将结果写入 `outputs/<name>.out`，主线程通过 `pthread_join` 等待所有 worker 结束并记录结果。
 
 **架构:**
 
 ```
-mini_web_server process (父进程)
-  ├── fork + execl → request_worker (子进程 1)
-  ├── fork + execl → request_worker (子进程 2)
-  └── fork + execl → request_worker (子进程 N)
+mini_web_server process (主线程)
+  │
+  ├─ 扫描 requests/ → 入队到共享队列
+  ├─ pthread_create → worker 线程 × 4
+  │     ├── Worker-1: sem_wait → 出队 → 处理 → outputs/
+  │     ├── Worker-2: sem_wait → 出队 → 处理 → outputs/
+  │     ├── Worker-3: sem_wait → 出队 → 处理 → outputs/
+  │     └── Worker-4: sem_wait → 出队 → 处理 → outputs/
+  └─ pthread_join × 4 → 统计结果
 ```
 
-**同步机制:** System V 信号量（参照 sday04 经典三信号量设计），保护多进程并发写入同一日志文件。
+**同步机制（POSIX 风格，参考 os_course）:**
+
+| 原语 | 用途 |
+|---|---|
+| `sem_t tasks_sem` | 计数信号量，计数可用任务数，worker 通过 `sem_wait` 等待 |
+| `pthread_mutex_t queue_mutex` | 互斥量保护请求队列 |
+| `pthread_cond_t queue_cond` | 条件变量，队列非空时唤醒等待的 worker 线程 |
+| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数） |
+| `pthread_mutex_t log_mutex` | 互斥量保护日志写入 |
 
 ## 请求文件格式
 
@@ -141,26 +154,26 @@ Server: MiniWeb
 
 所有日志统一输出到 `logs/server.log`。
 
-日志格式：每条日志必定包含进程 PID，可追溯到具体进程：
+日志格式：每条日志同时包含进程 PID 和线程 TID，可追溯到具体线程：
 
 ```
-[LEVEL] [PID N] [YYYY-MM-DD HH:MM:SS.xxxxxx] message
+[LEVEL] [PID N] [TID N] [YYYY-MM-DD HH:MM:SS.xxxxxx] message
 ```
 
 示例：
 
 ```
-[INFO] [PID 12345] [2026-07-09 12:00:00.123456] ========================================
-[INFO] [PID 12345] [2026-07-09 12:00:00.234567]   Parent PID: 12345
-[INFO] [PID 12345] [2026-07-09 12:00:00.345678] ========================================
-[INFO] [PID 12346] [2026-07-09 12:00:01.123456] ====== Child 12346 started [hello.req] ======
-[INFO] [PID 12346] [2026-07-09 12:00:01.234567] [Worker] processing request
-[INFO] [PID 12346] [2026-07-09 12:00:01.345678] [Worker] request processed
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804778] [ProcessServer] scanning requests (multi-thread mode)
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804815] [ProcessServer] enqueued: hello.req
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805374] [Worker-3] processing missing.req
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805545] [Worker-4] processing user_find.req
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806535] [ProcessServer] all workers done — processed: 3, errors: 0
 ```
 
-- `log_info(msg)` / `log_error(msg)` — 自动使用当前进程 PID
-- `log_info_pid(pid, msg)` / `log_error_pid(pid, msg)` — 显式指定 PID（父进程记录子进程时使用）
-- `====` 横幅醒目标记父进程启动和各子进程创建
+- 同一进程内所有线程 PID 相同，通过 TID 区分：主线程 vs Worker-1/2/3/4
+- `[ProcessServer]` 前缀 → 主线程日志；`[Worker-N]` 前缀 → worker 线程日志
+- `log_info(msg)` / `log_error(msg)` — 自动使用当前 PID + TID
+- `log_info_pid(pid, msg)` / `log_error_pid(pid, msg)` — 显式指定 PID（同时记录当前 TID）
 
 ## 目录结构
 
@@ -185,5 +198,5 @@ miniwebserver/
 bash tests/test_day01.sh   # 配置加载与 HTTP 响应
 bash tests/test_day02.sh   # 用户 CRUD 操作
 bash tests/test_day03.sh   # BST 索引与搜索
-bash tests/test_day04.sh   # 多进程请求处理（全部 req 命令覆盖）
+bash tests/test_day04.sh   # 多线程请求处理（全部 req 命令覆盖）
 ```
