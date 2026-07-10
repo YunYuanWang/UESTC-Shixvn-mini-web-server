@@ -1,0 +1,20 @@
+Debug Log
+
+问题现象：
+
+
+
+复现命令：
+make test
+
+定位过程：
+gdb ./mini_web_server
+run conf/server.conf
+bt
+
+原因分析：
+
+修改内容：
+
+验证结果：
+make test

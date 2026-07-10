@@ -1,0 +1,15 @@
+=== Connection Info ===
+Client IP: 127.0.0.1
+Client Port: 54321
+Server: MiniWeb
+=======================
+=== Connection Info ===
+Client IP: 127.0.0.1
+Client Port: 54321
+Server: MiniWeb
+=======================
+HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 12
+
+Hello, Web!

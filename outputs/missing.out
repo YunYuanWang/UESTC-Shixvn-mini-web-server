@@ -1,0 +1,11 @@
+=== Connection Info ===
+Client IP: 127.0.0.1
+Client Port: 54321
+Server: MiniWeb
+=======================
+=== Connection Info ===
+Client IP: 127.0.0.1
+Client Port: 54321
+Server: MiniWeb
+=======================
+404 Not Found: GET /nonexistent

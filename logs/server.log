@@ -1,0 +1,51 @@
+[INFO] [PID 2020865] [2026-07-09 16:44:07.844357] ========================================
+[INFO] [PID 2020865] [2026-07-09 16:44:07.844931]   Parent PID: 2020865
+[INFO] [PID 2020865] [2026-07-09 16:44:07.844947] ========================================
+[INFO] [PID 2020865] [2026-07-09 16:44:07.844996] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845019] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845034] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845049] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845064] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845078] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845093] rbt: node inserted
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845124] user store: users loaded
+[INFO] [PID 2020865] [2026-07-09 16:44:07.845195] [ProcessServer] scanning requests
+[INFO] [PID 2020866] [2026-07-09 16:44:07.845377] ====== Child 2020866 started [missing.req] ======
+[INFO] [PID 2020867] [2026-07-09 16:44:07.845578] ====== Child 2020867 started [user_find.req] ======
+[INFO] [PID 2020868] [2026-07-09 16:44:07.845771] ====== Child 2020868 started [hello.req] ======
+[INFO] [PID 2020867] [2026-07-09 16:44:07.847470] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848031] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848084] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848108] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848132] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848156] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848178] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848212] user store: users loaded
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848241] [Worker] processing request
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848332] user store: user found
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848378] user store: user not found
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848422] [Worker] request processed (2 lines)
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848450] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848561] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848577] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848592] rbt: node inserted
+[INFO] [PID 2020867] [2026-07-09 16:44:07.848590] [ProcessServer] child 2020867 exited with status 0
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848607] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848622] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848637] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848662] user store: users loaded
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848683] [Worker] processing request
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848622] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848722] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848739] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848754] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848768] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848784] rbt: node inserted
+[INFO] [PID 2020866] [2026-07-09 16:44:07.848792] [Worker] request processed (1 lines)
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848799] rbt: node inserted
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848849] user store: users loaded
+[INFO] [PID 2020868] [2026-07-09 16:44:07.848870] [Worker] processing request
+[INFO] [PID 2020866] [2026-07-09 16:44:07.849020] [ProcessServer] child 2020866 exited with status 0
+[INFO] [PID 2020868] [2026-07-09 16:44:07.849409] [Worker] request processed (1 lines)
+[INFO] [PID 2020868] [2026-07-09 16:44:07.849572] [ProcessServer] child 2020868 exited with status 0
+[INFO] [PID 2020865] [2026-07-09 16:44:07.849602] [ProcessServer] all children processed
