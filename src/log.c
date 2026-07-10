@@ -1,4 +1,5 @@
 #include "../include/log.h"
+#include <pthread.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
@@ -39,8 +40,9 @@ static void log_write(const char *level, pid_t pid, const char *message) {
     localtime_r(&tv.tv_sec, &tm_info);
     strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", &tm_info);
 
-    fprintf(log_file, "[%s] [PID %d] [%s.%06ld] %s\n",
-            level, (int)pid, time_buf, tv.tv_usec, message);
+    fprintf(log_file, "[%s] [PID %d] [TID %lu] [%s.%06ld] %s\n",
+            level, (int)pid, (unsigned long)pthread_self(),
+            time_buf, tv.tv_usec, message);
     fflush(log_file);
 }
 

@@ -4,7 +4,7 @@ mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj
 	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o -lm -lpthread
 
 request_worker: obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o
-	gcc -g -o request_worker obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o -lm
+	gcc -g -o request_worker obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o -lm -lpthread
 
 obj/config.o: src/config.c include/config.h
 	gcc -g -I./include -c src/config.c -o obj/config.o

@@ -160,3 +160,40 @@
 [INFO] [PID 2314069] [2026-07-10 11:32:14.881480] [ProcessServer] worker thread 3 joined
 [INFO] [PID 2314069] [2026-07-10 11:32:14.881496] [ProcessServer] worker thread 4 joined
 [INFO] [PID 2314069] [2026-07-10 11:32:14.881511] [ProcessServer] all workers done — processed: 3, errors: 0
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804185] ========================================
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804484]   Parent PID: 2344043
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804504] ========================================
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804584] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804611] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804628] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804644] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804661] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804679] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804702] rbt: node inserted
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804729] user store: users loaded
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804778] [ProcessServer] scanning requests (multi-thread mode)
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804815] [ProcessServer] enqueued: missing.req
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804832] [ProcessServer] enqueued: user_find.req
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804848] [ProcessServer] enqueued: hello.req
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804876] [ProcessServer] queue filled (3 tasks), spawning 4 workers
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805326] [Worker-3] started
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805374] [Worker-3] processing missing.req
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805519] [Worker-4] started
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805545] [Worker-4] processing user_find.req
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805632] [Worker-3] done with missing.req (1 lines, 0 errors)
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805650] [Worker-3] processing hello.req
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805675] user store: user found
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805706] user store: user not found
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805749] [Worker-4] done with user_find.req (2 lines, 0 errors)
+[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805781] [Worker-4] exiting (no more tasks)
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805814] [Worker-3] done with hello.req (1 lines, 0 errors)
+[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805837] [Worker-3] exiting (no more tasks)
+[INFO] [PID 2344043] [TID 132829925078720] [2026-07-10 11:48:13.805887] [Worker-1] started
+[INFO] [PID 2344043] [TID 132829925078720] [2026-07-10 11:48:13.805908] [Worker-1] exiting (no more tasks)
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806044] [ProcessServer] worker thread 1 joined
+[INFO] [PID 2344043] [TID 132829916686016] [2026-07-10 11:48:13.806366] [Worker-2] started
+[INFO] [PID 2344043] [TID 132829916686016] [2026-07-10 11:48:13.806421] [Worker-2] exiting (no more tasks)
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806481] [ProcessServer] worker thread 2 joined
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806504] [ProcessServer] worker thread 3 joined
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806519] [ProcessServer] worker thread 4 joined
+[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806535] [ProcessServer] all workers done — processed: 3, errors: 0
