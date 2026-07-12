@@ -1,0 +1,20 @@
+========================================
+  Search Method Comparison
+========================================
+  Target user: ZhangSan
+  Total users in store: 7
+  BST height (ideal log2): 2.8
+----------------------------------------
+
+[Single Search]
+  Linked list: FOUND in 3 step(s)
+  BST index:   FOUND in 4 step(s)
+
+  => BST was 0.8x faster (single search)
+
+[Continuous Search Benchmark (10000 iterations)]
+  Linked list: 4.579 ms
+  BST index:   4.725 ms
+
+  => BST was 1.0x faster (continuous, 10000 searches)
+========================================

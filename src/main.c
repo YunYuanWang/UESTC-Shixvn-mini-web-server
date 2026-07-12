@@ -1,7 +1,7 @@
 #include "../include/config.h"
-#include "../include/http_response.h"
 #include "../include/log.h"
 #include "../include/process_server.h"
+#include "../include/tcp_server.h"
 #include "../include/user_store.h"
 #include <stdio.h>
 #include <string.h>
@@ -107,7 +107,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
             return 1;
         }
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         u = user_store_find(argv[1]);
         printf(u != NULL ? "FOUND\n" : "NOT_FOUND\n");
@@ -126,7 +129,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
             return 1;
         }
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         ret = user_store_add(argv[1]);
         printf(ret == 0 ? "ADDED\n" : "EXISTS\n");
@@ -145,7 +151,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
             return 1;
         }
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         ret = user_store_delete(argv[1]);
         printf(ret == 0 ? "DELETED\n" : "NO_SUCH_USER\n");
@@ -159,7 +168,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
     if (strcmp(argv[0], "users") == 0 && argc >= 2 &&
         strcmp(argv[1], "index") == 0) {
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         user_store_print_index();
         if (!interactive) {
@@ -178,7 +190,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
             return 1;
         }
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         u = user_store_find_index(argv[2]);
         printf(u != NULL ? "FOUND\n" : "NOT_FOUND\n");
@@ -213,7 +228,10 @@ static int dispatch(int argc, char *argv[], int interactive) {
         }
 
         if (!interactive) {
-            user_store_load_csv("data/users.csv");
+            if (user_store_load_csv("data/users.csv") < 0) {
+                printf("error: cannot open data/users.csv\n");
+                return 1;
+            }
         }
         user_store_compare_search_method(name, verbose);
         if (!interactive) {
@@ -259,7 +277,10 @@ static int run_interactive(const char *csv_path) {
     printf("Loading %s ...\n", csv_path);
     fflush(stdout);
 
-    user_store_load_csv(csv_path);
+    if (user_store_load_csv(csv_path) < 0) {
+        printf("error: cannot open '%s'\n", csv_path);
+        return 1;
+    }
 
     printf("Ready.  Type 'help' for commands, 'quit' to exit.\n\n");
 
@@ -294,7 +315,6 @@ static int run_interactive(const char *csv_path) {
  * ================================================================ */
 int main(int argc, char *argv[]) {
     server_config_t config;
-    char response[512];
 
     /* --- help --- */
     if (argc >= 2 && strcmp(argv[1], "help") == 0) {
@@ -331,7 +351,11 @@ int main(int argc, char *argv[]) {
         }
         log_info("========================================");
 
-        user_store_load_csv("data/users.csv");
+        if (user_store_load_csv("data/users.csv") < 0) {
+            printf("error: cannot open data/users.csv\n");
+            log_close();
+            return 1;
+        }
 
         int ret = process_server_run();
 
@@ -361,18 +385,21 @@ int main(int argc, char *argv[]) {
     log_info("server config loaded");
     log_info("document root loaded");
 
-    user_store_load_csv("data/users.csv");
+    if (user_store_load_csv(config.data_path) < 0) {
+        printf("error: cannot open '%s'\n", config.data_path);
+        log_close();
+        return 1;
+    }
 
     print_config(&config);
 
-    if (build_hello_response(response, sizeof(response)) < 0) {
-        log_error("failed to build response");
+    /* run the TCP server — handles one connection then exits */
+    if (tcp_server_run(&config) != 0) {
+        log_error("tcp server exited with error");
         log_close();
         user_store_free();
         return 1;
     }
-
-    printf("%s", response);
 
     log_close();
     user_store_free();

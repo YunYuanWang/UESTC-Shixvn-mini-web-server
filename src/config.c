@@ -85,6 +85,8 @@ int load_config(const char *path, server_config_t *config) {
             config->port = atoi(value);
         } else if (strcmp(key, "root") == 0) {
             copy_text(config->root, sizeof(config->root), value);
+        } else if (strcmp(key, "data") == 0) {
+            copy_text(config->data_path, sizeof(config->data_path), value);
         } else if (strcmp(key, "log") == 0) {
             copy_text(config->log_path, sizeof(config->log_path), value);
         }
@@ -96,6 +98,7 @@ int load_config(const char *path, server_config_t *config) {
         config->host[0] == '\0' ||
         config->port <= 0 ||
         config->root[0] == '\0' ||
+        config->data_path[0] == '\0' ||
         config->log_path[0] == '\0') {
         return -1;
     }
@@ -108,5 +111,6 @@ void print_config(const server_config_t *config) {
     printf("host=%s\n", config->host);
     printf("port=%d\n", config->port);
     printf("root=%s\n", config->root);
+    printf("data=%s\n", config->data_path);
     printf("log=%s\n", config->log_path);
 }

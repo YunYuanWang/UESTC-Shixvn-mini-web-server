@@ -1,199 +1,53 @@
-[INFO] [PID 2020865] [2026-07-09 16:44:07.844357] ========================================
-[INFO] [PID 2020865] [2026-07-09 16:44:07.844931]   Parent PID: 2020865
-[INFO] [PID 2020865] [2026-07-09 16:44:07.844947] ========================================
-[INFO] [PID 2020865] [2026-07-09 16:44:07.844996] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845019] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845034] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845049] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845064] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845078] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845093] rbt: node inserted
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845124] user store: users loaded
-[INFO] [PID 2020865] [2026-07-09 16:44:07.845195] [ProcessServer] scanning requests
-[INFO] [PID 2020866] [2026-07-09 16:44:07.845377] ====== Child 2020866 started [missing.req] ======
-[INFO] [PID 2020867] [2026-07-09 16:44:07.845578] ====== Child 2020867 started [user_find.req] ======
-[INFO] [PID 2020868] [2026-07-09 16:44:07.845771] ====== Child 2020868 started [hello.req] ======
-[INFO] [PID 2020867] [2026-07-09 16:44:07.847470] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848031] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848084] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848108] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848132] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848156] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848178] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848212] user store: users loaded
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848241] [Worker] processing request
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848332] user store: user found
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848378] user store: user not found
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848422] [Worker] request processed (2 lines)
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848450] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848561] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848577] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848592] rbt: node inserted
-[INFO] [PID 2020867] [2026-07-09 16:44:07.848590] [ProcessServer] child 2020867 exited with status 0
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848607] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848622] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848637] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848662] user store: users loaded
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848683] [Worker] processing request
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848622] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848722] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848739] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848754] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848768] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848784] rbt: node inserted
-[INFO] [PID 2020866] [2026-07-09 16:44:07.848792] [Worker] request processed (1 lines)
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848799] rbt: node inserted
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848849] user store: users loaded
-[INFO] [PID 2020868] [2026-07-09 16:44:07.848870] [Worker] processing request
-[INFO] [PID 2020866] [2026-07-09 16:44:07.849020] [ProcessServer] child 2020866 exited with status 0
-[INFO] [PID 2020868] [2026-07-09 16:44:07.849409] [Worker] request processed (1 lines)
-[INFO] [PID 2020868] [2026-07-09 16:44:07.849572] [ProcessServer] child 2020868 exited with status 0
-[INFO] [PID 2020865] [2026-07-09 16:44:07.849602] [ProcessServer] all children processed
-[INFO] [PID 2282798] [2026-07-10 10:53:40.608938] ========================================
-[INFO] [PID 2282798] [2026-07-10 10:53:40.609077]   Parent PID: 2282798
-[INFO] [PID 2282798] [2026-07-10 10:53:40.609093] ========================================
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621460] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621506] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621522] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621537] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621552] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621567] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621590] rbt: node inserted
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621624] user store: users loaded
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621685] [ProcessServer] scanning requests (multi-thread mode)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621721] [ProcessServer] enqueued: missing.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621736] [ProcessServer] enqueued: user_find.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621750] [ProcessServer] enqueued: hello.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.621775] [ProcessServer] queue filled (3 tasks), spawning 4 workers
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622043] [Worker-1] started
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622098] [Worker-1] processing missing.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622120] [Worker-2] started
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622142] [Worker-2] processing user_find.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622227] [Worker-1] done with missing.req (1 lines, 0 errors)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622253] [Worker-1] processing hello.req
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622228] user store: user found
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622281] [Worker-3] started
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622317] [Worker-3] exiting (no more tasks)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622383] [Worker-1] done with hello.req (1 lines, 0 errors)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622420] [Worker-1] exiting (no more tasks)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622385] user store: user not found
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622476] [Worker-4] started
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622508] [Worker-4] exiting (no more tasks)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622552] [Worker-2] done with user_find.req (2 lines, 0 errors)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622585] [Worker-2] exiting (no more tasks)
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622590] [ProcessServer] worker thread 1 joined
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622632] [ProcessServer] worker thread 2 joined
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622647] [ProcessServer] worker thread 3 joined
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622661] [ProcessServer] worker thread 4 joined
-[INFO] [PID 2282798] [2026-07-10 10:53:40.622684] [ProcessServer] all workers done — processed: 3, errors: 0
-[INFO] [PID 2283522] [2026-07-10 10:55:11.517031] ========================================
-[INFO] [PID 2283522] [2026-07-10 10:55:11.517946]   Parent PID: 2283522
-[INFO] [PID 2283522] [2026-07-10 10:55:11.517988] ========================================
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518040] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518066] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518081] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518097] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518121] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518145] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518169] rbt: node inserted
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518203] user store: users loaded
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518255] [ProcessServer] scanning requests (multi-thread mode)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518279] [ProcessServer] enqueued: missing.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518303] [ProcessServer] enqueued: user_find.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518318] [ProcessServer] enqueued: hello.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518353] [ProcessServer] queue filled (3 tasks), spawning 4 workers
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518664] [Worker-2] started
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518711] [Worker-2] processing missing.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518888] [Worker-2] done with missing.req (1 lines, 0 errors)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518904] [Worker-2] processing user_find.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518951] user store: user found
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518971] user store: user not found
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518975] [Worker-1] started
-[INFO] [PID 2283522] [2026-07-10 10:55:11.518997] [Worker-1] processing hello.req
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519202] [Worker-1] done with hello.req (1 lines, 0 errors)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519218] [Worker-1] exiting (no more tasks)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519323] [ProcessServer] worker thread 1 joined
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519342] [Worker-2] done with user_find.req (2 lines, 0 errors)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519466] [Worker-2] exiting (no more tasks)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519539] [ProcessServer] worker thread 2 joined
-[INFO] [PID 2283522] [2026-07-10 10:55:11.519969] [Worker-3] started
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520017] [Worker-3] exiting (no more tasks)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520058] [Worker-4] started
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520092] [Worker-4] exiting (no more tasks)
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520131] [ProcessServer] worker thread 3 joined
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520155] [ProcessServer] worker thread 4 joined
-[INFO] [PID 2283522] [2026-07-10 10:55:11.520170] [ProcessServer] all workers done — processed: 3, errors: 0
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879284] ========================================
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879560]   Parent PID: 2314069
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879578] ========================================
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879676] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879693] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879709] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879728] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879744] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879760] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879775] rbt: node inserted
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879802] user store: users loaded
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879869] [ProcessServer] scanning requests (multi-thread mode)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879925] [ProcessServer] enqueued: missing.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879941] [ProcessServer] enqueued: user_find.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879957] [ProcessServer] enqueued: hello.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.879992] [ProcessServer] queue filled (3 tasks), spawning 4 workers
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880274] [Worker-1] started
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880374] [Worker-1] processing missing.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880474] [Worker-3] started
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880520] [Worker-3] processing user_find.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880591] [Worker-2] started
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880621] [Worker-2] processing hello.req
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880654] user store: user found
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880677] user store: user not found
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880797] [Worker-1] done with missing.req (1 lines, 0 errors)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880815] [Worker-1] exiting (no more tasks)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880844] [Worker-3] done with user_find.req (2 lines, 0 errors)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.880862] [Worker-3] exiting (no more tasks)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881037] [Worker-2] done with hello.req (1 lines, 0 errors)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881097] [Worker-4] started
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881100] [ProcessServer] worker thread 1 joined
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881140] [Worker-4] exiting (no more tasks)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881302] [Worker-2] exiting (no more tasks)
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881407] [ProcessServer] worker thread 2 joined
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881480] [ProcessServer] worker thread 3 joined
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881496] [ProcessServer] worker thread 4 joined
-[INFO] [PID 2314069] [2026-07-10 11:32:14.881511] [ProcessServer] all workers done — processed: 3, errors: 0
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804185] ========================================
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804484]   Parent PID: 2344043
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804504] ========================================
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804584] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804611] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804628] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804644] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804661] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804679] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804702] rbt: node inserted
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804729] user store: users loaded
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804778] [ProcessServer] scanning requests (multi-thread mode)
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804815] [ProcessServer] enqueued: missing.req
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804832] [ProcessServer] enqueued: user_find.req
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804848] [ProcessServer] enqueued: hello.req
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804876] [ProcessServer] queue filled (3 tasks), spawning 4 workers
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805326] [Worker-3] started
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805374] [Worker-3] processing missing.req
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805519] [Worker-4] started
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805545] [Worker-4] processing user_find.req
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805632] [Worker-3] done with missing.req (1 lines, 0 errors)
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805650] [Worker-3] processing hello.req
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805675] user store: user found
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805706] user store: user not found
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805749] [Worker-4] done with user_find.req (2 lines, 0 errors)
-[INFO] [PID 2344043] [TID 132829899900608] [2026-07-10 11:48:13.805781] [Worker-4] exiting (no more tasks)
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805814] [Worker-3] done with hello.req (1 lines, 0 errors)
-[INFO] [PID 2344043] [TID 132829908293312] [2026-07-10 11:48:13.805837] [Worker-3] exiting (no more tasks)
-[INFO] [PID 2344043] [TID 132829925078720] [2026-07-10 11:48:13.805887] [Worker-1] started
-[INFO] [PID 2344043] [TID 132829925078720] [2026-07-10 11:48:13.805908] [Worker-1] exiting (no more tasks)
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806044] [ProcessServer] worker thread 1 joined
-[INFO] [PID 2344043] [TID 132829916686016] [2026-07-10 11:48:13.806366] [Worker-2] started
-[INFO] [PID 2344043] [TID 132829916686016] [2026-07-10 11:48:13.806421] [Worker-2] exiting (no more tasks)
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806481] [ProcessServer] worker thread 2 joined
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806504] [ProcessServer] worker thread 3 joined
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806519] [ProcessServer] worker thread 4 joined
-[INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.806535] [ProcessServer] all workers done — processed: 3, errors: 0
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944407] server config loaded
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944450] document root loaded
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944457] user store: loading data...
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944643] user store: loaded 7 users
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944654] ========================================
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944657]   Server PID: 497874  (TCP mode)
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944659] ========================================
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944668] [TCPServer] socket created
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:39.944682] [TCPServer] listening on 127.0.0.1:8080
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.449280] [TCPServer] [#1] accepted connection from 127.0.0.1:50470
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.449327] [TCPServer] request: GET /hello
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.449349] [TCPServer] response: GET /hello → 200
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.449390] [TCPServer] connection closed
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.454148] [TCPServer] [#2] accepted connection from 127.0.0.1:50474
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.454188] [TCPServer] request: GET /help
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.454195] [TCPServer] response: GET /help → 200
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.454231] [TCPServer] connection closed
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.458593] [TCPServer] [#3] accepted connection from 127.0.0.1:50478
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.458625] [TCPServer] request: GET /not-exist
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.458631] [TCPServer] response: GET /not-exist → 404
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.458665] [TCPServer] connection closed
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.463178] [TCPServer] [#4] accepted connection from 127.0.0.1:50486
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.463212] [TCPServer] request: GET /users/ZhangSan
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.463218] user store: user found
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.463222] [TCPServer] response: GET /users/ZhangSan → 200
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.463255] [TCPServer] connection closed
+[INFO] [PID 497874] [TID 128262769121088] [2026-07-12 16:10:40.665186] [TCPServer] server shutdown — handled 4 request(s)
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.805252] server config loaded
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.805311] document root loaded
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.805318] user store: loading data...
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846453] user store: loaded 100003 users
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846501] ========================================
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846505]   Server PID: 503001  (TCP mode)
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846509] ========================================
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846522] [TCPServer] socket created
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:15.846543] [TCPServer] listening on 127.0.0.1:8080
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:23.717531] [TCPServer] [#1] accepted connection from 127.0.0.1:48184
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:23.717599] [TCPServer] request: GET /hello
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:23.717608] [TCPServer] response: GET /hello → 200
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:23.717667] [TCPServer] connection closed
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:34.419124] [TCPServer] [#2] accepted connection from 127.0.0.1:59398
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:34.419170] [TCPServer] request: GET /users/find-index/sunsongdi
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:34.419182] rbt: user found
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:34.419186] [TCPServer] response: GET /users/find-index/sunsongdi → 200
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:34.419242] [TCPServer] connection closed
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156136] [TCPServer] [#3] accepted connection from 127.0.0.1:38784
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156188] [TCPServer] request: POST /users
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156193] [TCPServer] body: zhangsan,pass,123,123,123,123
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156199] user store: user found
+[ERROR] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156201] user store: user already exists
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156204] [TCPServer] response: POST /users → 200
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:41.156261] [TCPServer] connection closed
+[INFO] [PID 503001] [TID 128930551256896] [2026-07-12 16:19:48.958383] [TCPServer] server shutdown — handled 3 request(s)

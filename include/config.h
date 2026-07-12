@@ -6,6 +6,7 @@ typedef struct {
     char host[64];
     int port;
     char root[128];
+    char data_path[128];
     char log_path[128];
 } server_config_t;
 

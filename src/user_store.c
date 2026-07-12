@@ -18,19 +18,14 @@ static void remove_newline(char *text) {
     text[strcspn(text, "\r\n")] = '\0';
 }
 
-static void insert_sorted(ListPtr node) {
-    ListPtr prev;
-    ListPtr cur;
-
-    prev = &head_node;
-    cur = head_node.next;
-    while (cur != NULL && strcmp(cur->data.name, node->data.name) < 0) {
-        prev = cur;
-        cur = cur->next;
-    }
-
-    node->next = cur;
-    prev->next = node;
+/*
+ * insert_head — O(1) head insertion for fastest table building.
+ * The linked list is unordered (random order); searches use linear
+ * traversal.  Fast lookups are provided by the BST index.
+ */
+static void insert_head(ListPtr node) {
+    node->next = head_node.next;
+    head_node.next = node;
 }
 
 static int parse_csv_line(char *line, ElemType *elem) {
@@ -90,9 +85,11 @@ int user_store_load_csv(const char *path) {
 
     fp = fopen(path, "r");
     if (fp == NULL) {
-        log_info("user store: no existing user file, starting empty");
-        return 0;
+        log_error("user store: cannot open user file");
+        return -1;
     }
+
+    log_info("user store: loading data...");
 
     int first_line = 1;
 
@@ -126,16 +123,23 @@ int user_store_load_csv(const char *path) {
         }
 
         new_node->next = NULL;
-        insert_sorted(new_node);
+        insert_head(new_node);
 
         /* also insert into BST index */
-        bst_insert(&user_bst, new_node);
+        if (bst_insert(&user_bst, new_node) != 0) {
+            log_error("user store: bst_insert failed");
+        }
 
         count++;
     }
 
     fclose(fp);
-    log_info("user store: users loaded");
+    {
+        char buf[64];
+        snprintf(buf, sizeof(buf),
+                 "user store: loaded %d users", count);
+        log_info(buf);
+    }
     return count;
 }
 
@@ -244,7 +248,7 @@ int user_store_add(const char *csv_line) {
 
     node->data = new_elem;
     node->next = NULL;
-    insert_sorted(node);
+    insert_head(node);
 
     /* also insert into BST index */
     bst_insert(&user_bst, node);

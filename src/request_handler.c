@@ -220,7 +220,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
         return 0;
     }
 
-    /* ---- GET /user/<name> (simple find, must be after /users/* routes) ---- */
+    /* ---- GET /user/<name> (simple find, must be after /users/ routes) ---- */
     if (strcmp(req->method, "GET") == 0 &&
         strncmp(req->path, "/user/", 6) == 0) {
         const char *name = req->path + 6;
@@ -308,4 +308,239 @@ int request_handler_process(const request_t *req, char *output, int size) {
     }
     offset += written;
     return 0;
+}
+
+/* ================================================================
+ *  HTTP response helpers
+ * ================================================================ */
+
+/*
+ * Build a complete HTTP/1.1 response.
+ * Returns 0 on success, -1 if the buffer is too small.
+ */
+static int build_http_response(char *output, int size,
+                                int status, const char *status_text,
+                                const char *body) {
+    int written;
+    int body_len;
+
+    if (body == NULL) {
+        body = "";
+    }
+    body_len = (int)strlen(body);
+
+    written = snprintf(output, (size_t)size,
+        "HTTP/1.1 %d %s\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: %d\r\n"
+        "\r\n"
+        "%s",
+        status, status_text, body_len, body);
+
+    if (written < 0 || written >= size) {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Build a user information string with all fields.
+ */
+static int format_user_info(const ListNode *user, char *buf, int size) {
+    if (user == NULL || buf == NULL || size <= 0) {
+        return -1;
+    }
+    return snprintf(buf, (size_t)size,
+        "name: %s\n"
+        "password: %s\n"
+        "birthdate: %s\n"
+        "phone: %s\n"
+        "mobile: %s\n"
+        "email: %s\n",
+        user->data.name,
+        user->data.password,
+        user->data.birthdate,
+        user->data.phone,
+        user->data.mobile,
+        user->data.email);
+}
+
+/* ================================================================
+ *  request_handler_process_http
+ *
+ *  Same routing logic as request_handler_process, but outputs a
+ *  proper HTTP/1.1 response with status codes.
+ * ================================================================ */
+int request_handler_process_http(const request_t *req, char *output, int size) {
+    char body[8192];
+    int status;
+    const char *status_text;
+
+    if (req == NULL || output == NULL || size <= 0) {
+        return -1;
+    }
+
+    memset(body, 0, sizeof(body));
+
+    /* ---- GET /hello ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strcmp(req->path, "/hello") == 0) {
+        return build_http_response(output, size, 200, "OK",
+                                   "Hello, Web!\n");
+    }
+
+    /* ---- GET /help ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strcmp(req->path, "/help") == 0) {
+        const char *help_text =
+            "MiniWebServer v0.6 — HTTP API\n"
+            "\n"
+            "  GET  /hello                          hello\n"
+            "  GET  /help                           this help\n"
+            "  GET  /users                          list all users (BST inorder)\n"
+            "  GET  /users/<name>                   find user by name\n"
+            "  GET  /users/find-index/<name>        find user via BST index\n"
+            "  GET  /users/compare/<name>           compare linked-list vs BST search\n"
+            "  GET  /users/compare-verbose/<name>   compare search (verbose)\n"
+            "  GET  /user/<name>                    find user by name\n"
+            "  POST /users                          add user (body: csv line)\n"
+            "  DELETE /users/<name>                 delete user\n";
+        return build_http_response(output, size, 200, "OK", help_text);
+    }
+
+    /* ---- GET /users (list all, BST inorder) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strcmp(req->path, "/users") == 0) {
+        if (capture_stdout(do_print_index_wrapper, body, sizeof(body)) < 0) {
+            return build_http_response(output, size, 500,
+                                       "INTERNAL SERVER ERROR",
+                                       "500 Internal Server Error\n");
+        }
+        return build_http_response(output, size, 200, "OK", body);
+    }
+
+    /* ---- GET /users/find-index/<name> (before /users/<name> to
+     *      match longer prefix first) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/users/find-index/", 18) == 0) {
+        const char *name = req->path + 18;
+        ListNode *user = user_store_find_index(name);
+        if (user != NULL) {
+            if (format_user_info(user, body, sizeof(body)) < 0) {
+                return -1;
+            }
+            return build_http_response(output, size, 200, "OK", body);
+        }
+        snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+        return build_http_response(output, size, 404, "NOT FOUND", body);
+    }
+
+    /* ---- GET /users/compare-verbose/<name> (before /compare/ and
+     *      /users/<name> to match longer prefix first) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/users/compare-verbose/", 23) == 0) {
+        const char *name = req->path + 23;
+        g_compare_ctx.name = name;
+        g_compare_ctx.verbose = 1;
+        if (capture_stdout(do_compare_search_wrapper, body, sizeof(body)) < 0) {
+            return build_http_response(output, size, 500,
+                                       "INTERNAL SERVER ERROR",
+                                       "500 Internal Server Error\n");
+        }
+        return build_http_response(output, size, 200, "OK", body);
+    }
+
+    /* ---- GET /users/compare/<name> (before /users/<name>) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/users/compare/", 15) == 0) {
+        const char *name = req->path + 15;
+        g_compare_ctx.name = name;
+        g_compare_ctx.verbose = 0;
+        if (capture_stdout(do_compare_search_wrapper, body, sizeof(body)) < 0) {
+            return build_http_response(output, size, 500,
+                                       "INTERNAL SERVER ERROR",
+                                       "500 Internal Server Error\n");
+        }
+        return build_http_response(output, size, 200, "OK", body);
+    }
+
+    /* ---- DELETE /users/<name> (before GET /users/<name>) ---- */
+    if (strcmp(req->method, "DELETE") == 0 &&
+        strncmp(req->path, "/users/", 7) == 0) {
+        const char *name = req->path + 7;
+        int ret;
+        if (name[0] == '\0') {
+            return build_http_response(output, size, 400, "BAD REQUEST",
+                                       "ERROR: DELETE requires a user name\n");
+        }
+        ret = user_store_delete(name);
+        if (ret == 0) {
+            return build_http_response(output, size, 200, "OK",
+                                       "DELETED\n");
+        }
+        return build_http_response(output, size, 404, "NOT FOUND",
+                                   "NO_SUCH_USER\n");
+    }
+
+    /* ---- GET /users/<name> (simple find by name) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/users/", 7) == 0) {
+        const char *name = req->path + 7;
+        if (name[0] == '\0') {
+            return build_http_response(output, size, 400, "BAD REQUEST",
+                                       "ERROR: empty user name\n");
+        }
+        {
+            ListNode *user = user_store_find(name);
+            if (user != NULL) {
+                if (format_user_info(user, body, sizeof(body)) < 0) {
+                    return -1;
+                }
+                return build_http_response(output, size, 200, "OK", body);
+            }
+            snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+            return build_http_response(output, size, 404, "NOT FOUND", body);
+        }
+    }
+
+    /* ---- GET /user/<name> (simple find, must be after /users/ routes) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/user/", 6) == 0) {
+        const char *name = req->path + 6;
+        if (name[0] == '\0') {
+            return build_http_response(output, size, 400, "BAD REQUEST",
+                                       "ERROR: empty user name\n");
+        }
+        {
+            ListNode *user = user_store_find(name);
+            if (user != NULL) {
+                if (format_user_info(user, body, sizeof(body)) < 0) {
+                    return -1;
+                }
+                return build_http_response(output, size, 200, "OK", body);
+            }
+            snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+            return build_http_response(output, size, 404, "NOT FOUND", body);
+        }
+    }
+
+    /* ---- POST /users (add user, body = csv line) ---- */
+    if (strcmp(req->method, "POST") == 0 &&
+        strcmp(req->path, "/users") == 0) {
+        int ret;
+        if (req->body[0] == '\0') {
+            return build_http_response(output, size, 400, "BAD REQUEST",
+                "ERROR: POST /users requires a body with CSV data\n");
+        }
+        ret = user_store_add(req->body);
+        if (ret == 0) {
+            return build_http_response(output, size, 200, "OK", "ADDED\n");
+        }
+        return build_http_response(output, size, 200, "OK", "EXISTS\n");
+    }
+
+    /* ---- fallback: 404 ---- */
+    snprintf(body, sizeof(body), "404 Not Found: %s %s\n",
+             req->method, req->path);
+    return build_http_response(output, size, 404, "NOT FOUND", body);
 }

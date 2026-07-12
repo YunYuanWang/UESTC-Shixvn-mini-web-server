@@ -162,7 +162,6 @@ int bst_insert(BST *tree, ListPtr user) {
      */
     rbt_insert_fixup(tree, new_node);
 
-    log_info("rbt: node inserted");
     return 0;
 }
 

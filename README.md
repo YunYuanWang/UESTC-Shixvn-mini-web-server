@@ -15,13 +15,39 @@ make
 
 ## 使用方法
 
-### 服务器模式
+### 服务器模式 (TCP/HTTP)
 
 ```bash
 ./mini_web_server conf/server.conf
 ```
 
-从配置文件加载设置，初始化日志和用户数据，输出 HTTP hello 响应。
+从配置文件加载设置，初始化日志和用户数据，启动 TCP 服务器监听 `host:port`（默认 `127.0.0.1:8080`），接受一个 HTTP 连接，处理请求并返回 HTTP/1.1 响应，然后退出。
+
+使用 curl 测试：
+
+```bash
+# hello 端点
+curl http://127.0.0.1:8080/hello
+# → HTTP/1.1 200 OK
+# → Hello, Web!
+
+# 按名称查找用户
+curl http://127.0.0.1:8080/users/ZhangSan
+# → HTTP/1.1 200 OK (含全部用户字段)
+# → 或 HTTP/1.1 404 NOT FOUND (用户不存在)
+
+# 未知路径
+curl http://127.0.0.1:8080/not-exist
+# → HTTP/1.1 404 NOT FOUND
+
+# 添加用户
+curl -X POST -d "name,password,20000101,010-11111111,13900000000,test@test.com" http://127.0.0.1:8080/users
+
+# 删除用户
+curl -X DELETE http://127.0.0.1:8080/users/name
+```
+
+**注意:** 服务器每次只处理一个连接，处理完成后正常退出。如需再次测试，需重新启动服务器。
 
 ### 用户管理
 
@@ -199,4 +225,5 @@ bash tests/test_day01.sh   # 配置加载与 HTTP 响应
 bash tests/test_day02.sh   # 用户 CRUD 操作
 bash tests/test_day03.sh   # BST 索引与搜索
 bash tests/test_day04.sh   # 多线程请求处理（全部 req 命令覆盖）
+bash tests/test_day06.sh   # TCP/HTTP 服务器（curl 模拟 HTTP 请求）
 ```

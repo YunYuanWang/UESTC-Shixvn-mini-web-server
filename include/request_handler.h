@@ -28,6 +28,7 @@ void request_handler_set_body(const char *body, request_t *req);
  *   GET  /hello                        — hello response
  *   GET  /user/<name>                  — find user
  *   GET  /users                        — list all users (BST inorder)
+ *   GET  /users/<name>                 — find user by name
  *   GET  /users/find-index/<name>      — find via BST index
  *   GET  /users/compare/<name>         — compare search methods
  *   GET  /users/compare-verbose/<name> — compare (verbose)
@@ -35,5 +36,17 @@ void request_handler_set_body(const char *body, request_t *req);
  *   DELETE /users/<name>              — delete user
  */
 int request_handler_process(const request_t *req, char *output, int size);
+
+/*
+ * Process a parsed request and generate an HTTP/1.1 response into the
+ * provided buffer.  Returns 0 on success, -1 if the buffer is too small.
+ *
+ * Supported routes are the same as request_handler_process.
+ * Response format:
+ *   HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: N\r\n\r\n<body>
+ *   HTTP/1.1 404 NOT FOUND\r\n...
+ *   HTTP/1.1 400 BAD REQUEST\r\n...
+ */
+int request_handler_process_http(const request_t *req, char *output, int size);
 
 #endif
