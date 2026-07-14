@@ -1,20 +1,163 @@
-Debug Log
+Debug Log — mini_web_server v0.7 多进程 fork 服务器
+
+================================================================
+问题 1: tcp_server 控制台丢失请求详情
+================================================================
 
 问题现象：
-
-
+  ./mini_web_server conf/server.conf 启动后，服务器控制台只输出：
+    [#1] [#2] [#3]
+  没有了原来的请求方法和状态码，如：
+    [#1] GET /hello → 200
 
 复现命令：
-make test
+  make clean && make
+  ./mini_web_server conf/server.conf &
+  curl -s http://127.0.0.1:8080/hello
 
 定位过程：
-gdb ./mini_web_server
-run conf/server.conf
-bt
+  1. 对比 tcp_server.c 的 git diff，发现 handle_one_request() 被重构为
+     调用 request_handler_handle_connection()，只保留了 printf("[#%d] ", req_num)。
+  2. 原来的 handle_one_request() 在 send 响应前有 console 输出：
+        printf("[#%d] %s %s → %d\n", req_num, method, path, resp_status);
+  3. 新提取的 request_handler_handle_connection() 只写日志(log_info)，
+     没有写控制台(printf)。
 
 原因分析：
+  重构时把 v0.6 的 handle_one_request() 整个替换为对共享函数
+  request_handler_handle_connection() 的调用，但共享函数内部只做了
+  log_info 写日志文件，丢失了控制台输出。
 
 修改内容：
+  src/request_handler.c: request_handler_handle_connection()
+  在 send() 之前增加 printf("%s %s -> %d\n", method, path, resp_status);
+  同时在 else 分支初始化 resp_status = 0 避免未初始化变量。
 
 验证结果：
-make test
+  make clean && make
+  ./mini_web_server conf/server.conf &
+  curl http://127.0.0.1:8080/hello
+  → 控制台输出: [#1] GET /hello -> 200  ✓
+
+================================================================
+问题 2: fork 服务器退出码 255（bind 失败无终端提示）
+================================================================
+
+问题现象：
+  $ ./mini_web_server fork & sleep 5
+  [2] 274021
+  [#4] child PID 274224 handling request
+  GET /users -> 200
+  [2]+  退出 255              ./mini_web_server fork
+
+  服务器退出码 255（-1 的无符号表示），且 [#4] 从第 4 个开始计数。
+
+复现命令：
+  # 终端 1
+  ./mini_web_server fork &
+  # 终端 2（不等终端 1 的服务器退出）
+  ./mini_web_server fork & sleep 5
+
+定位过程：
+  1. cat logs/server.log 查看日志，发现关键错误行：
+     [ERROR] [PID 274021] bind(127.0.0.1:8080) failed
+  2. 日志中有两个 fork server 实例：
+     PID 272024 — 第一个，正常运行
+     PID 274021 — 第二个，bind 失败
+  3. 第二个实例 bind 失败 → tcp_fork_server_run() 返回 -1 → main() 返回 -1
+     → bash 显示退出码 255（-1 & 0xFF = 255）
+  4. [#4] 的输出来自第一个实例(PID 272024)，不是用户刚启动的第二个。
+  5. bind 失败的原因：第一个 fork server 没有 SIGINT 处理器，
+     Ctrl+C 无法终止后台进程，端口一直被占用。
+
+原因分析：
+  两条链：
+  a) fork server 缺少 SIGINT 处理器（见问题 3），导致 Ctrl+C 无法终止，
+     端口被旧进程占用。
+  b) bind 失败时只写了 log_error（日志文件），没有 fprintf(stderr, ...)，
+     用户在终端完全看不到失败原因。
+
+修改内容：
+  src/tcp_fork_server.c: bind 失败分支增加
+    fprintf(stderr, "ERROR: bind(127.0.0.1:8080) failed — "
+            "port may already be in use\n");
+
+验证结果：
+  make && ./mini_web_server fork & sleep 0.3 && ./mini_web_server fork
+  → stderr 输出: ERROR: bind(127.0.0.1:8080) failed — port may already be in use
+  → 退出码 255 的原因对用户可见 ✓
+
+================================================================
+问题 3: Ctrl+C 无法终止 fork 服务器（缺少 SIGINT 处理器）
+================================================================
+
+问题现象：
+  前台运行 ./mini_web_server fork，按 Ctrl+C 后进程不会优雅退出；
+  后台运行 ./mini_web_server fork &，无法用常规方式终止。
+  旧进程一直占用 8080 端口，导致新实例 bind 失败。
+
+复现命令：
+  ./mini_web_server fork &
+  kill -INT $!        # SIGINT 无法终止
+  kill $!             # SIGTERM 默认行为：终止，但不优雅
+
+定位过程：
+  1. 阅读 tcp_fork_server.c 信号设置代码，发现只有：
+       sigaction(SIGCHLD, ...)   // 回收子进程
+       signal(SIGPIPE, SIG_IGN)  // 忽略管道断裂
+     完全没有 SIGINT 相关代码。
+  2. 对比 tcp_server.c，后者有：
+       static volatile sig_atomic_t g_shutdown = 0;
+       static void sigint_handler(int sig) { g_shutdown = 1; }
+       sigaction(SIGINT, &sa, NULL);
+       while (!g_shutdown) { accept... }
+  3. fork server 的 while 条件是 while (clients_served < MAX_CLIENTS)，
+     没有响应 SIGINT 的机制。
+
+原因分析：
+  缺少三个部分：
+  a) SIGINT 信号处理器（设 g_shutdown 标志）
+  b) sigaction 注册 SIGINT
+  c) accept 循环中检查 g_shutdown 决定是否退出
+  导致 SIGINT 走默认行为：直接杀进程，不执行清理代码（close listen_fd、
+  回收子进程等）。
+
+修改内容：
+  src/tcp_fork_server.c:
+  1. 增加 g_shutdown 标志和 sigint_handler:
+       static volatile sig_atomic_t g_shutdown = 0;
+       static void sigint_handler(int sig) { (void)sig; g_shutdown = 1; }
+  2. 信号设置中注册 SIGINT:
+       sa.sa_handler = sigint_handler;
+       sigaction(SIGINT, &sa, NULL);
+  3. accept 循环条件改为 while (clients_served < MAX_CLIENTS && !g_shutdown)
+  4. EINTR 分支中检查 g_shutdown:
+       if (errno == EINTR) { if (g_shutdown) break; continue; }
+  5. 退出日志中标记 SIGINT 退出:
+       printf("ForkServer: served %d clients, exiting%s.\n",
+              clients_served, g_shutdown ? " (Ctrl-C)" : "");
+
+验证结果：
+  ./mini_web_server fork &
+  curl -s http://127.0.0.1:8080/hello > /dev/null
+  kill -INT $!
+  → 控制台输出: ForkServer: served 1 clients, exiting (Ctrl-C).
+  → exit code = 0, 端口释放 ✓
+
+================================================================
+总结
+================================================================
+
+v0.7 开发中遇到的三处 bug 均与重构和新增代码的信号/输出处理有关：
+
+| Bug | 根因 | 修复文件 |
+|---|---|---|
+| 控制台丢失请求详情 | 重构时控制台 printf 未迁移到共享函数 | request_handler.c |
+| bind 失败无提示 + 退出码 255 | 错误只写日志不写 stderr + 旧进程未退出 | tcp_fork_server.c |
+| Ctrl+C 无法终止 | 缺少 SIGINT 处理器 | tcp_fork_server.c |
+
+经验教训：
+1. 重构提取公共函数时，注意保留两种调用场景都需要的行为（日志 + 控制台输出）。
+2. 网络服务器必须处理 SIGINT 实现优雅关闭，前台/后台运行都需要。
+3. 系统调用失败时，stderr 输出比日志文件更直接——日志文件用户不会第一时间去看。
+4. 测试脚本开头应清理残留进程（pkill），避免上次运行的进程干扰本次测试。

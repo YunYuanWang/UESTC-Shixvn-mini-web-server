@@ -49,4 +49,12 @@ int request_handler_process(const request_t *req, char *output, int size);
  */
 int request_handler_process_http(const request_t *req, char *output, int size);
 
+/*
+ * Handle a single HTTP connection: recv -> parse -> route -> send.
+ * Reads the HTTP request from conn_fd, processes it, and sends the
+ * HTTP/1.1 response back.  Logs the request and response status.
+ * Returns 0 on success, -1 on client/IO error.
+ */
+int request_handler_handle_connection(int conn_fd);
+
 #endif

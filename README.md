@@ -10,7 +10,7 @@ make
 ```
 
 编译生成两个可执行文件：
-- `mini_web_server` — 主程序（服务器模式 / 用户管理 / 多线程请求处理）
+- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 用户管理 / 多线程请求处理）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
 
 ## 使用方法
@@ -21,7 +21,15 @@ make
 ./mini_web_server conf/server.conf
 ```
 
-从配置文件加载设置，初始化日志和用户数据，启动 TCP 服务器监听 `host:port`（默认 `127.0.0.1:8080`），接受一个 HTTP 连接，处理请求并返回 HTTP/1.1 响应，然后退出。
+从配置文件加载设置，初始化日志和用户数据，启动 TCP 服务器监听 `host:port`（默认 `127.0.0.1:8080`），循环接受 HTTP 连接，处理请求并返回 HTTP/1.1 响应，按 Ctrl-C 退出。
+
+### 多进程 fork 模式
+
+```bash
+./mini_web_server fork
+```
+
+父进程监听 127.0.0.1:8080，每个客户端连接 fork 一个子进程处理，支持并发请求。处理 MAX_CLIENTS (5) 个连接后自动退出。
 
 使用 curl 测试：
 
@@ -47,7 +55,7 @@ curl -X POST -d "name,password,20000101,010-11111111,13900000000,test@test.com" 
 curl -X DELETE http://127.0.0.1:8080/users/name
 ```
 
-**注意:** 服务器每次只处理一个连接，处理完成后正常退出。如需再次测试，需重新启动服务器。
+**注意:** conf/server.conf 模式下服务器循环处理连接，按 Ctrl-C 退出。fork 模式下处理 MAX_CLIENTS 个连接后自动退出。如需再次测试，需重新启动服务器。
 
 ### 用户管理
 
@@ -99,6 +107,54 @@ mini_web_server process (主线程)
 | `pthread_cond_t queue_cond` | 条件变量，队列非空时唤醒等待的 worker 线程 |
 | `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数） |
 | `pthread_mutex_t log_mutex` | 互斥量保护日志写入 |
+
+### 多进程 TCP 服务器 (fork 模式)
+
+```bash
+./mini_web_server fork
+```
+
+父进程创建监听套接字（127.0.0.1:8080），对每个客户端连接 `fork()` 一个子进程处理 HTTP 请求，处理完成后子进程退出。父进程通过 `SIGCHLD` 信号 + `waitpid(WNOHANG)` 回收僵尸进程，避免资源泄漏。
+
+服务器在处理 MAX_CLIENTS (5) 个连接后自动退出，适用于自动化测试。
+
+**架构:**
+
+```
+./mini_web_server fork (父进程)
+  │
+  ├─ 创建监听套接字 (127.0.0.1:8080)
+  ├─ accept() 循环（最多 MAX_CLIENTS 次）
+  │     ├── Client-1 → fork() → 子进程-1: request_handler_handle_connection() → exit
+  │     ├── Client-2 → fork() → 子进程-2: request_handler_handle_connection() → exit
+  │     ├── ...
+  │     └── Client-5 → fork() → 子进程-5: request_handler_handle_connection() → exit
+  ├─ SIGCHLD 处理器: waitpid(-1, &stat, WNOHANG) 回收所有子进程
+  ├─ SIGPIPE 忽略: send() 返回 EPIPE 而非终止进程
+  ├─ accept() EINTR 处理: 被信号打断时继续等待
+  └─ 达到 MAX_CLIENTS → close(listen_fd) → 退出
+```
+
+**信号处理:**
+
+| 信号 | 处理方式 | 说明 |
+|---|---|---|
+| SIGCHLD | `waitpid(-1, &stat, WNOHANG)` 循环回收 | 避免僵尸进程 |
+| SIGPIPE | `SIG_IGN` 忽略 | 客户端异常断开时 send() 返回 EPIPE，不会终止进程 |
+| EINTR | `accept()` 返回 -1 且 errno==EINTR 时 continue | 被 SIGCHLD 打断后继续等待连接 |
+
+**并发测试:**
+
+```bash
+# 启动 fork 服务器
+./mini_web_server fork &
+
+# 发送 5 个并发请求
+for i in 1 2 3 4 5; do
+  curl -s http://127.0.0.1:8080/hello &
+done
+wait
+```
 
 ## 请求文件格式
 
@@ -226,4 +282,5 @@ bash tests/test_day02.sh   # 用户 CRUD 操作
 bash tests/test_day03.sh   # BST 索引与搜索
 bash tests/test_day04.sh   # 多线程请求处理（全部 req 命令覆盖）
 bash tests/test_day06.sh   # TCP/HTTP 服务器（curl 模拟 HTTP 请求）
+bash tests/test_day07      # 多进程 TCP/HTTP 服务器（fork 模式，并发 curl 测试）
 ```
