@@ -5,7 +5,7 @@
  *   1. Creates a listening socket on 127.0.0.1:8080
  *   2. Starts a fixed-size thread pool (all workers block on empty queue)
  *   3. Loops on accept(), enqueuing each client_fd into the work queue
- *   4. After MAX_CLIENTS connections, shuts down the pool and exits
+ *   4. After POOL_MAX_CLIENTS connections, shuts down the pool and exits
  *
  * Worker threads:
  *   - Dequeue a client_fd from the queue
@@ -74,8 +74,8 @@ int tcp_pool_server_run(void) {
         log_info(buf);
     }
     snprintf(msg, sizeof(msg),
-             "  max_clients: %d  workers: %d",
-             MAX_CLIENTS, NUM_WORKERS);
+             "  max_clients: %d  core_workers: %d  max_workers: %d",
+             POOL_MAX_CLIENTS, CORE_POOL_SIZE, MAX_POOL_SIZE);
     log_info(msg);
     log_info("========================================");
 
@@ -113,7 +113,8 @@ int tcp_pool_server_run(void) {
 
     log_info("[PoolServer] listening on 127.0.0.1:8080");
     printf("PoolServer listening on http://127.0.0.1:8080  "
-           "(max %d clients, %d workers)\n", MAX_CLIENTS, NUM_WORKERS);
+           "(max %d clients, core=%d max=%d workers)\n",
+           POOL_MAX_CLIENTS, CORE_POOL_SIZE, MAX_POOL_SIZE);
 
     /* ---- listen ---- */
     if (listen(listen_fd, SOMAXCONN) < 0) {
@@ -123,7 +124,7 @@ int tcp_pool_server_run(void) {
     }
 
     /* ---- create thread pool ---- */
-    pool = thread_pool_create(NUM_WORKERS, QUEUE_CAPACITY);
+    pool = thread_pool_create(CORE_POOL_SIZE, MAX_POOL_SIZE, QUEUE_CAPACITY);
     if (pool == NULL) {
         log_error("[PoolServer] thread_pool_create failed");
         close(listen_fd);
@@ -133,7 +134,7 @@ int tcp_pool_server_run(void) {
     /* ================================================================
      *  main accept loop — enqueue client fds into work queue
      * ================================================================ */
-    while (clients_served < MAX_CLIENTS && !g_shutdown) {
+    while (clients_served < POOL_MAX_CLIENTS && !g_shutdown) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int conn_fd;
@@ -203,6 +204,7 @@ int tcp_pool_server_run(void) {
     {
         int processed = 0;
         int errors    = 0;
+        int peak      = thread_pool_get_peak_workers(pool);
 
         thread_pool_destroy(pool, &processed, &errors);
 
@@ -210,14 +212,15 @@ int tcp_pool_server_run(void) {
 
         snprintf(msg, sizeof(msg),
                  "[PoolServer] server shutdown — "
-                 "accepted %d client(s), processed %d, errors %d%s",
-                 clients_served, processed, errors,
+                 "accepted %d client(s), processed %d, errors %d, "
+                 "peak_workers %d%s",
+                 clients_served, processed, errors, peak,
                  g_shutdown ? " (SIGINT)" : "");
         log_info(msg);
 
         printf("PoolServer: accepted %d clients, processed %d, errors %d, "
-               "exiting%s.\n",
-               clients_served, processed, errors,
+               "peak_workers %d, exiting%s.\n",
+               clients_served, processed, errors, peak,
                g_shutdown ? " (Ctrl-C)" : "");
     }
 

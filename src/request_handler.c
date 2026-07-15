@@ -18,6 +18,10 @@ void request_handler_set_worker_label(int worker_id) {
     g_worker_id = worker_id;
 }
 
+int request_handler_get_worker_label_int(void) {
+    return g_worker_id;
+}
+
 /*
  * Return a log prefix for the current worker thread.
  * Returns "[Worker-N] " when a label is set, or "" otherwise.

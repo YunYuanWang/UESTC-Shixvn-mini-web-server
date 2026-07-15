@@ -12,7 +12,7 @@
  *              of killing the process when client disconnects early
  *   - accept() returns EINTR when interrupted by SIGCHLD; we continue
  *
- * The server exits after serving MAX_CLIENTS connections (for automated
+ * The server exits after serving FORK_MAX_CLIENTS connections (for automated
  * testing with concurrent curl requests).
  */
 
@@ -101,7 +101,7 @@ int tcp_fork_server_run(void) {
         log_info(buf);
     }
     snprintf(msg, sizeof(msg),
-             "  max_clients: %d", MAX_CLIENTS);
+             "  max_clients: %d", FORK_MAX_CLIENTS);
     log_info(msg);
     log_info("========================================");
 
@@ -139,7 +139,7 @@ int tcp_fork_server_run(void) {
 
     log_info("[ForkServer] listening on 127.0.0.1:8080");
     printf("ForkServer listening on http://127.0.0.1:8080  "
-           "(max %d clients)\n", MAX_CLIENTS);
+           "(max %d clients)\n", FORK_MAX_CLIENTS);
 
     /* ---- listen ---- */
     if (listen(listen_fd, SOMAXCONN) < 0) {
@@ -151,7 +151,7 @@ int tcp_fork_server_run(void) {
     /* ================================================================
      *  main accept loop — fork per connection
      * ================================================================ */
-    while (clients_served < MAX_CLIENTS && !g_shutdown) {
+    while (clients_served < FORK_MAX_CLIENTS && !g_shutdown) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int conn_fd;

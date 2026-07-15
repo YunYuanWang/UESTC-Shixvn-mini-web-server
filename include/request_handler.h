@@ -65,4 +65,10 @@ int request_handler_handle_connection(int conn_fd);
  */
 void request_handler_set_worker_label(int worker_id);
 
+/*
+ * Return the current thread's worker label as an integer.
+ * Returns 0 if no label has been set.
+ */
+int request_handler_get_worker_label_int(void);
+
 #endif

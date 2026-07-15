@@ -1,7 +1,7 @@
 #ifndef TCP_FORK_SERVER_H
 #define TCP_FORK_SERVER_H
 
-#define MAX_CLIENTS 5
+#define FORK_MAX_CLIENTS 5
 
 /*
  * Run a multi-process TCP/HTTP server using fork-per-connection:
