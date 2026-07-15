@@ -10,7 +10,7 @@ make
 ```
 
 编译生成两个可执行文件：
-- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 用户管理 / 多线程请求处理）
+- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 线程池 pool 模式 / 用户管理 / 多线程请求处理）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
 
 ## 使用方法
@@ -55,7 +55,70 @@ curl -X POST -d "name,password,20000101,010-11111111,13900000000,test@test.com" 
 curl -X DELETE http://127.0.0.1:8080/users/name
 ```
 
-**注意:** conf/server.conf 模式下服务器循环处理连接，按 Ctrl-C 退出。fork 模式下处理 MAX_CLIENTS 个连接后自动退出。如需再次测试，需重新启动服务器。
+**注意:** conf/server.conf 模式下服务器循环处理连接，按 Ctrl-C 退出。fork 模式与 pool 模式下处理 MAX_CLIENTS 个连接后自动退出。如需再次测试，需重新启动服务器。
+
+### 线程池 Pool 模式 (多线程 TCP/HTTP 服务器)
+
+```bash
+./mini_web_server pool
+```
+
+主线程读取 `conf/server.conf`，创建监听套接字（127.0.0.1:8080），启动固定大小的线程池（4 个 worker 线程），循环 `accept()` 客户端连接，将每个 `client_fd` 作为任务加入工作队列。worker 线程从队列中取出任务，调用已有的 HTTP 请求处理函数，处理完毕后关闭 `client_fd`。队列为空时 worker 线程阻塞等待。达到 MAX_CLIENTS (5) 后停止接收新连接，关闭线程池，唤醒所有 worker，等待所有线程退出。
+
+**架构:**
+
+```
+./mini_web_server pool (主线程)
+  │
+  ├─ 创建监听套接字 (127.0.0.1:8080)
+  ├─ 启动线程池 (4 个 worker 线程阻塞等待)
+  ├─ accept() 循环（最多 MAX_CLIENTS 次）
+  │     ├── Client-1 → 入队 → Worker-N: request_handler_handle_connection() → close(fd)
+  │     ├── Client-2 → 入队 → Worker-M: request_handler_handle_connection() → close(fd)
+  │     ├── ...
+  │     └── Client-5 → 入队 → Worker-K: request_handler_handle_connection() → close(fd)
+  ├─ 达到 MAX_CLIENTS → close(listen_fd)
+  ├─ thread_pool_shutdown() → 唤醒所有 worker
+  ├─ thread_pool_destroy() → pthread_join 所有 worker
+  └─ 输出统计（accepted / processed / errors）→ 退出
+```
+
+**同步机制（POSIX 风格，参考 os_course）:**
+
+| 原语 | 用途 |
+|---|---|
+| `pthread_mutex_t mutex` | 互斥量保护任务队列和 shutdown 标志 |
+| `pthread_cond_t not_empty` | 条件变量，队列非空时唤醒等待的 worker 线程 |
+| `pthread_cond_t not_full` | 条件变量，队列有空间时唤醒等待的 enqueuer |
+| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数） |
+
+**对比 fork 模式和 pool 模式:**
+
+| 特性 | fork 模式 | pool 模式 |
+|---|---|---|
+| 并发模型 | 多进程（fork per connection） | 多线程（固定线程池） |
+| 资源开销 | 每个连接一个进程 | 固定数量线程复用 |
+| 地址空间 | 独立地址空间 | 共享地址空间 |
+| 同步原语 | SIGCHLD + waitpid | mutex + condition variable |
+| 适用场景 | 隔离性要求高 | 高并发低延迟 |
+
+使用 curl 测试：
+
+```bash
+# hello 端点
+curl http://127.0.0.1:8080/hello
+# → HTTP/1.1 200 OK
+# → Hello, Web!
+
+# 支持所有与 fork 模式相同的 HTTP 端点
+```
+
+**日志示例:**
+
+```
+[INFO] [PID 607365] [TID 123460843988672] [2026-07-14 10:10:16.130854] [Worker-1] request: GET /hello
+[INFO] [PID 607365] [TID 123460843988672] [2026-07-14 10:10:16.130862] [Worker-1] response: GET /hello -> 200
+```
 
 ### 用户管理
 
@@ -282,5 +345,6 @@ bash tests/test_day02.sh   # 用户 CRUD 操作
 bash tests/test_day03.sh   # BST 索引与搜索
 bash tests/test_day04.sh   # 多线程请求处理（全部 req 命令覆盖）
 bash tests/test_day06.sh   # TCP/HTTP 服务器（curl 模拟 HTTP 请求）
-bash tests/test_day07      # 多进程 TCP/HTTP 服务器（fork 模式，并发 curl 测试）
+bash tests/test_day07.sh   # 多进程 TCP/HTTP 服务器（fork 模式，并发 curl 测试）
+bash tests/test_day08.sh   # 多线程 TCP/HTTP 服务器（线程池模式，并发 curl 测试）
 ```

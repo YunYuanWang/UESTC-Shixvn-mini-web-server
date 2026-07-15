@@ -57,4 +57,12 @@ int request_handler_process_http(const request_t *req, char *output, int size);
  */
 int request_handler_handle_connection(int conn_fd);
 
+/*
+ * Set a human-readable label for the current thread (e.g. 1 for "Worker-1").
+ * When set, log messages from request_handler_handle_connection() will
+ * include a [Worker-N] prefix.  Uses a thread-local variable so each
+ * thread can set its own label independently.
+ */
+void request_handler_set_worker_label(int worker_id);
+
 #endif

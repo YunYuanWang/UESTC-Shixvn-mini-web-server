@@ -11,6 +11,26 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+/* ---- thread-local worker label (set by thread pool) ---- */
+static __thread int g_worker_id = 0;
+
+void request_handler_set_worker_label(int worker_id) {
+    g_worker_id = worker_id;
+}
+
+/*
+ * Return a log prefix for the current worker thread.
+ * Returns "[Worker-N] " when a label is set, or "" otherwise.
+ */
+static const char *worker_prefix(void) {
+    static __thread char buf[32];
+    if (g_worker_id > 0) {
+        snprintf(buf, sizeof(buf), "[Worker-%d] ", g_worker_id);
+        return buf;
+    }
+    return "";
+}
+
 int request_handler_parse(const char *line, request_t *req) {
     char method_buf[16];
     char path_buf[256];
@@ -394,6 +414,34 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
                                    "Hello, Web!\n");
     }
 
+    /* ---- GET /sleep/<ms> (for testing queue congestion) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        strncmp(req->path, "/sleep/", 7) == 0) {
+        int delay_ms = atoi(req->path + 7);
+        if (delay_ms <= 0) {
+            delay_ms = 100;
+        }
+        if (delay_ms > 5000) {
+            delay_ms = 5000;  /* cap at 5 seconds */
+        }
+
+        {
+            char msg[128];
+            snprintf(msg, sizeof(msg),
+                     "%ssleeping %d ms", worker_prefix(), delay_ms);
+            log_info(msg);
+        }
+
+        /* busy-wait or usleep — use usleep for simplicity */
+        usleep((unsigned int)(delay_ms * 1000));
+
+        {
+            char body[64];
+            snprintf(body, sizeof(body), "Slept %d ms\n", delay_ms);
+            return build_http_response(output, size, 200, "OK", body);
+        }
+    }
+
     /* ---- GET /help ---- */
     if (strcmp(req->method, "GET") == 0 &&
         strcmp(req->path, "/help") == 0) {
@@ -633,7 +681,12 @@ int request_handler_handle_connection(int conn_fd) {
     /* ---- read HTTP request ---- */
     n = recv(conn_fd, recv_buf, sizeof(recv_buf) - 1, 0);
     if (n <= 0) {
-        log_error("[ReqHandler] recv() failed or empty request");
+        {
+        char _msg[128];
+        snprintf(_msg, sizeof(_msg), "%srecv() failed or empty request",
+                 worker_prefix());
+        log_error(_msg);
+    }
         return -1;
     }
     recv_buf[n] = '\0';
@@ -656,7 +709,9 @@ int request_handler_handle_connection(int conn_fd) {
         if (nl != NULL) *nl = '\0';
 
         if (parse_http_request_line(line_copy, &method, &path) != 0) {
-            log_error("[ReqHandler] malformed HTTP request line");
+            snprintf(msg, sizeof(msg), "%smalformed HTTP request line",
+                     worker_prefix());
+            log_error(msg);
             snprintf(resp_buf, sizeof(resp_buf),
                      "HTTP/1.1 400 BAD REQUEST\r\n"
                      "Content-Type: text/plain\r\n"
@@ -664,12 +719,15 @@ int request_handler_handle_connection(int conn_fd) {
                      "\r\n"
                      "400 Bad Request\n");
             send(conn_fd, resp_buf, strlen(resp_buf), 0);
-            log_info("[ReqHandler] response: (malformed) -> 400 BAD REQUEST");
+            snprintf(msg, sizeof(msg),
+                     "%sresponse: (malformed) -> 400 BAD REQUEST",
+                     worker_prefix());
+            log_info(msg);
             return -1;
         }
 
         snprintf(msg, sizeof(msg),
-                 "[ReqHandler] request: %s %s", method, path);
+                 "%srequest: %s %s", worker_prefix(), method, path);
         log_info(msg);
 
         /* fill request_t — normalize method to uppercase */
@@ -689,14 +747,17 @@ int request_handler_handle_connection(int conn_fd) {
         if (body != NULL) {
             request_handler_set_body(body, &req);
             snprintf(msg, sizeof(msg),
-                     "[ReqHandler] body: %s", body);
+                     "%sbody: %s", worker_prefix(), body);
             log_info(msg);
         }
 
         /* generate HTTP response */
         if (request_handler_process_http(&req, resp_buf,
                                           sizeof(resp_buf)) < 0) {
-            log_error("[ReqHandler] request_handler_process_http failed");
+            snprintf(msg, sizeof(msg),
+                     "%srequest_handler_process_http failed",
+                     worker_prefix());
+            log_error(msg);
             snprintf(resp_buf, sizeof(resp_buf),
                      "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
                      "Content-Type: text/plain\r\n"
@@ -709,13 +770,13 @@ int request_handler_handle_connection(int conn_fd) {
         if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
             resp_status = atoi(resp_buf + 9);
             snprintf(msg, sizeof(msg),
-                     "[ReqHandler] response: %s %s -> %d",
-                     method, path, resp_status);
+                     "%sresponse: %s %s -> %d",
+                     worker_prefix(), method, path, resp_status);
         } else {
             resp_status = 0;
             snprintf(msg, sizeof(msg),
-                     "[ReqHandler] response: %s %s -> (unknown status)",
-                     method, path);
+                     "%sresponse: %s %s -> (unknown status)",
+                     worker_prefix(), method, path);
         }
         log_info(msg);
 
@@ -724,7 +785,9 @@ int request_handler_handle_connection(int conn_fd) {
 
         /* ---- send response ---- */
         if (send(conn_fd, resp_buf, strlen(resp_buf), 0) < 0) {
-            log_error("[ReqHandler] send() failed");
+            snprintf(msg, sizeof(msg), "%ssend() failed",
+                     worker_prefix());
+            log_error(msg);
             return -1;
         }
     }
