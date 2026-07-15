@@ -10,7 +10,7 @@ make
 ```
 
 编译生成两个可执行文件：
-- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 线程池 pool 模式 / 用户管理 / 多线程请求处理）
+- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / 用户管理 / 多线程请求处理）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
 
 ## 使用方法
@@ -118,6 +118,57 @@ curl http://127.0.0.1:8080/hello
 ```
 [INFO] [PID 607365] [TID 123460843988672] [2026-07-14 10:10:16.130854] [Worker-1] request: GET /hello
 [INFO] [PID 607365] [TID 123460843988672] [2026-07-14 10:10:16.130862] [Worker-1] response: GET /hello -> 200
+```
+
+### select I/O 多路复用模式
+
+```bash
+./mini_web_server select <ip> <port>
+# 例如: ./mini_web_server select 127.0.0.3 8888
+```
+
+单线程事件驱动服务器，使用 `select()` 系统调用同时监听多个文件描述符（监听 socket + 所有客户端连接）。当某个 fd 就绪时，读取 HTTP 请求、调用已有处理函数、发送响应、关闭连接。按 Ctrl-C 退出。
+
+**架构:**
+
+```
+./mini_web_server select 127.0.0.1 8080 (主线程)
+  │
+  ├─ socket() → bind() → listen()
+  ├─ FD_ZERO → FD_SET(listen_fd)
+  └─ while !shutdown:
+       ├─ select(max_fd+1, &read_set, NULL, NULL, NULL)
+       └─ for each ready fd:
+            ├─ fd == listen_fd  → accept() → FD_SET(client_fd)
+            └─ fd == client_fd  → recv() → 解析 → 处理 → send() → close() → FD_CLR
+```
+
+**特性:**
+- 单线程，无锁，无上下文切换开销
+- 通过 `fd_set` 同时管理多达 1024 个连接
+- 请求处理是同步的——慢请求会阻塞事件循环（适合快速响应的场景）
+
+**对比三种并发模式:**
+
+| 特性 | fork 模式 | pool 模式 | select 模式 |
+|---|---|---|---|
+| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 |
+| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） |
+| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 |
+| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 |
+| 适用场景 | 隔离性要求高 | 通用高并发 | 大量短连接 |
+
+使用 curl 测试：
+
+```bash
+# 启动 select 服务器
+./mini_web_server select 127.0.0.1 8080 &
+
+# hello 端点
+curl http://127.0.0.1:8080/hello
+# → Hello, Web!
+
+# 支持所有与 fork/pool 模式相同的 HTTP 端点
 ```
 
 ### 用户管理
@@ -346,5 +397,6 @@ bash tests/test_day03.sh   # BST 索引与搜索
 bash tests/test_day04.sh   # 多线程请求处理（全部 req 命令覆盖）
 bash tests/test_day06.sh   # TCP/HTTP 服务器（curl 模拟 HTTP 请求）
 bash tests/test_day07.sh   # 多进程 TCP/HTTP 服务器（fork 模式，并发 curl 测试）
-bash tests/test_day08.sh   # 多线程 TCP/HTTP 服务器（线程池模式，并发 curl 测试）
+bash tests/test_day08.sh   # 多线程 TCP/HTTP 服务器（线程池模式，动态扩缩）
+bash tests/test_day09.sh   # select I/O 多路复用服务器（select 事件驱动）
 ```

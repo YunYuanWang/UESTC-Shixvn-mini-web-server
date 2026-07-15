@@ -1,7 +1,7 @@
 all: mini_web_server request_worker
 
-mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/thread_pool.o obj/tcp_pool_server.o
-	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/thread_pool.o obj/tcp_pool_server.o -lm -lpthread
+mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o
+	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o -lm -lpthread
 
 request_worker: obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o
 	gcc -g -o request_worker obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o -lm -lpthread
@@ -21,7 +21,7 @@ obj/user_store.o: src/user_store.c include/user_store.h include/user_index.h
 obj/user_index.o: src/user_index.c include/user_index.h include/user_store.h
 	gcc -g -I./include -c src/user_index.c -o obj/user_index.o
 
-obj/main.o: src/main.c include/config.h include/http_response.h include/log.h include/process_server.h include/tcp_fork_server.h include/tcp_pool_server.h include/user_store.h
+obj/main.o: src/main.c include/config.h include/http_response.h include/log.h include/process_server.h include/tcp_fork_server.h include/tcp_pool_server.h include/select_server.h include/user_store.h
 	gcc -g -I./include -c src/main.c -o obj/main.o
 
 obj/request_handler.o: src/request_handler.c include/request_handler.h include/http_response.h include/log.h include/user_store.h
@@ -41,6 +41,9 @@ obj/thread_pool.o: src/thread_pool.c include/thread_pool.h include/log.h include
 
 obj/tcp_pool_server.o: src/tcp_pool_server.c include/tcp_pool_server.h include/thread_pool.h include/log.h include/request_handler.h
 	gcc -g -I./include -c src/tcp_pool_server.c -o obj/tcp_pool_server.o
+
+obj/select_server.o: src/select_server.c include/select_server.h include/log.h include/request_handler.h
+	gcc -g -I./include -c src/select_server.c -o obj/select_server.o
 
 obj/request_worker.o: src/request_worker.c include/request_handler.h include/log.h include/user_store.h include/ipc_utils.h
 	gcc -g -I./include -c src/request_worker.c -o obj/request_worker.o
