@@ -1,4 +1,5 @@
 #include "../include/config.h"
+#include "../include/epoll_server.h"
 #include "../include/log.h"
 #include "../include/process_server.h"
 #include "../include/tcp_fork_server.h"
@@ -27,6 +28,7 @@ static void print_help(const char *prog) {
     printf("       %s thread [ip] [port]\n", prog);
     printf("       %s pool [ip] [port]\n", prog);
     printf("       %s select <ip> <port>\n", prog);
+    printf("       %s epoll <ip> <port>\n", prog);
     printf("       %s help\n", prog);
 }
 
@@ -514,6 +516,42 @@ int main(int argc, char *argv[]) {
         }
 
         int ret = select_server_run(ip, port);
+
+        log_close();
+        user_store_free();
+        return ret;
+    }
+
+    /* --- epoll mode (I/O multiplexing TCP/HTTP server using epoll) --- */
+    if (argc == 4 && strcmp(argv[1], "epoll") == 0) {
+        const char *ip   = argv[2];
+        int         port = atoi(argv[3]);
+
+        if (port <= 0 || port > 65535) {
+            printf("error: invalid port '%s'\n", argv[3]);
+            return 1;
+        }
+
+        if (log_init("logs/server.log") != 0) {
+            printf("failed to open log file\n");
+            return 1;
+        }
+
+        log_info("========================================");
+        {
+            char buf[64];
+            snprintf(buf, sizeof(buf), "  Parent PID: %d", (int)getpid());
+            log_info(buf);
+        }
+        log_info("========================================");
+
+        if (user_store_load_csv("data/users.csv") < 0) {
+            printf("error: cannot open data/users.csv\n");
+            log_close();
+            return 1;
+        }
+
+        int ret = epoll_server_run(ip, port);
 
         log_close();
         user_store_free();

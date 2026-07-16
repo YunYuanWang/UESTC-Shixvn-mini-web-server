@@ -9,8 +9,10 @@ make clean
 make
 ```
 
-编译生成两个可执行文件：
-- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / 用户管理 / 多线程请求处理）
+编译生成可执行文件：
+- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 多线程 thread 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / epoll I/O 多路复用模式 / 用户管理 / 多线程请求处理）
+- `EpollServer` — 独立 epoll TCP/HTTP 服务器二进制文件（v0.10 新增）
+- `epoll_client` — TCP 测试客户端（v0.10 新增）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
 
 ## 使用方法
@@ -148,15 +150,88 @@ curl http://127.0.0.1:8080/hello
 - 通过 `fd_set` 同时管理多达 1024 个连接
 - 请求处理是同步的——慢请求会阻塞事件循环（适合快速响应的场景）
 
-**对比三种并发模式:**
+### epoll I/O 多路复用模式 (v0.10 新增)
 
-| 特性 | fork 模式 | pool 模式 | select 模式 |
-|---|---|---|---|
-| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 |
-| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） |
-| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 |
-| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 |
-| 适用场景 | 隔离性要求高 | 通用高并发 | 大量短连接 |
+```bash
+# 方式一: 通过 mini_web_server 调度
+./mini_web_server epoll <ip> <port>
+# 例如: ./mini_web_server epoll 127.0.0.3 8888
+
+# 方式二: 直接运行独立 EpollServer 二进制文件
+./EpollServer <ip> <port>
+# 例如: ./EpollServer 127.0.0.3 8888
+```
+
+单线程事件驱动服务器，使用 `epoll_create1()` / `epoll_ctl()` / `epoll_wait()` 系统调用同时监听多个文件描述符（监听 socket + 所有客户端连接）。当某个 fd 就绪时，epoll_wait 以 O(1) 复杂度返回就绪事件列表（无需像 select 那样 O(n) 扫描全部 fd）。
+
+**架构:**
+
+```
+./EpollServer 127.0.0.1 8080 (单线程 epoll 事件循环)
+  │
+  ├─ socket() → bind() → listen()
+  ├─ epoll_create1(0)
+  ├─ epoll_ctl(EPOLL_CTL_ADD, listen_fd, EPOLLIN)
+  └─ while !shutdown:
+       ├─ epoll_wait(epfd, events, MAX_EVENTS, 1000ms)
+       └─ for each ready event:
+            ├─ fd == listen_fd  → accept() → epoll_ctl(EPOLL_CTL_ADD, client_fd)
+            │                    → printf("[+] client connected (total: N)")
+            └─ fd == client_fd  → recv() → 解析 HTTP → 处理 → send()
+                                → printf("[client X] GET /hello -> 200")
+                                → keep-alive 或 epoll_ctl(DEL) + close()
+                                → printf("[-] client disconnected (total: N)")
+```
+
+**特性:**
+- 使用 epoll 替代 select，无 FD_SETSIZE 限制（系统级 fd 限制）
+- O(1) 就绪事件交付，高并发下性能远优于 select 的 O(n) 扫描
+- Level-Triggered (LT) 模式，与 select 语义一致，简单可靠
+- 实时 stdout 输出：连接数、客户端地址、客户端类型、请求消息
+- 支持 HTTP/1.1 keep-alive（空闲超时 5s，最大 100 请求/连接）
+- 支持原始 TCP 消息回显（非 HTTP 消息原样回显）
+
+### TCP 测试客户端 (v0.10 新增)
+
+```bash
+./epoll_client <ip> <port>
+# 例如: ./epoll_client 127.0.0.3 8888
+```
+
+连接到 EpollServer，从 stdin 读取消息发送到服务器，接收并打印响应。输入 `quit` 退出客户端。
+
+**同时启动 3 个客户端演示:**
+
+```bash
+# 终端 1: 启动 EpollServer
+./EpollServer 127.0.0.3 8888
+
+# 终端 2: 客户端 1
+./epoll_client 127.0.0.3 8888
+
+# 终端 3: 客户端 2
+./epoll_client 127.0.0.3 8888
+
+# 终端 4: 客户端 3
+./epoll_client 127.0.0.3 8888
+```
+
+服务器端将实时显示每个客户端的连接、消息和断开事件。
+
+**对比四种并发模式:**
+
+**对比四种并发模式:**
+
+| 特性 | fork 模式 | pool 模式 | select 模式 | epoll 模式 |
+|---|---|---|---|---|
+| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 | 单线程 I/O 复用 |
+| I/O 机制 | 阻塞 accept | 阻塞 accept | select() | epoll_wait() |
+| fd 上限 | 系统限制 | 系统限制 | FD_SETSIZE (1024) | 系统限制 |
+| 事件复杂度 | — | — | O(n) 扫描 | O(1) 就绪交付 |
+| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） | 低（事件驱动） |
+| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 | 单一地址空间 |
+| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 | 阻塞整个事件循环 |
+| 适用场景 | 隔离性要求高 | 通用高并发 | 中等并发短连接 | 高并发海量连接 |
 
 使用 curl 测试：
 
@@ -399,4 +474,5 @@ bash tests/test_day06.sh   # TCP/HTTP 服务器（curl 模拟 HTTP 请求）
 bash tests/test_day07.sh   # 多进程 TCP/HTTP 服务器（fork 模式，并发 curl 测试）
 bash tests/test_day08.sh   # 多线程 TCP/HTTP 服务器（线程池模式，动态扩缩）
 bash tests/test_day09.sh   # select I/O 多路复用服务器（select 事件驱动）
+bash tests/test_day10.sh   # epoll I/O 多路复用服务器（epoll 事件驱动，v0.10）
 ```

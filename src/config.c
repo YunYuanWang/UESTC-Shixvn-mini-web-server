@@ -83,22 +83,59 @@ int load_config(const char *path, server_config_t *config) {
             copy_text(config->host, sizeof(config->host), value);
         } else if (strcmp(key, "port") == 0) {
             config->port = atoi(value);
+        } else if (strcmp(key, "www_root") == 0) {
+            copy_text(config->www_root, sizeof(config->www_root), value);
         } else if (strcmp(key, "root") == 0) {
             copy_text(config->root, sizeof(config->root), value);
+        } else if (strcmp(key, "user_file") == 0) {
+            copy_text(config->user_file, sizeof(config->user_file), value);
         } else if (strcmp(key, "data") == 0) {
             copy_text(config->data_path, sizeof(config->data_path), value);
         } else if (strcmp(key, "log") == 0) {
             copy_text(config->log_path, sizeof(config->log_path), value);
+        } else if (strcmp(key, "max_connections") == 0) {
+            config->max_connections = atoi(value);
+        } else if (strcmp(key, "max_request_bytes") == 0) {
+            config->max_request_bytes = atoi(value);
         }
     }
 
     fclose(fp);
 
-    if (config->server_name[0] == '\0' ||
-        config->host[0] == '\0' ||
+    /*
+     * Backward compatibility: if new-style keys (www_root, user_file)
+     * are not set, fall back to legacy keys (root, data).
+     * Also copy new-style → legacy so code using either field works.
+     */
+    if (config->www_root[0] == '\0' && config->root[0] != '\0') {
+        copy_text(config->www_root, sizeof(config->www_root), config->root);
+    }
+    if (config->root[0] == '\0' && config->www_root[0] != '\0') {
+        copy_text(config->root, sizeof(config->root), config->www_root);
+    }
+    if (config->user_file[0] == '\0' && config->data_path[0] != '\0') {
+        copy_text(config->user_file, sizeof(config->user_file),
+                  config->data_path);
+    }
+    if (config->data_path[0] == '\0' && config->user_file[0] != '\0') {
+        copy_text(config->data_path, sizeof(config->data_path),
+                  config->user_file);
+    }
+
+    /*
+     * Apply default values for optional fields.
+     */
+    if (config->max_connections <= 0) {
+        config->max_connections = 256;
+    }
+    if (config->max_request_bytes <= 0) {
+        config->max_request_bytes = 4096;
+    }
+
+    if (config->host[0] == '\0' ||
         config->port <= 0 ||
-        config->root[0] == '\0' ||
-        config->data_path[0] == '\0' ||
+        config->www_root[0] == '\0' ||
+        config->user_file[0] == '\0' ||
         config->log_path[0] == '\0') {
         return -1;
     }
@@ -110,7 +147,9 @@ void print_config(const server_config_t *config) {
     printf("server_name=%s\n", config->server_name);
     printf("host=%s\n", config->host);
     printf("port=%d\n", config->port);
-    printf("root=%s\n", config->root);
-    printf("data=%s\n", config->data_path);
+    printf("www_root=%s\n", config->www_root);
+    printf("user_file=%s\n", config->user_file);
     printf("log=%s\n", config->log_path);
+    printf("max_connections=%d\n", config->max_connections);
+    printf("max_request_bytes=%d\n", config->max_request_bytes);
 }
