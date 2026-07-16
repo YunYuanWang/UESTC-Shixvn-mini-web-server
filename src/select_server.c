@@ -31,6 +31,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 /* ---- per-connection state ---- */
@@ -38,9 +39,11 @@
 #define RESP_BUF_SIZE 16384
 
 typedef struct {
-    int   fd;               /* -1 = slot free */
-    char  recv_buf[RECV_BUF_SIZE];
-    int   recv_len;
+    int    fd;               /* -1 = slot free */
+    char   recv_buf[RECV_BUF_SIZE];
+    int    recv_len;
+    int    request_count;    /* requests handled on this connection */
+    time_t last_activity;    /* timestamp of last data activity */
 } conn_t;
 
 /* ---- graceful shutdown via SIGINT ---- */
@@ -166,10 +169,15 @@ int select_server_run(const char *host, int port) {
         read_set = master_set;
 
         /*
-         * select() blocks until one or more fds are ready.
-         * No timeout — wait indefinitely until activity or SIGINT.
+         * select() with a 1-second timeout so we can periodically
+         * check for idle keep-alive connections.
          */
-        activity = select(max_fd + 1, &read_set, NULL, NULL, NULL);
+        {
+            struct timeval tv;
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            activity = select(max_fd + 1, &read_set, NULL, NULL, &tv);
+        }
         if (activity < 0) {
             if (errno == EINTR) {
                 /* interrupted by SIGINT — exit loop */
@@ -181,7 +189,29 @@ int select_server_run(const char *host, int port) {
         }
 
         if (activity == 0) {
-            continue;  /* timeout — should not happen (no timeout set) */
+            /* timeout — check for idle keep-alive connections */
+            time_t now = time(NULL);
+            for (int i = 0; i < SELECT_MAX_CONNS; i++) {
+                if (connections[i].fd != -1 &&
+                    now - connections[i].last_activity >= KEEP_ALIVE_TIMEOUT_SEC) {
+                    snprintf(msg, sizeof(msg),
+                             "[SelectServer] idle timeout on fd=%d (slot %d), "
+                             "closing after %d request(s)",
+                             connections[i].fd, i,
+                             connections[i].request_count);
+                    log_info(msg);
+                    FD_CLR(connections[i].fd, &master_set);
+                    if (connections[i].fd == max_fd) {
+                        while (max_fd > listen_fd &&
+                               !FD_ISSET(max_fd, &master_set)) {
+                            max_fd--;
+                        }
+                    }
+                    close(connections[i].fd);
+                    connections[i].fd = -1;
+                }
+            }
+            continue;
         }
 
         /* ---- scan all fds up to max_fd ---- */
@@ -223,8 +253,10 @@ int select_server_run(const char *host, int port) {
                         continue;
                     }
 
-                    connections[slot].fd       = conn_fd;
-                    connections[slot].recv_len = 0;
+                    connections[slot].fd             = conn_fd;
+                    connections[slot].recv_len       = 0;
+                    connections[slot].request_count  = 0;
+                    connections[slot].last_activity   = time(NULL);
                     memset(connections[slot].recv_buf, 0, RECV_BUF_SIZE);
 
                     FD_SET(conn_fd, &master_set);
@@ -300,6 +332,7 @@ int select_server_run(const char *host, int port) {
 
                     conn->recv_len += (int)n;
                     conn->recv_buf[conn->recv_len] = '\0';
+                    conn->last_activity = time(NULL);
 
                     /*
                      * Check if we have a complete HTTP request.
@@ -339,6 +372,7 @@ int select_server_run(const char *host, int port) {
                                      "HTTP/1.1 400 BAD REQUEST\r\n"
                                      "Content-Type: text/plain\r\n"
                                      "Content-Length: 17\r\n"
+                                     "Connection: close\r\n"
                                      "\r\n"
                                      "400 Bad Request\n");
                             send(fd, resp_buf, strlen(resp_buf), 0);
@@ -418,6 +452,7 @@ int select_server_run(const char *host, int port) {
                                      "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
                                      "Content-Type: text/plain\r\n"
                                      "Content-Length: 25\r\n"
+                                     "Connection: close\r\n"
                                      "\r\n"
                                      "500 Internal Server Error\n");
                         }
@@ -446,19 +481,49 @@ int select_server_run(const char *host, int port) {
                                      "[SelectServer] send() failed on fd=%d",
                                      fd);
                             log_error(msg);
+                            /* send failure — close connection */
+                            FD_CLR(fd, &master_set);
+                            close(fd);
+                            conn->fd = -1;
+                            if (fd == max_fd) {
+                                while (max_fd > listen_fd &&
+                                       !FD_ISSET(max_fd, &master_set)) {
+                                    max_fd--;
+                                }
+                            }
+                            log_info("[SelectServer] connection closed "
+                                     "(send error)");
+                            continue;
                         }
 
-                        /* ---- close connection ---- */
-                        FD_CLR(fd, &master_set);
-                        close(fd);
-                        conn->fd = -1;
-                        if (fd == max_fd) {
-                            while (max_fd > listen_fd &&
-                                   !FD_ISSET(max_fd, &master_set)) {
-                                max_fd--;
+                        /* ---- keep-alive: check limits ---- */
+                        conn->request_count++;
+
+                        if (conn->request_count >= MAX_KEEP_ALIVE_REQUESTS) {
+                            /* max requests reached — close connection */
+                            snprintf(msg, sizeof(msg),
+                                     "[SelectServer] max requests (%d) reached "
+                                     "on fd=%d, closing",
+                                     MAX_KEEP_ALIVE_REQUESTS, fd);
+                            log_info(msg);
+                            FD_CLR(fd, &master_set);
+                            close(fd);
+                            conn->fd = -1;
+                            if (fd == max_fd) {
+                                while (max_fd > listen_fd &&
+                                       !FD_ISSET(max_fd, &master_set)) {
+                                    max_fd--;
+                                }
                             }
+                            log_info("[SelectServer] connection closed "
+                                     "(max requests)");
+                        } else {
+                            /* keep connection alive for next request */
+                            conn->recv_len = 0;
+                            memset(conn->recv_buf, 0, RECV_BUF_SIZE);
+                            log_info("[SelectServer] keep-alive: "
+                                     "waiting for next request");
                         }
-                        log_info("[SelectServer] connection closed");
                     }
                 }
             }

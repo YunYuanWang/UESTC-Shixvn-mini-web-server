@@ -1,0 +1,26 @@
+Benchmark: http://127.0.0.1:13648/users/compare/ZhangSan
+  Concurrency: 10
+  Duration:    90s
+  Target:      127.0.0.1:13648/users/compare/ZhangSan
+
+Warmup...
+Warmup complete.
+
+Running 90s benchmark with 10 concurrent connections...
+
+============================================================
+Results (100.1s elapsed)
+============================================================
+  Total requests:   7
+  Total errors:     1
+  Requests/sec:     0.1
+
+  Avg latency:      44217.86 ms
+  Min latency:      32599.70 ms
+  Max latency:      53169.35 ms
+  P50 latency:      39378.19 ms
+  P75 latency:      53080.79 ms
+  P90 latency:      53169.35 ms
+  P95 latency:      53169.35 ms
+  P99 latency:      53169.35 ms
+============================================================

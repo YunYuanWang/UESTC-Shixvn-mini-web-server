@@ -1,0 +1,29 @@
+Running 10s test @ http://127.0.0.1:9549/hello
+  2 threads and 200 connections
+  Thread calibration: mean lat.: 3.161ms, rate sampling interval: 18ms
+  Thread calibration: mean lat.: 2.490ms, rate sampling interval: 11ms
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     -nanus    -nanus   0.00us    0.00%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  Latency Distribution (HdrHistogram - Recorded Latency)
+ 50.000%    0.00us
+ 75.000%    0.00us
+ 90.000%    0.00us
+ 99.000%    0.00us
+ 99.900%    0.00us
+ 99.990%    0.00us
+ 99.999%    0.00us
+100.000%    0.00us
+
+  Detailed Percentile spectrum:
+       Value   Percentile   TotalCount 1/(1-Percentile)
+
+       0.000     1.000000            0          inf
+#[Mean    =         -nan, StdDeviation   =         -nan]
+#[Max     =        0.000, Total count    =            0]
+#[Buckets =           27, SubBuckets     =         2048]
+----------------------------------------------------------
+  20400 requests in 10.50s, 1.96MB read
+  Socket errors: connect 0, read 4, write 0, timeout 960
+Requests/sec:   1942.82
+Transfer/sec:    191.63KB

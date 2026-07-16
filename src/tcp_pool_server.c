@@ -43,7 +43,7 @@ static void sigint_handler(int sig) {
 /* ================================================================
  *  tcp_pool_server_run
  * ================================================================ */
-int tcp_pool_server_run(void) {
+int tcp_pool_server_run(const char *host, int port) {
     int listen_fd;
     struct sockaddr_in server_addr;
     int optval;
@@ -74,8 +74,8 @@ int tcp_pool_server_run(void) {
         log_info(buf);
     }
     snprintf(msg, sizeof(msg),
-             "  max_clients: %d  core_workers: %d  max_workers: %d",
-             POOL_MAX_CLIENTS, CORE_POOL_SIZE, MAX_POOL_SIZE);
+             "  listening on %s:%d  core_workers: %d  max_workers: %d",
+             host, port, CORE_POOL_SIZE, MAX_POOL_SIZE);
     log_info(msg);
     log_info("========================================");
 
@@ -99,22 +99,33 @@ int tcp_pool_server_run(void) {
     /* ---- bind ---- */
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8080);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    if (bind(listen_fd, (struct sockaddr *)&server_addr,
-             sizeof(server_addr)) < 0) {
-        log_error("[PoolServer] bind(127.0.0.1:8080) failed");
-        fprintf(stderr, "ERROR: bind(127.0.0.1:8080) failed — "
-                "port may already be in use\n");
+    server_addr.sin_port = htons((uint16_t)port);
+    if (inet_pton(AF_INET, host, &server_addr.sin_addr) != 1) {
+        snprintf(msg, sizeof(msg),
+                 "[PoolServer] invalid address: %s", host);
+        log_error(msg);
+        fprintf(stderr, "ERROR: invalid address '%s'\n", host);
         close(listen_fd);
         return -1;
     }
 
-    log_info("[PoolServer] listening on 127.0.0.1:8080");
-    printf("PoolServer listening on http://127.0.0.1:8080  "
-           "(max %d clients, core=%d max=%d workers)\n",
-           POOL_MAX_CLIENTS, CORE_POOL_SIZE, MAX_POOL_SIZE);
+    if (bind(listen_fd, (struct sockaddr *)&server_addr,
+             sizeof(server_addr)) < 0) {
+        snprintf(msg, sizeof(msg),
+                 "[PoolServer] bind(%s:%d) failed", host, port);
+        log_error(msg);
+        fprintf(stderr, "ERROR: bind(%s:%d) failed — "
+                "port may already be in use\n", host, port);
+        close(listen_fd);
+        return -1;
+    }
+
+    snprintf(msg, sizeof(msg),
+             "[PoolServer] listening on %s:%d", host, port);
+    log_info(msg);
+    printf("PoolServer listening on http://%s:%d  "
+           "(core=%d max=%d workers, Ctrl-C to stop)\n",
+           host, port, CORE_POOL_SIZE, MAX_POOL_SIZE);
 
     /* ---- listen ---- */
     if (listen(listen_fd, SOMAXCONN) < 0) {
@@ -134,7 +145,7 @@ int tcp_pool_server_run(void) {
     /* ================================================================
      *  main accept loop — enqueue client fds into work queue
      * ================================================================ */
-    while (clients_served < POOL_MAX_CLIENTS && !g_shutdown) {
+    while (!g_shutdown) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int conn_fd;

@@ -1,0 +1,17 @@
+Linux 6.17.0-40-generic (zigh-wang-VMware-Virtual-Platform) 	2026年07月15日 	_x86_64_	(4 CPU)
+
+16时39分29秒   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时39分30秒  1000     22846   14.85   30.69    0.00   42.57   45.54     0  mini_web_server
+
+16时39分29秒   UID       PID  minflt/s  majflt/s     VSZ     RSS   %MEM  Command
+
+16时39分29秒   UID       PID   cswch/s nvcswch/s  Command
+16时39分30秒  1000     22846   3586.14   3020.79  mini_web_server
+
+16时39分30秒   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时39分31秒  1000     22846   14.85   27.72    0.00   41.58   42.57     0  mini_web_server
+
+16时39分30秒   UID       PID  minflt/s  majflt/s     VSZ     RSS   %MEM  Command
+
+16时39分30秒   UID       PID   cswch/s nvcswch/s  Command
+16时39分31秒  1000     22846   3749.50   4030.69  mini_web_server

@@ -4,7 +4,7 @@ set -e
 # ================================================================
 # test_day08.sh — dynamic thread pool TCP/HTTP server tests (v0.8)
 #
-# Pool config: core=2 max=8 queue_cap=128 max_clients=30
+# Pool config: core=2 max=8 queue_cap=128 (runs until SIGINT)
 #
 # Tests:
 #   1. Pool server handles 5 concurrent GET /hello requests
@@ -12,7 +12,7 @@ set -e
 #   3. Pool server handles POST /users
 #   4. Pool server handles DELETE /users/<name>
 #   5. Pool server handles 404 NOT FOUND
-#   6. Pool server exits cleanly after POOL_MAX_CLIENTS
+#   6. Pool server handles SIGINT graceful shutdown
 #   7. Log contains worker thread info + pool lifecycle events
 #   8. Dynamic scaling: scale-up under load, scale-down on idle
 # ================================================================
@@ -122,32 +122,26 @@ echo "$RESP" | grep -F "404 Not Found"
 echo "PASS: GET /not-exist"
 
 # ================================================================
-echo "=== Test 6: server exits after POOL_MAX_CLIENTS (30) ==="
+echo "=== Test 6: SIGINT graceful shutdown ==="
 start_server
 
-# Send exactly 30 requests to trigger natural exit
+# Send some requests
 for i in $(seq 1 30); do
     curl -s "${BASE}/hello" > /dev/null 2>&1 &
 done
 wait
 
-# Server should exit naturally
-exited=0
-for i in $(seq 1 15); do
-    if ! kill -0 $SERVER_PID 2>/dev/null; then
-        exited=1
-        break
-    fi
-    sleep 0.5
-done
-
-if [ "$exited" -eq 1 ]; then
-    echo "PASS: server exited after POOL_MAX_CLIENTS"
+# Server should still be running (no auto-exit)
+if kill -0 $SERVER_PID 2>/dev/null; then
+    echo "PASS: server still running after 30 requests (no auto-exit)"
 else
-    echo "FAIL: server did not exit after POOL_MAX_CLIENTS"
-    stop_server $SERVER_PID
+    echo "FAIL: server already exited"
     exit 1
 fi
+
+# SIGINT should trigger graceful shutdown
+stop_server $SERVER_PID
+echo "PASS: SIGINT graceful shutdown"
 
 # ================================================================
 echo "=== Test 7: log contains pool lifecycle events ==="
@@ -198,16 +192,8 @@ wait
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
 
-# Wait for natural exit after 30 clients
-for i in $(seq 1 20); do
-    if ! kill -0 $SERVER_PID 2>/dev/null; then
-        echo "Server exited after ~$((i*500))ms"
-        break
-    fi
-    sleep 0.5
-done
-kill -9 $SERVER_PID 2>/dev/null || true
-wait $SERVER_PID 2>/dev/null || true
+# Stop server gracefully (no longer auto-exits)
+stop_server $SERVER_PID
 
 # --- Verify all 30 succeeded ---
 passed=0

@@ -2,6 +2,7 @@
 #include "../include/log.h"
 #include "../include/process_server.h"
 #include "../include/tcp_fork_server.h"
+#include "../include/tcp_thread_server.h"
 #include "../include/select_server.h"
 #include "../include/tcp_pool_server.h"
 #include "../include/tcp_server.h"
@@ -22,8 +23,9 @@ static void print_help(const char *prog) {
     printf("       %s users compare_search_method <name>\n", prog);
     printf("       %s users compare_search_method --verbose <name>\n", prog);
     printf("       %s process\n", prog);
-    printf("       %s fork\n", prog);
-    printf("       %s pool\n", prog);
+    printf("       %s fork [ip] [port]\n", prog);
+    printf("       %s thread [ip] [port]\n", prog);
+    printf("       %s pool [ip] [port]\n", prog);
     printf("       %s select <ip> <port>\n", prog);
     printf("       %s help\n", prog);
 }
@@ -372,7 +374,16 @@ int main(int argc, char *argv[]) {
     }
 
     /* --- fork mode (multi-process TCP/HTTP server) --- */
-    if (argc == 2 && strcmp(argv[1], "fork") == 0) {
+    if (argc >= 2 && strcmp(argv[1], "fork") == 0) {
+        const char *ip   = (argc >= 3) ? argv[2] : "127.0.0.1";
+        int         port = (argc >= 4) ? atoi(argv[3]) : 8080;
+
+        if (port <= 0 || port > 65535) {
+            printf("error: invalid port '%s'\n",
+                   (argc >= 4) ? argv[3] : "8080");
+            return 1;
+        }
+
         if (log_init("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
@@ -392,7 +403,44 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        int ret = tcp_fork_server_run();
+        int ret = tcp_fork_server_run(ip, port);
+
+        log_close();
+        user_store_free();
+        return ret;
+    }
+
+    /* --- thread mode (multi-threaded TCP/HTTP server, thread-per-connection) --- */
+    if (argc >= 2 && strcmp(argv[1], "thread") == 0) {
+        const char *ip   = (argc >= 3) ? argv[2] : "127.0.0.1";
+        int         port = (argc >= 4) ? atoi(argv[3]) : 8080;
+
+        if (port <= 0 || port > 65535) {
+            printf("error: invalid port '%s'\n",
+                   (argc >= 4) ? argv[3] : "8080");
+            return 1;
+        }
+
+        if (log_init("logs/server.log") != 0) {
+            printf("failed to open log file\n");
+            return 1;
+        }
+
+        log_info("========================================");
+        {
+            char buf[64];
+            snprintf(buf, sizeof(buf), "  Parent PID: %d", (int)getpid());
+            log_info(buf);
+        }
+        log_info("========================================");
+
+        if (user_store_load_csv("data/users.csv") < 0) {
+            printf("error: cannot open data/users.csv\n");
+            log_close();
+            return 1;
+        }
+
+        int ret = tcp_thread_server_run(ip, port);
 
         log_close();
         user_store_free();
@@ -400,7 +448,16 @@ int main(int argc, char *argv[]) {
     }
 
     /* --- pool mode (multi-threaded TCP/HTTP server with thread pool) --- */
-    if (argc == 2 && strcmp(argv[1], "pool") == 0) {
+    if (argc >= 2 && strcmp(argv[1], "pool") == 0) {
+        const char *ip   = (argc >= 3) ? argv[2] : "127.0.0.1";
+        int         port = (argc >= 4) ? atoi(argv[3]) : 8080;
+
+        if (port <= 0 || port > 65535) {
+            printf("error: invalid port '%s'\n",
+                   (argc >= 4) ? argv[3] : "8080");
+            return 1;
+        }
+
         if (log_init("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
@@ -420,7 +477,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        int ret = tcp_pool_server_run();
+        int ret = tcp_pool_server_run(ip, port);
 
         log_close();
         user_store_free();

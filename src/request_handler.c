@@ -4,11 +4,13 @@
 #include "../include/user_store.h"
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 /* ---- thread-local worker label (set by thread pool) ---- */
@@ -362,6 +364,7 @@ static int build_http_response(char *output, int size,
         "HTTP/1.1 %d %s\r\n"
         "Content-Type: text/plain\r\n"
         "Content-Length: %d\r\n"
+        "Connection: keep-alive\r\n"
         "\r\n"
         "%s",
         status, status_text, body_len, body);
@@ -677,124 +680,166 @@ static char *extract_body(char *raw, int len) {
 }
 
 int request_handler_handle_connection(int conn_fd) {
-    char recv_buf[RECV_BUF_SIZE];
-    char resp_buf[RESP_BUF_SIZE];
     char msg[512];
+    int request_count = 0;
+    struct timeval tv;
     ssize_t n;
 
-    /* ---- read HTTP request ---- */
-    n = recv(conn_fd, recv_buf, sizeof(recv_buf) - 1, 0);
-    if (n <= 0) {
-        {
-        char _msg[128];
-        snprintf(_msg, sizeof(_msg), "%srecv() failed or empty request",
-                 worker_prefix());
-        log_error(_msg);
-    }
-        return -1;
-    }
-    recv_buf[n] = '\0';
+    /* ---- set keep-alive idle timeout ---- */
+    tv.tv_sec = KEEP_ALIVE_TIMEOUT_SEC;
+    tv.tv_usec = 0;
+    setsockopt(conn_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-    /* ---- parse the first line ---- */
-    {
-        char *method;
-        char *path;
-        char line_copy[512];
-        request_t req;
-        char *body;
-        char *nl;
-        int resp_status;
+    /* ================================================================
+     *  keep-alive loop — handle multiple requests per connection
+     * ================================================================ */
+    while (request_count < MAX_KEEP_ALIVE_REQUESTS) {
+        char recv_buf[RECV_BUF_SIZE];
+        char resp_buf[RESP_BUF_SIZE];
 
-        strncpy(line_copy, recv_buf, sizeof(line_copy) - 1);
-        line_copy[sizeof(line_copy) - 1] = '\0';
-        nl = strchr(line_copy, '\r');
-        if (nl != NULL) *nl = '\0';
-        nl = strchr(line_copy, '\n');
-        if (nl != NULL) *nl = '\0';
-
-        if (parse_http_request_line(line_copy, &method, &path) != 0) {
-            snprintf(msg, sizeof(msg), "%smalformed HTTP request line",
-                     worker_prefix());
-            log_error(msg);
-            snprintf(resp_buf, sizeof(resp_buf),
-                     "HTTP/1.1 400 BAD REQUEST\r\n"
-                     "Content-Type: text/plain\r\n"
-                     "Content-Length: 17\r\n"
-                     "\r\n"
-                     "400 Bad Request\n");
-            send(conn_fd, resp_buf, strlen(resp_buf), 0);
-            snprintf(msg, sizeof(msg),
-                     "%sresponse: (malformed) -> 400 BAD REQUEST",
-                     worker_prefix());
-            log_info(msg);
-            return -1;
-        }
-
-        snprintf(msg, sizeof(msg),
-                 "%srequest: %s %s", worker_prefix(), method, path);
-        log_info(msg);
-
-        /* fill request_t — normalize method to uppercase */
-        memset(&req, 0, sizeof(req));
-        {
-            int i;
-            for (i = 0; method[i] != '\0' && i < (int)sizeof(req.method) - 1; i++) {
-                req.method[i] = (char)toupper((unsigned char)method[i]);
+        /* ---- read HTTP request ---- */
+        n = recv(conn_fd, recv_buf, sizeof(recv_buf) - 1, 0);
+        if (n <= 0) {
+            if (n == 0) {
+                /* client closed connection cleanly */
+                snprintf(msg, sizeof(msg),
+                         "%sclient closed connection (after %d request(s))",
+                         worker_prefix(), request_count);
+                log_info(msg);
+            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                /* idle timeout between requests */
+                snprintf(msg, sizeof(msg),
+                         "%skeep-alive idle timeout after %d request(s)",
+                         worker_prefix(), request_count);
+                log_info(msg);
+            } else {
+                char _msg[128];
+                snprintf(_msg, sizeof(_msg), "%srecv() failed on request #%d",
+                         worker_prefix(), request_count + 1);
+                log_error(_msg);
+                return -1;
             }
-            req.method[i] = '\0';
+            break;
         }
-        strncpy(req.path, path, sizeof(req.path) - 1);
-        req.path[sizeof(req.path) - 1] = '\0';
+        recv_buf[n] = '\0';
 
-        /* extract body */
-        body = extract_body(recv_buf, (int)n);
-        if (body != NULL) {
-            request_handler_set_body(body, &req);
+        /* ---- parse the first line ---- */
+        {
+            char *method;
+            char *path;
+            char line_copy[512];
+            request_t req;
+            char *body;
+            char *nl;
+            int resp_status;
+
+            strncpy(line_copy, recv_buf, sizeof(line_copy) - 1);
+            line_copy[sizeof(line_copy) - 1] = '\0';
+            nl = strchr(line_copy, '\r');
+            if (nl != NULL) *nl = '\0';
+            nl = strchr(line_copy, '\n');
+            if (nl != NULL) *nl = '\0';
+
+            if (parse_http_request_line(line_copy, &method, &path) != 0) {
+                snprintf(msg, sizeof(msg), "%smalformed HTTP request line",
+                         worker_prefix());
+                log_error(msg);
+                snprintf(resp_buf, sizeof(resp_buf),
+                         "HTTP/1.1 400 BAD REQUEST\r\n"
+                         "Content-Type: text/plain\r\n"
+                         "Content-Length: 17\r\n"
+                         "Connection: close\r\n"
+                         "\r\n"
+                         "400 Bad Request\n");
+                send(conn_fd, resp_buf, strlen(resp_buf), 0);
+                snprintf(msg, sizeof(msg),
+                         "%sresponse: (malformed) -> 400 BAD REQUEST",
+                         worker_prefix());
+                log_info(msg);
+                return -1;
+            }
+
             snprintf(msg, sizeof(msg),
-                     "%sbody: %s", worker_prefix(), body);
+                     "%srequest: %s %s", worker_prefix(), method, path);
             log_info(msg);
+
+            /* fill request_t — normalize method to uppercase */
+            memset(&req, 0, sizeof(req));
+            {
+                int i;
+                for (i = 0; method[i] != '\0' && i < (int)sizeof(req.method) - 1; i++) {
+                    req.method[i] = (char)toupper((unsigned char)method[i]);
+                }
+                req.method[i] = '\0';
+            }
+            strncpy(req.path, path, sizeof(req.path) - 1);
+            req.path[sizeof(req.path) - 1] = '\0';
+
+            /* extract body */
+            body = extract_body(recv_buf, (int)n);
+            if (body != NULL) {
+                request_handler_set_body(body, &req);
+                snprintf(msg, sizeof(msg),
+                         "%sbody: %s", worker_prefix(), body);
+                log_info(msg);
+            }
+
+            /* generate HTTP response */
+            if (request_handler_process_http(&req, resp_buf,
+                                              sizeof(resp_buf)) < 0) {
+                snprintf(msg, sizeof(msg),
+                         "%srequest_handler_process_http failed",
+                         worker_prefix());
+                log_error(msg);
+                snprintf(resp_buf, sizeof(resp_buf),
+                         "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
+                         "Content-Type: text/plain\r\n"
+                         "Content-Length: 25\r\n"
+                         "Connection: close\r\n"
+                         "\r\n"
+                         "500 Internal Server Error\n");
+            }
+
+            /* extract and log response status */
+            if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
+                resp_status = atoi(resp_buf + 9);
+                snprintf(msg, sizeof(msg),
+                         "%sresponse: %s %s -> %d",
+                         worker_prefix(), method, path, resp_status);
+            } else {
+                resp_status = 0;
+                snprintf(msg, sizeof(msg),
+                         "%sresponse: %s %s -> (unknown status)",
+                         worker_prefix(), method, path);
+            }
+            log_info(msg);
+
+            /* console output */
+            printf("%s %s -> %d\n", method, path, resp_status);
+
+            /* ---- send response ---- */
+            {
+                ssize_t total = 0;
+                ssize_t remaining = (ssize_t)strlen(resp_buf);
+                const char *ptr = resp_buf;
+
+                while (remaining > 0) {
+                    ssize_t sent = send(conn_fd, ptr, (size_t)remaining, 0);
+                    if (sent < 0) {
+                        snprintf(msg, sizeof(msg), "%ssend() failed (errno=%d)",
+                                 worker_prefix(), errno);
+                        log_error(msg);
+                        return -1;
+                    }
+                    total += sent;
+                    ptr += sent;
+                    remaining -= sent;
+                }
+            }
         }
 
-        /* generate HTTP response */
-        if (request_handler_process_http(&req, resp_buf,
-                                          sizeof(resp_buf)) < 0) {
-            snprintf(msg, sizeof(msg),
-                     "%srequest_handler_process_http failed",
-                     worker_prefix());
-            log_error(msg);
-            snprintf(resp_buf, sizeof(resp_buf),
-                     "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
-                     "Content-Type: text/plain\r\n"
-                     "Content-Length: 25\r\n"
-                     "\r\n"
-                     "500 Internal Server Error\n");
-        }
-
-        /* extract and log response status */
-        if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
-            resp_status = atoi(resp_buf + 9);
-            snprintf(msg, sizeof(msg),
-                     "%sresponse: %s %s -> %d",
-                     worker_prefix(), method, path, resp_status);
-        } else {
-            resp_status = 0;
-            snprintf(msg, sizeof(msg),
-                     "%sresponse: %s %s -> (unknown status)",
-                     worker_prefix(), method, path);
-        }
-        log_info(msg);
-
-        /* console output */
-        printf("%s %s -> %d\n", method, path, resp_status);
-
-        /* ---- send response ---- */
-        if (send(conn_fd, resp_buf, strlen(resp_buf), 0) < 0) {
-            snprintf(msg, sizeof(msg), "%ssend() failed",
-                     worker_prefix());
-            log_error(msg);
-            return -1;
-        }
+        request_count++;
     }
 
-    return 0;
+    return (request_count > 0) ? 0 : -1;
 }

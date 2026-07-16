@@ -7,6 +7,10 @@ typedef struct {
     char body[512];   /* CSV data for POST /users (addusr) */
 } request_t;
 
+/* ---- HTTP/1.1 keep-alive configuration ---- */
+#define KEEP_ALIVE_TIMEOUT_SEC   5     /* idle timeout between requests */
+#define MAX_KEEP_ALIVE_REQUESTS  100   /* max requests per connection */
+
 /*
  * Parse a single-line request (e.g. "GET /hello") into a request_t.
  * Returns 0 on success, -1 on parse error.

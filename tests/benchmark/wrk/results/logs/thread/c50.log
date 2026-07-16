@@ -1,0 +1,14 @@
+Running 15s test @ http://127.0.0.1:9610/hello
+  4 threads and 50 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   576.20us    1.24ms  30.01ms   92.92%
+    Req/Sec    30.88k    21.47k  103.57k    80.67%
+  Latency Distribution
+     50%  167.00us
+     75%  587.00us
+     90%    1.41ms
+     99%    5.77ms
+  1846171 requests in 15.04s, 177.83MB read
+  Socket errors: connect 0, read 18436, write 0, timeout 0
+Requests/sec: 122725.21
+Transfer/sec:     11.82MB

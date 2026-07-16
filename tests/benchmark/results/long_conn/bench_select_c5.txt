@@ -1,0 +1,18 @@
+Benchmark: http://127.0.0.1:13832/users/compare/ZhangSan
+  Concurrency: 5
+  Duration:    90s
+  Target:      127.0.0.1:13832/users/compare/ZhangSan
+
+Warmup...
+Warmup complete.
+
+Running 90s benchmark with 5 concurrent connections...
+
+============================================================
+Results (100.1s elapsed)
+============================================================
+  Total requests:   0
+  Total errors:     0
+  Requests/sec:     0.0
+
+  (no successful requests)

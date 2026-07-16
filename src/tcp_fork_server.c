@@ -65,7 +65,7 @@ static void sigchld_handler(int sig) {
 /* ================================================================
  *  tcp_fork_server_run
  * ================================================================ */
-int tcp_fork_server_run(void) {
+int tcp_fork_server_run(const char *host, int port) {
     int listen_fd;
     struct sockaddr_in server_addr;
     int optval;
@@ -101,7 +101,7 @@ int tcp_fork_server_run(void) {
         log_info(buf);
     }
     snprintf(msg, sizeof(msg),
-             "  max_clients: %d", FORK_MAX_CLIENTS);
+             "  listening on %s:%d  (Ctrl-C to stop)", host, port);
     log_info(msg);
     log_info("========================================");
 
@@ -125,21 +125,32 @@ int tcp_fork_server_run(void) {
     /* ---- bind ---- */
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8080);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    if (bind(listen_fd, (struct sockaddr *)&server_addr,
-             sizeof(server_addr)) < 0) {
-        log_error("[ForkServer] bind(127.0.0.1:8080) failed");
-        fprintf(stderr, "ERROR: bind(127.0.0.1:8080) failed — "
-                "port may already be in use\n");
+    server_addr.sin_port = htons((uint16_t)port);
+    if (inet_pton(AF_INET, host, &server_addr.sin_addr) != 1) {
+        snprintf(msg, sizeof(msg),
+                 "[ForkServer] invalid address: %s", host);
+        log_error(msg);
+        fprintf(stderr, "ERROR: invalid address '%s'\n", host);
         close(listen_fd);
         return -1;
     }
 
-    log_info("[ForkServer] listening on 127.0.0.1:8080");
-    printf("ForkServer listening on http://127.0.0.1:8080  "
-           "(max %d clients)\n", FORK_MAX_CLIENTS);
+    if (bind(listen_fd, (struct sockaddr *)&server_addr,
+             sizeof(server_addr)) < 0) {
+        snprintf(msg, sizeof(msg),
+                 "[ForkServer] bind(%s:%d) failed", host, port);
+        log_error(msg);
+        fprintf(stderr, "ERROR: bind(%s:%d) failed — "
+                "port may already be in use\n", host, port);
+        close(listen_fd);
+        return -1;
+    }
+
+    snprintf(msg, sizeof(msg),
+             "[ForkServer] listening on %s:%d", host, port);
+    log_info(msg);
+    printf("ForkServer listening on http://%s:%d  (Ctrl-C to stop)\n",
+           host, port);
 
     /* ---- listen ---- */
     if (listen(listen_fd, SOMAXCONN) < 0) {
@@ -151,7 +162,7 @@ int tcp_fork_server_run(void) {
     /* ================================================================
      *  main accept loop — fork per connection
      * ================================================================ */
-    while (clients_served < FORK_MAX_CLIENTS && !g_shutdown) {
+    while (!g_shutdown) {
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int conn_fd;
@@ -204,7 +215,8 @@ int tcp_fork_server_run(void) {
             /* handle the HTTP request */
             request_handler_handle_connection(conn_fd);
 
-            /* close the client connection */
+            /* ensure orderly TCP shutdown before exiting */
+            shutdown(conn_fd, SHUT_RDWR);
             close(conn_fd);
 
             /* _exit() — NOT exit() — avoids double-flush of stdio

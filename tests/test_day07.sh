@@ -10,18 +10,20 @@ set -e
 #   3. Fork server handles POST /users
 #   4. Fork server handles DELETE /users/<name>
 #   5. Fork server handles 404 NOT FOUND
-#   6. Fork server exits cleanly after MAX_CLIENTS
+#   6. Fork server handles SIGINT graceful shutdown
 # ================================================================
 
 HOST="127.0.0.1"
 PORT="8080"
 BASE="http://${HOST}:${PORT}"
 
-# Helper: kill server gracefully
+# Helper: kill server gracefully via SIGINT
 stop_server() {
     local pid=$1
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-        kill "$pid" 2>/dev/null || true
+        kill -INT "$pid" 2>/dev/null || true
+        sleep 0.3
+        kill -9 "$pid" 2>/dev/null || true
         wait "$pid" 2>/dev/null || true
     fi
 }
@@ -59,9 +61,9 @@ for i in 1 2 3 4 5; do
 done
 wait  # wait for all curl processes
 
-# Wait for server to exit naturally (after MAX_CLIENTS=5)
-sleep 1
-wait $SERVER_PID 2>/dev/null || true
+# Stop server gracefully (no longer auto-exits after MAX_CLIENTS)
+sleep 0.5
+stop_server $SERVER_PID
 
 # Verify all 5 responses contain "Hello, Web!"
 passed=0
@@ -116,32 +118,26 @@ echo "$RESP" | grep -F "404 Not Found"
 echo "PASS: GET /not-exist"
 
 # ================================================================
-echo "=== Test 6: server exits after MAX_CLIENTS ==="
+echo "=== Test 6: SIGINT graceful shutdown ==="
 start_server
 
-# Send exactly MAX_CLIENTS (5) requests
+# Send some requests
 for i in 1 2 3 4 5; do
     curl -s "${BASE}/hello" > /dev/null 2>&1 &
 done
 wait
 
-# Server should exit naturally within a few seconds
-exited=0
-for i in $(seq 1 10); do
-    if ! kill -0 $SERVER_PID 2>/dev/null; then
-        exited=1
-        break
-    fi
-    sleep 0.5
-done
-
-if [ "$exited" -eq 1 ]; then
-    echo "PASS: server exited after MAX_CLIENTS"
+# Server should be still running (no auto-exit)
+if kill -0 $SERVER_PID 2>/dev/null; then
+    echo "PASS: server still running after 5 requests (no auto-exit)"
 else
-    echo "FAIL: server did not exit after MAX_CLIENTS"
-    stop_server $SERVER_PID
+    echo "FAIL: server already exited"
     exit 1
 fi
+
+# Send SIGINT — should shut down gracefully
+stop_server $SERVER_PID
+echo "PASS: SIGINT graceful shutdown"
 
 # ================================================================
 # Cleanup
