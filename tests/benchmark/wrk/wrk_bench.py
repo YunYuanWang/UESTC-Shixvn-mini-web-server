@@ -92,6 +92,7 @@ def run_test(mode, port, conn):
 
 # ── Test matrix ──
 configs = {
+    "epoll":  [10, 50, 100, 200, 500, 800, 1000, 1024, 1100, 1500, 2000, 3000],
     "select": [10, 50, 100, 200, 500, 800, 1000, 1024, 1100, 1500],
     "pool":   [10, 50, 100, 200, 500, 1000, 2000, 3000],
     "thread": [10, 50, 100, 200, 500, 1000, 1500, 2000],
@@ -105,7 +106,7 @@ all_csv = f"{OUT}/all_results.csv"
 with open(all_csv, "w") as f:
     f.write("mode,concurrency,qps,avg_ms,p50_ms,p75_ms,p90_ms,p99_ms,max_ms,req_per_sec,err_connect,err_read,err_write,err_timeout,total,duration_s\n")
 
-for mode in ["select", "pool", "thread", "fork"]:
+for mode in ["epoll", "select", "pool", "thread", "fork"]:
     os.makedirs(f"{OUT}/logs/{mode}", exist_ok=True)
     levels = configs[mode]
     print(f"\n{'='*85}")

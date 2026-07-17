@@ -8,10 +8,10 @@ import csv, os, glob
 from collections import defaultdict
 
 # ── Design ──
-MODES = ['fork', 'thread', 'pool', 'select']
-MODE_LABELS = {'fork': 'Fork', 'thread': 'Thread', 'pool': 'Pool', 'select': 'Select'}
-MODE_COLORS = {'fork': '#e74c3c', 'thread': '#f39c12', 'pool': '#3498db', 'select': '#2ecc71'}
-MODE_MARKERS = {'fork': 'o', 'thread': 'D', 'pool': 's', 'select': '^'}
+MODES = ['fork', 'thread', 'pool', 'select', 'epoll']
+MODE_LABELS = {'fork': 'Fork', 'thread': 'Thread', 'pool': 'Pool', 'select': 'Select', 'epoll': 'Epoll'}
+MODE_COLORS = {'fork': '#e74c3c', 'thread': '#f39c12', 'pool': '#3498db', 'select': '#2ecc71', 'epoll': '#9b59b6'}
+MODE_MARKERS = {'fork': 'o', 'thread': 'D', 'pool': 's', 'select': '^', 'epoll': 'v'}
 SF = '#fcfcfb'; BL = '#c3c2b7'; GL = '#e1e0d9'
 I1 = '#0b0b0b'; I2 = '#52514e'; I3 = '#898781'; DPI = 150
 

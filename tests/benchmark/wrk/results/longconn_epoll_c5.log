@@ -1,0 +1,14 @@
+Running 2m test @ http://127.0.0.1:9995/users/compare/ZhangSan
+  2 threads and 5 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    42.20s    21.83s    1.33m    66.67%
+    Req/Sec     0.00      0.00     0.00    100.00%
+  Latency Distribution
+     50%   47.36s 
+     75%   47.62s 
+     90%    1.33m 
+     99%    1.33m 
+  7 requests in 2.00m, 4.63KB read
+  Socket errors: connect 0, read 0, write 0, timeout 1
+Requests/sec:      0.06
+Transfer/sec:      39.53B
