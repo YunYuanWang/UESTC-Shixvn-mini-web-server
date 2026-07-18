@@ -10,7 +10,7 @@ make
 ```
 
 编译生成可执行文件：
-- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 多线程 thread 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / epoll I/O 多路复用模式 / 用户管理 / 多线程请求处理）
+- `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 多线程 thread 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / epoll I/O 多路复用模式 / master-worker 模式 / 用户管理 / 多线程请求处理）
 - `EpollServer` — 独立 epoll TCP/HTTP 服务器二进制文件（v0.10 新增）
 - `epoll_client` — TCP 测试客户端（v0.10 新增）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
@@ -20,10 +20,19 @@ make
 ### 服务器模式 (TCP/HTTP)
 
 ```bash
+# 传统单连接 TCP 服务器（从配置文件加载）
 ./mini_web_server conf/server.conf
 ```
 
 从配置文件加载设置，初始化日志和用户数据，启动 TCP 服务器监听 `host:port`（默认 `127.0.0.1:8080`），循环接受 HTTP 连接，处理请求并返回 HTTP/1.1 响应，按 Ctrl-C 退出。
+
+### Master-Worker 模式 (推荐用于生产环境)
+
+```bash
+./mini_web_server master conf/server.conf
+```
+
+Nginx 风格多进程架构，详见下方 [Master-Worker 模式 (v1.0)](#master-worker-模式-v10-新增--nginx-风格多进程架构) 章节。
 
 ### 多进程 fork 模式
 
@@ -218,20 +227,156 @@ curl http://127.0.0.1:8080/hello
 
 服务器端将实时显示每个客户端的连接、消息和断开事件。
 
-**对比四种并发模式:**
+### Master-Worker 模式 (v1.0 新增 — Nginx 风格多进程架构)
 
-**对比四种并发模式:**
+```bash
+./mini_web_server master conf/server.conf
+```
 
-| 特性 | fork 模式 | pool 模式 | select 模式 | epoll 模式 |
-|---|---|---|---|---|
-| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 | 单线程 I/O 复用 |
-| I/O 机制 | 阻塞 accept | 阻塞 accept | select() | epoll_wait() |
-| fd 上限 | 系统限制 | 系统限制 | FD_SETSIZE (1024) | 系统限制 |
-| 事件复杂度 | — | — | O(n) 扫描 | O(1) 就绪交付 |
-| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） | 低（事件驱动） |
-| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 | 单一地址空间 |
-| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 | 阻塞整个事件循环 |
-| 适用场景 | 隔离性要求高 | 通用高并发 | 中等并发短连接 | 高并发海量连接 |
+master-worker 模式借鉴 Nginx 的进程模型：一个 master 进程管理多个 worker 进程，每个 worker 独立运行 epoll 事件循环，通过 `fork()` 共享监听 socket。Linux 内核保证多个 worker 在 `accept()` 上不会产生惊群效应——每个连接只唤醒一个 worker。
+
+**架构:**
+
+```
+./mini_web_server master conf/server.conf
+  │
+  ├─ [Master PID A]
+  │     ├─ 读取配置 (worker_processes=2, worker_shutdown_timeout_ms=3000)
+  │     ├─ 加载用户数据 + 建立 RBT 索引    ← 仅一次，在 fork 之前
+  │     ├─ socket() → bind() → listen()     ← 创建共享监听 socket
+  │     ├─ fork() ─→ [Worker-1 PID B]
+  │     │               ├─ log_reopen()     ← 独立日志 FILE*
+  │     │               ├─ epoll 事件循环（监听继承的 listen_fd）
+  │     │               ├─ accept() → recv → 处理 HTTP → send
+  │     │               └─ SIGTERM → 优雅关闭 → _exit(0)
+  │     │
+  │     ├─ fork() ─→ [Worker-2 PID C]
+  │     │               └─ (与 Worker-1 相同)
+  │     │
+  │     └─ 等待信号 (pause 循环)
+  │           ├─ SIGINT → 关闭 listen socket
+  │           ├─ 向所有 worker 发送 SIGTERM
+  │           ├─ waitpid() 等待 worker 退出 (超时: worker_shutdown_timeout_ms)
+  │           └─ 超时后 SIGKILL 强杀残留 worker
+  │
+  └─ 退出
+```
+
+**Master 进程职责:**
+
+| 职责 | 说明 |
+|---|---|
+| 读取配置 | 解析 `worker_processes`、`worker_shutdown_timeout_ms` 等 v1.0 新增字段 |
+| 加载用户数据 | 调用 `user_store_load_csv()` 一次，fork 后各 worker 通过 CoW 继承 |
+| 创建监听 socket | `socket()` → `setsockopt(SO_REUSEADDR)` → `bind()` → `listen()` |
+| fork worker | 根据 `worker_processes` 配置 fork 若干个子进程 |
+| 接收完成通知 | SIGCHLD 处理器通过 `waitpid(WNOHANG)` 回收已退出的 worker |
+| 处理退出信号 | SIGINT 触发优雅关闭流程 |
+| waitpid 回收 | 先 SIGTERM 超时等待，再 SIGKILL 确保所有 worker 被回收 |
+
+**Worker 进程职责:**
+
+| 职责 | 说明 |
+|---|---|
+| 独立 epoll 事件循环 | 每个 worker 在继承的监听 fd 上独立运行 epoll_wait / accept |
+| 处理 HTTP 请求 | 复用 v0.10 的 epoll HTTP 请求解析与路由逻辑 |
+| 优雅关闭 | 收到 SIGTERM 后设置 `g_shutdown` 标志，完成当前请求后退出 |
+
+**信号处理流程:**
+
+```
+用户 Ctrl-C
+  │
+  ▼
+SIGINT → 所有进程 (进程组广播)
+  │
+  ├─ [Master] g_master_shutdown = 1, pause() 返回, 跳出等待循环
+  │     ├─ close(listen_fd)         ← 停止接收新连接
+  │     ├─ kill(SIGTERM, worker_1)  ← 通知 worker 退出
+  │     ├─ kill(SIGTERM, worker_2)
+  │     ├─ waitpid() 循环 (超时: worker_shutdown_timeout_ms)
+  │     └─ 超时 → kill(SIGKILL) → waitpid() 确认回收
+  │
+  └─ [Worker-1 / Worker-2] g_shutdown = 1, epoll_wait() 返回 EINTR
+        ├─ 关闭所有活跃客户端连接
+        ├─ log_info("[Worker] shutdown — served N client(s)")
+        └─ _exit(0)
+```
+
+**配置文件新增字段 (v1.0):**
+
+```ini
+# conf/server.conf
+worker_processes=2               # worker 进程数 (默认: 2)
+worker_shutdown_timeout_ms=3000  # worker 关闭超时毫秒 (默认: 3000)
+```
+
+**日志格式 (v1.0):**
+
+每条请求日志单次调用 `write()`（一次 `fprintf` + `fflush`），包含 PID、连接 fd、请求路径和状态码，多 worker 并发写入同一日志文件时不会交错：
+
+```
+[INFO] [PID 111813] [TID ...] [2026-07-17 16:18:37.779993] [EpollServer] fd=6 GET /hello -> 200
+[INFO] [PID 111814] [TID ...] [2026-07-17 16:18:37.779995] [EpollServer] fd=7 GET /users/ZhangSan -> 404
+[INFO] [PID 111813] [TID ...] [2026-07-17 16:18:37.780012] [EpollServer] fd=8 POST /users -> 200
+```
+
+多 worker 日志示例——可以看到两个不同 PID 交替出现：
+
+```
+[INFO] [PID 111813] ... [Worker] PID 111813 started, listen_fd=4
+[INFO] [PID 111814] ... [Worker] PID 111814 started, listen_fd=4
+[INFO] [PID 111813] ... fd=6 GET /hello -> 200      ← Worker-1
+[INFO] [PID 111814] ... fd=6 GET /hello -> 200      ← Worker-2
+[INFO] [PID 111813] ... fd=7 GET /users -> 200      ← Worker-1
+[INFO] [PID 111814] ... fd=7 POST /users -> 200     ← Worker-2
+```
+
+**压力测试:**
+
+```bash
+# 启动 master-worker 服务器
+./mini_web_server master conf/server.conf &
+
+# wrk 40 并发压测
+wrk -c 40 -t 4 -d 10s http://127.0.0.1:8080/hello
+
+# 或使用 curl 循环
+for i in $(seq 1 40); do
+    curl -s http://127.0.0.1:8080/hello &
+done
+wait
+```
+
+**关闭测试:**
+
+```bash
+# 向 master 发送 SIGINT
+kill -INT $(pgrep -f "mini_web_server master" | head -1)
+
+# 日志应显示:
+#   [Master] shutting down...
+#   [Master] sending SIGTERM to worker PID 112453
+#   [Master] sending SIGTERM to worker PID 112454
+#   [Worker] shutdown — served N client(s) (SIGTERM)
+#   [Master] all workers stopped
+#   [Master] shutdown complete
+```
+
+**对比五种并发模式:**
+
+| 特性 | fork 模式 | pool 模式 | select 模式 | epoll 模式 | master-worker 模式 |
+|---|---|---|---|---|---|
+| 版本 | v0.7 | v0.8 | v0.9 | v0.10 | v1.0 |
+| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 | 单线程 I/O 复用 | 多进程 epoll (pre-fork) |
+| I/O 机制 | 阻塞 accept | 阻塞 accept | select() | epoll_wait() | epoll_wait() × N worker |
+| fd 上限 | 系统限制 | 系统限制 | FD_SETSIZE (1024) | 系统限制 | 系统限制 × worker 数 |
+| 事件复杂度 | — | — | O(n) 扫描 | O(1) 就绪交付 | O(1) 就绪交付 |
+| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） | 低（事件驱动） | 低（事件驱动 + 进程级隔离） |
+| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 | 单一地址空间 | 共享监听 socket + CoW |
+| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 | 阻塞整个事件循环 | 阻塞单个 worker |
+| 进程管理 | SIGCHLD | — | — | — | Master 管理生命周期 |
+| 适用场景 | 隔离性要求高 | 通用高并发 | 中等并发短连接 | 高并发海量连接 | 生产环境多核利用 |
 
 使用 curl 测试：
 
@@ -345,7 +490,34 @@ done
 wait
 ```
 
-## 请求文件格式
+## 配置文件格式 (conf/server.conf)
+
+`key=value` 格式，每行一对。`#` 开头的行为注释。等号两侧空格会被裁剪。
+
+```
+host=127.0.0.1
+port=8080
+www_root=www
+user_file=data/users.csv
+log=logs/server.log
+max_connections=256
+max_request_bytes=4096
+worker_processes=2               # v1.0: worker 进程数
+worker_shutdown_timeout_ms=3000  # v1.0: worker 关闭超时
+```
+
+| 字段 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `host` | string | 必填 | 监听地址 |
+| `port` | int | 必填 | 监听端口 |
+| `www_root` | string | 必填 | Web 文档根目录 |
+| `user_file` | string | 必填 | CSV 用户数据库路径 |
+| `log` | string | 必填 | 日志文件路径 |
+| `server_name` | string | "" | 服务器名称 |
+| `max_connections` | int | 256 | 最大并发连接数 |
+| `max_request_bytes` | int | 4096 | 最大请求体字节数 |
+| `worker_processes` | int | 2 | **v1.0**: worker 进程数 |
+| `worker_shutdown_timeout_ms` | int | 3000 | **v1.0**: worker 优雅关闭超时 |
 
 `requests/` 目录下的 `.req` 文件，文件名与输出文件对应（`<name>.req` → `outputs/<name>.out`）。
 
@@ -425,13 +597,25 @@ Server: MiniWeb
 
 所有日志统一输出到 `logs/server.log`。
 
-日志格式：每条日志同时包含进程 PID 和线程 TID，可追溯到具体线程：
+日志格式：每条日志同时包含进程 PID 和线程 TID，可追溯到具体线程/进程：
 
 ```
 [LEVEL] [PID N] [TID N] [YYYY-MM-DD HH:MM:SS.xxxxxx] message
 ```
 
-示例：
+### v1.0 日志增强
+
+**多进程写入:** 日志文件以追加模式 (`fopen("a")`) 打开，每次 `fprintf` + `fflush` 对应一次原子 `write()` 系统调用（O_APPEND 保证）。worker 在 fork 后调用 `log_reopen()` 获取独立的 `FILE*` 和 stdio 缓冲区，避免跨进程缓冲污染。
+
+**请求日志合并:** 每条 HTTP 请求仅产生一条日志记录，同时包含 PID、连接 fd、请求路径和状态码：
+
+```
+[INFO] [PID 111813] [TID ...] [2026-07-17 16:18:37.779993] [EpollServer] fd=6 GET /hello -> 200
+[INFO] [PID 111814] [TID ...] [2026-07-17 16:18:40.480124] [EpollServer] fd=6 GET /sleep/3000 -> 200
+[INFO] [PID 111813] [TID ...] [2026-07-17 16:18:41.123456] [EpollServer] fd=7 POST /users -> 200
+```
+
+### 示例
 
 ```
 [INFO] [PID 2344043] [TID 132829928163136] [2026-07-10 11:48:13.804778] [ProcessServer] scanning requests (multi-thread mode)
@@ -450,14 +634,14 @@ Server: MiniWeb
 
 ```
 miniwebserver/
-├── conf/           # 配置文件
+├── conf/           # 配置文件 (server.conf)
 ├── data/           # CSV 用户数据
-├── include/        # 头文件
-├── logs/           # 日志输出
+├── include/        # 头文件 (含 master_worker.h)
+├── logs/           # 日志输出 (server.log)
 ├── obj/            # 编译中间文件
 ├── outputs/        # 请求处理输出
 ├── requests/       # 请求文件
-├── src/            # 源代码
+├── src/            # 源代码 (含 master_worker.c)
 ├── tests/          # 测试脚本
 ├── www/            # Web 根目录
 └── Makefile
@@ -475,4 +659,5 @@ bash tests/test_day07.sh   # 多进程 TCP/HTTP 服务器（fork 模式，并发
 bash tests/test_day08.sh   # 多线程 TCP/HTTP 服务器（线程池模式，动态扩缩）
 bash tests/test_day09.sh   # select I/O 多路复用服务器（select 事件驱动）
 bash tests/test_day10.sh   # epoll I/O 多路复用服务器（epoll 事件驱动，v0.10）
+bash tests/test_day11.sh   # master-worker 多进程服务器（Nginx 风格架构，v1.0）
 ```

@@ -1,6 +1,7 @@
 #include "../include/config.h"
 #include "../include/epoll_server.h"
 #include "../include/log.h"
+#include "../include/master_worker.h"
 #include "../include/process_server.h"
 #include "../include/tcp_fork_server.h"
 #include "../include/tcp_thread_server.h"
@@ -29,6 +30,7 @@ static void print_help(const char *prog) {
     printf("       %s pool [ip] [port]\n", prog);
     printf("       %s select <ip> <port>\n", prog);
     printf("       %s epoll <ip> <port>\n", prog);
+    printf("       %s master conf/server.conf\n", prog);
     printf("       %s help\n", prog);
 }
 
@@ -552,6 +554,40 @@ int main(int argc, char *argv[]) {
         }
 
         int ret = epoll_server_run(ip, port);
+
+        log_close();
+        user_store_free();
+        return ret;
+    }
+
+    /* --- master mode (Nginx-style master-worker process model) --- */
+    if (argc == 3 && strcmp(argv[1], "master") == 0) {
+        server_config_t master_config;
+        memset(&master_config, 0, sizeof(master_config));
+
+        if (load_config(argv[2], &master_config) != 0) {
+            printf("failed to load config\n");
+            return 1;
+        }
+
+        if (log_init(master_config.log_path) != 0) {
+            printf("failed to open log file\n");
+            return 1;
+        }
+
+        log_info("========================================");
+        log_info("  Master-Worker Mode (epoll I/O multiplexing)");
+        log_info("========================================");
+
+        if (user_store_load_csv(master_config.user_file) < 0) {
+            printf("error: cannot open '%s'\n", master_config.user_file);
+            log_close();
+            return 1;
+        }
+
+        print_config(&master_config);
+
+        int ret = master_worker_run(&master_config);
 
         log_close();
         user_store_free();

@@ -11,6 +11,10 @@ typedef struct {
     int  max_connections;        /* v0.10: max concurrent connections */
     int  max_request_bytes;      /* v0.10: max request body size in bytes */
 
+    /* v1.0: master-worker process model */
+    int  worker_processes;            /* number of worker processes (default: 2) */
+    int  worker_shutdown_timeout_ms;  /* grace period for worker shutdown (default: 3000) */
+
     /* legacy field aliases (maintained for backward compatibility) */
     char root[128];              /* deprecated — use www_root */
     char data_path[128];         /* deprecated — use user_file */

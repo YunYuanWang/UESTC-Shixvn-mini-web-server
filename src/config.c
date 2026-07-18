@@ -97,6 +97,10 @@ int load_config(const char *path, server_config_t *config) {
             config->max_connections = atoi(value);
         } else if (strcmp(key, "max_request_bytes") == 0) {
             config->max_request_bytes = atoi(value);
+        } else if (strcmp(key, "worker_processes") == 0) {
+            config->worker_processes = atoi(value);
+        } else if (strcmp(key, "worker_shutdown_timeout_ms") == 0) {
+            config->worker_shutdown_timeout_ms = atoi(value);
         }
     }
 
@@ -131,6 +135,12 @@ int load_config(const char *path, server_config_t *config) {
     if (config->max_request_bytes <= 0) {
         config->max_request_bytes = 4096;
     }
+    if (config->worker_processes <= 0) {
+        config->worker_processes = 2;
+    }
+    if (config->worker_shutdown_timeout_ms <= 0) {
+        config->worker_shutdown_timeout_ms = 3000;
+    }
 
     if (config->host[0] == '\0' ||
         config->port <= 0 ||
@@ -152,4 +162,6 @@ void print_config(const server_config_t *config) {
     printf("log=%s\n", config->log_path);
     printf("max_connections=%d\n", config->max_connections);
     printf("max_request_bytes=%d\n", config->max_request_bytes);
+    printf("worker_processes=%d\n", config->worker_processes);
+    printf("worker_shutdown_timeout_ms=%d\n", config->worker_shutdown_timeout_ms);
 }

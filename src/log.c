@@ -21,6 +21,27 @@ int log_init(const char *path) {
 }
 
 /*
+ * log_reopen — close the inherited FILE* (from fork) and open a fresh one.
+ * Each worker calls this after fork to get an independent stdio buffer and
+ * file descriptor, avoiding cross-process buffer corruption.  The kernel's
+ * O_APPEND ensures each write() is atomically appended.
+ */
+int log_reopen(const char *path) {
+    if (log_file != NULL) {
+        fclose(log_file);
+        log_file = NULL;
+    }
+    if (path == NULL) {
+        return -1;
+    }
+    log_file = fopen(path, "a");
+    if (log_file == NULL) {
+        return -1;
+    }
+    return 0;
+}
+
+/*
  * log_write — 所有日志输出的统一入口。
  * 每条日志必定包含 PID，调用者无需关心 pid 参数。
  * 调用 log_info/log_error 时自动使用 getpid()；

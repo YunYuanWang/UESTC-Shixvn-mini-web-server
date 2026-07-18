@@ -55,11 +55,21 @@ typedef struct {
 
 /* ---- global state ---- */
 static volatile sig_atomic_t g_shutdown = 0;
+static volatile sig_atomic_t g_worker_shutdown = 0;  /* v1.0: set by SIGTERM in worker mode */
 static int                   g_active_conns = 0;   /* current active connections */
+static int                   g_worker_mode = 0;    /* v1.0: non-zero when running as worker */
+static int                   g_master_listen_fd = -1; /* v1.0: listen_fd inherited from master */
 
 static void sigint_handler(int sig) {
     (void)sig;
     g_shutdown = 1;
+}
+
+/* v1.0: SIGTERM handler for worker graceful shutdown */
+static void sigterm_handler(int sig) {
+    (void)sig;
+    g_shutdown = 1;
+    g_worker_shutdown = 1;
 }
 
 /*
@@ -103,6 +113,10 @@ int epoll_server_run(const char *host, int port) {
         sa.sa_flags = 0;
         sigaction(SIGINT, &sa, NULL);
 
+        /* v1.0: also handle SIGTERM (sent by master to workers) */
+        sa.sa_handler = sigterm_handler;
+        sigaction(SIGTERM, &sa, NULL);
+
         /* SIGPIPE: ignore so send() returns EPIPE instead of killing us */
         signal(SIGPIPE, SIG_IGN);
     }
@@ -111,66 +125,81 @@ int epoll_server_run(const char *host, int port) {
     log_info("========================================");
     {
         char buf[64];
-        snprintf(buf, sizeof(buf),
-                 "  EpollServer PID: %d  (epoll I/O multiplexing mode)",
-                 (int)getpid());
+        if (g_worker_mode) {
+            snprintf(buf, sizeof(buf),
+                     "  Worker PID: %d  (epoll I/O multiplexing)",
+                     (int)getpid());
+        } else {
+            snprintf(buf, sizeof(buf),
+                     "  EpollServer PID: %d  (epoll I/O multiplexing mode)",
+                     (int)getpid());
+        }
         log_info(buf);
     }
-    snprintf(msg, sizeof(msg),
-             "  listening on %s:%d  max_events: %d  max_connections: %d",
-             host, port, EPOLL_MAX_EVENTS, EPOLL_MAX_CONNS);
-    log_info(msg);
+    if (!g_worker_mode) {
+        snprintf(msg, sizeof(msg),
+                 "  listening on %s:%d  max_events: %d  max_connections: %d",
+                 host, port, EPOLL_MAX_EVENTS, EPOLL_MAX_CONNS);
+        log_info(msg);
+    }
     log_info("========================================");
 
-    /* ---- create socket ---- */
-    listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_fd < 0) {
-        log_error("[EpollServer] socket() failed");
-        goto cleanup;
-    }
-    log_info("[EpollServer] socket created");
-
-    /* ---- SO_REUSEADDR ---- */
-    optval = 1;
-    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR,
-                   &optval, sizeof(optval)) < 0) {
-        log_error("[EpollServer] setsockopt(SO_REUSEADDR) failed");
-        goto cleanup;
-    }
-
-    /* ---- bind ---- */
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port   = htons((uint16_t)port);
-    if (inet_pton(AF_INET, host, &server_addr.sin_addr) != 1) {
+    /* ---- create socket (or reuse master's in worker mode) ---- */
+    if (g_worker_mode) {
+        listen_fd = g_master_listen_fd;
         snprintf(msg, sizeof(msg),
-                 "[EpollServer] invalid address: %s", host);
-        log_error(msg);
-        fprintf(stderr, "ERROR: invalid address '%s'\n", host);
-        goto cleanup;
-    }
+                 "[Worker] using inherited listen_fd=%d", listen_fd);
+        log_info(msg);
+    } else {
+        listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (listen_fd < 0) {
+            log_error("[EpollServer] socket() failed");
+            goto cleanup;
+        }
+        log_info("[EpollServer] socket created");
 
-    if (bind(listen_fd, (struct sockaddr *)&server_addr,
-             sizeof(server_addr)) < 0) {
+        /* ---- SO_REUSEADDR ---- */
+        optval = 1;
+        if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR,
+                       &optval, sizeof(optval)) < 0) {
+            log_error("[EpollServer] setsockopt(SO_REUSEADDR) failed");
+            goto cleanup;
+        }
+
+        /* ---- bind ---- */
+        memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port   = htons((uint16_t)port);
+        if (inet_pton(AF_INET, host, &server_addr.sin_addr) != 1) {
+            snprintf(msg, sizeof(msg),
+                     "[EpollServer] invalid address: %s", host);
+            log_error(msg);
+            fprintf(stderr, "ERROR: invalid address '%s'\n", host);
+            goto cleanup;
+        }
+
+        if (bind(listen_fd, (struct sockaddr *)&server_addr,
+                 sizeof(server_addr)) < 0) {
+            snprintf(msg, sizeof(msg),
+                     "[EpollServer] bind(%s:%d) failed", host, port);
+            log_error(msg);
+            fprintf(stderr, "ERROR: bind(%s:%d) failed — "
+                    "port may already be in use\n", host, port);
+            goto cleanup;
+        }
+
         snprintf(msg, sizeof(msg),
-                 "[EpollServer] bind(%s:%d) failed", host, port);
-        log_error(msg);
-        fprintf(stderr, "ERROR: bind(%s:%d) failed — "
-                "port may already be in use\n", host, port);
-        goto cleanup;
-    }
+                 "[EpollServer] listening on %s:%d", host, port);
+        log_info(msg);
+        printf("EpollServer listening on http://%s:%d  (Ctrl-C to stop)\n",
+               host, port);
+        fflush(stdout);
 
-    snprintf(msg, sizeof(msg),
-             "[EpollServer] listening on %s:%d", host, port);
-    log_info(msg);
-    printf("EpollServer listening on http://%s:%d  (Ctrl-C to stop)\n",
-           host, port);
-    fflush(stdout);
-
-    /* ---- listen ---- */
-    if (listen(listen_fd, SOMAXCONN) < 0) {
-        log_error("[EpollServer] listen() failed");
-        goto cleanup;
+        /* ---- listen ---- */
+        if (listen(listen_fd, SOMAXCONN) < 0) {
+            log_error("[EpollServer] listen() failed");
+            goto cleanup;
+        }
     }
 
     /* ---- create epoll instance ---- */
@@ -549,11 +578,6 @@ int epoll_server_run(const char *host, int port) {
                     nl = strchr(path, ' ');
                     if (nl != NULL) *nl = '\0';
 
-                    snprintf(msg, sizeof(msg),
-                             "[EpollServer] request: %s %s",
-                             method, path);
-                    log_info(msg);
-
                     /* ---- fill request_t ---- */
                     memset(&req, 0, sizeof(req));
                     {
@@ -610,18 +634,17 @@ int epoll_server_run(const char *host, int port) {
                                  "500 Internal Server Error\n");
                     }
 
-                    /* extract and log response status */
+                    /* extract and log response status (v1.0: single log with fd/path/status) */
                     if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
                         resp_status = atoi(resp_buf + 9);
                         snprintf(msg, sizeof(msg),
-                                 "[EpollServer] response: %s %s -> %d",
-                                 method, path, resp_status);
+                                 "[EpollServer] fd=%d %s %s -> %d",
+                                 ready_fd, method, path, resp_status);
                     } else {
                         resp_status = 0;
                         snprintf(msg, sizeof(msg),
-                                 "[EpollServer] response: %s %s -> "
-                                 "(unknown status)",
-                                 method, path);
+                                 "[EpollServer] fd=%d %s %s -> (unknown status)",
+                                 ready_fd, method, path);
                     }
                     log_info(msg);
 
@@ -699,30 +722,61 @@ int epoll_server_run(const char *host, int port) {
         }
     }
 
-    /* close listen socket and epoll fd */
-    epoll_ctl(epfd, EPOLL_CTL_DEL, listen_fd, NULL);
-    close(listen_fd);
+    /* close listen socket and epoll fd (listen_fd owned by master in worker mode) */
+    if (!g_worker_mode) {
+        epoll_ctl(epfd, EPOLL_CTL_DEL, listen_fd, NULL);
+        close(listen_fd);
+    }
     close(epfd);
 
-    snprintf(msg, sizeof(msg),
-             "[EpollServer] server shutdown — served %d client(s)%s",
-             clients_served,
-             g_shutdown ? " (SIGINT)" : "");
+    if (g_worker_mode) {
+        snprintf(msg, sizeof(msg),
+                 "[Worker] shutdown — served %d client(s)%s",
+                 clients_served,
+                 g_worker_shutdown ? " (SIGTERM)" : "");
+    } else {
+        snprintf(msg, sizeof(msg),
+                 "[EpollServer] server shutdown — served %d client(s)%s",
+                 clients_served,
+                 g_shutdown ? " (SIGINT)" : "");
+    }
     log_info(msg);
-    printf("EpollServer: served %d clients, exiting%s.\n",
-           clients_served,
-           g_shutdown ? " (Ctrl-C)" : "");
+    if (!g_worker_mode) {
+        printf("EpollServer: served %d clients, exiting%s.\n",
+               clients_served,
+               g_shutdown ? " (Ctrl-C)" : "");
+    }
 
     ret = 0;
 
 cleanup:
     free(connections);
-    /* close listen_fd if we bailed out early (goto cleanup) */
-    if (ret == -1 && listen_fd >= 0) {
+    /* close listen_fd if we bailed out early (goto cleanup);
+     * in worker mode the listen_fd is owned by master */
+    if (ret == -1 && listen_fd >= 0 && !g_worker_mode) {
         close(listen_fd);
     }
     if (epfd >= 0) {
         close(epfd);
     }
     return ret;
+}
+
+/*
+ * epoll_server_worker_run — v1.0 worker entry point.
+ *
+ * Called by each forked worker process.  Uses the listen_fd inherited from
+ * the master (already bound and listening).  Installs signal handlers for
+ * graceful shutdown (SIGINT / SIGTERM → g_shutdown).
+ *
+ * Returns 0 on clean shutdown.
+ */
+int epoll_server_worker_run(int listen_fd) {
+    g_worker_mode       = 1;
+    g_master_listen_fd  = listen_fd;
+    g_shutdown          = 0;
+    g_worker_shutdown   = 0;
+
+    /* host/port are ignored in worker mode (guarded by g_worker_mode) */
+    return epoll_server_run("0.0.0.0", 0);
 }

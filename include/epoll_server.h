@@ -37,4 +37,16 @@
  */
 int epoll_server_run(const char *host, int port);
 
+/*
+ * v1.0: Run an epoll-based TCP/HTTP worker on a pre-created listen_fd.
+ *
+ * The listen_fd must already be bound and listening (created by the master
+ * process and inherited via fork).  The worker does NOT close listen_fd on
+ * shutdown — the master owns it.
+ *
+ * Returns 0 on clean shutdown, -1 on error.
+ * Requires: log_reopen() already called, user_store already loaded.
+ */
+int epoll_server_worker_run(int listen_fd);
+
 #endif /* EPOLL_SERVER_H */
