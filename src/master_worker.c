@@ -325,7 +325,7 @@ int master_worker_run(const server_config_t *config) {
              * Run the epoll event loop on the inherited listen socket.
              * This function returns when g_shutdown is set (SIGINT/SIGTERM).
              */
-            epoll_server_worker_run(listen_fd);
+            epoll_server_worker_run(listen_fd, i + 1);  /* worker IDs are 1-based */
 
             /* clean exit */
             {

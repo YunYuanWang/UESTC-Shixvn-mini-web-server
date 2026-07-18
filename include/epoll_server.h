@@ -47,6 +47,6 @@ int epoll_server_run(const char *host, int port);
  * Returns 0 on clean shutdown, -1 on error.
  * Requires: log_reopen() already called, user_store already loaded.
  */
-int epoll_server_worker_run(int listen_fd);
+int epoll_server_worker_run(int listen_fd, int worker_id);
 
 #endif /* EPOLL_SERVER_H */

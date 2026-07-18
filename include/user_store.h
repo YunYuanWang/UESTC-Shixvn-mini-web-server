@@ -24,6 +24,11 @@ void user_store_free(void);
 
 /* BST index operations */
 void user_store_print_index(void);
+
+/* v1.1: format users into a buffer (BST inorder), safe for large datasets.
+ * Writes up to buf_size bytes.  *total is set to the total user count,
+ * *offset is advanced by the number of bytes written. */
+void user_store_format_users(char *buf, int buf_size, int *total, int *offset);
 ListNode *user_store_find_index(const char *name);
 void user_store_compare_search_method(const char *name, int verbose);
 

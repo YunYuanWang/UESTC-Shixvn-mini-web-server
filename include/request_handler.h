@@ -5,11 +5,16 @@ typedef struct {
     char method[16];
     char path[256];
     char body[512];   /* CSV data for POST /users (addusr) */
+
+    /* v1.1: HTTP version and keep-alive from header parsing */
+    int  http_version_major;   /* 1 */
+    int  http_version_minor;   /* 0 or 1 */
+    int  keep_alive;           /* 1=keep connection, 0=close */
 } request_t;
 
 /* ---- HTTP/1.1 keep-alive configuration ---- */
 #define KEEP_ALIVE_TIMEOUT_SEC   5     /* idle timeout between requests */
-#define MAX_KEEP_ALIVE_REQUESTS  100   /* max requests per connection */
+#define MAX_KEEP_ALIVE_REQUESTS  10000   /* max requests per connection (v1.1: raised for ab benchmarks) */
 
 /*
  * Parse a single-line request (e.g. "GET /hello") into a request_t.

@@ -29,6 +29,12 @@ int bst_delete(BST *tree, const char *name);
 void bst_inorder(BST *tree);
 void bst_free(BST *tree);
 
+/*
+ * v1.1: inorder traversal that writes to a buffer.
+ * Stops when buf is full. *total is user count, *offset is bytes written.
+ */
+void bst_format_users(BST *tree, char *buf, int buf_size, int *total, int *offset);
+
 /* Internal red-black tree helpers */
 void rbt_left_rotate(BST *tree, BSTnode *x);
 void rbt_right_rotate(BST *tree, BSTnode *x);

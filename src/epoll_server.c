@@ -24,6 +24,7 @@
 
 #include "../include/log.h"
 #include "../include/request_handler.h"
+#include "../include/http_parser.h"
 #include "../include/epoll_server.h"
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -53,11 +54,23 @@ typedef struct {
     time_t last_activity;    /* timestamp of last data activity */
 } conn_t;
 
+/* ---- v1.1: graceful close to avoid RST on keep-alive connections ---- */
+static void safe_close(int fd) {
+    if (fd >= 0) {
+        shutdown(fd, SHUT_RDWR);
+        /* drain any pending data to avoid RST */
+        char dummy[256];
+        while (recv(fd, dummy, sizeof(dummy), 0) > 0) {}
+        close(fd);
+    }
+}
+
 /* ---- global state ---- */
 static volatile sig_atomic_t g_shutdown = 0;
 static volatile sig_atomic_t g_worker_shutdown = 0;  /* v1.0: set by SIGTERM in worker mode */
 static int                   g_active_conns = 0;   /* current active connections */
 static int                   g_worker_mode = 0;    /* v1.0: non-zero when running as worker */
+static int                   g_worker_id   = 0;    /* v1.1: worker number (1-based) */
 static int                   g_master_listen_fd = -1; /* v1.0: listen_fd inherited from master */
 
 static void sigint_handler(int sig) {
@@ -127,8 +140,8 @@ int epoll_server_run(const char *host, int port) {
         char buf[64];
         if (g_worker_mode) {
             snprintf(buf, sizeof(buf),
-                     "  Worker PID: %d  (epoll I/O multiplexing)",
-                     (int)getpid());
+                     "  Worker-%d PID: %d  (epoll I/O multiplexing)",
+                     g_worker_id, (int)getpid());
         } else {
             snprintf(buf, sizeof(buf),
                      "  EpollServer PID: %d  (epoll I/O multiplexing mode)",
@@ -259,7 +272,7 @@ int epoll_server_run(const char *host, int port) {
                     fflush(stdout);
 
                     epoll_ctl(epfd, EPOLL_CTL_DEL, connections[i].fd, NULL);
-                    close(connections[i].fd);
+                    safe_close(connections[i].fd);
                     connections[i].fd = -1;
                     g_active_conns--;
                     print_conn_count();
@@ -298,7 +311,7 @@ int epoll_server_run(const char *host, int port) {
                     fflush(stdout);
 
                     epoll_ctl(epfd, EPOLL_CTL_DEL, ready_fd, NULL);
-                    close(ready_fd);
+                    safe_close(ready_fd);
                     conn->fd = -1;
                     g_active_conns--;
                     print_conn_count();
@@ -376,8 +389,9 @@ int epoll_server_run(const char *host, int port) {
                         }
 
                         snprintf(msg, sizeof(msg),
-                                 "[EpollServer] [#%d] accepted connection "
+                                 "%s[#%d] accepted connection "
                                  "from %s:%d (fd=%d) type=%s",
+                                 g_worker_mode ? "" : "[EpollServer] ",
                                  clients_served + 1,
                                  connections[slot].client_ip,
                                  connections[slot].client_port,
@@ -422,7 +436,7 @@ int epoll_server_run(const char *host, int port) {
                     fflush(stdout);
 
                     epoll_ctl(epfd, EPOLL_CTL_DEL, ready_fd, NULL);
-                    close(ready_fd);
+                    safe_close(ready_fd);
                     conn->fd = -1;
                     g_active_conns--;
                     print_conn_count();
@@ -558,7 +572,7 @@ int epoll_server_run(const char *host, int port) {
                                  strlen(resp_buf), 0);
                             epoll_ctl(epfd, EPOLL_CTL_DEL,
                                       ready_fd, NULL);
-                            close(ready_fd);
+                            safe_close(ready_fd);
                             conn->fd = -1;
                             g_active_conns--;
                             log_info("[EpollServer] response: "
@@ -621,6 +635,42 @@ int epoll_server_run(const char *host, int port) {
                         }
                     }
 
+                    /* ---- v1.1: keep-alive negotiation (case-insensitive header matching) ---- */
+                    {
+                        int close_after = 0;
+                        /*
+                         * AB sends HTTP/1.0 + "Connection: Keep-Alive" (mixed case).
+                         * Curl sends "Connection: keep-alive" (lowercase).
+                         * We detect the keep-alive keyword case-insensitively
+                         * by checking all 4 case variants.
+                         */
+                        #define HAS_KEEPALIVE(haystack) \
+                            (strstr(haystack, "Connection: keep-alive") || \
+                             strstr(haystack, "Connection: Keep-Alive") || \
+                             strstr(haystack, "connection: keep-alive") || \
+                             strstr(haystack, "connection: Keep-Alive"))
+                        #define HAS_CLOSE(haystack) \
+                            (strstr(haystack, "Connection: close") || \
+                             strstr(haystack, "Connection: Close") || \
+                             strstr(haystack, "connection: close") || \
+                             strstr(haystack, "connection: Close"))
+
+                        if (strstr(conn->recv_buf, "HTTP/1.0")) {
+                            close_after = 1;  /* HTTP/1.0 defaults to close */
+                            if (HAS_KEEPALIVE(conn->recv_buf)) {
+                                close_after = 0;  /* explicit keep-alive */
+                            }
+                        } else {
+                            /* HTTP/1.1 defaults to keep-alive */
+                            if (HAS_CLOSE(conn->recv_buf)) {
+                                close_after = 1;  /* explicit close */
+                            }
+                        }
+                        req.keep_alive = close_after ? 0 : 1;
+                        #undef HAS_KEEPALIVE
+                        #undef HAS_CLOSE
+                    }
+
                     /* ---- generate HTTP/1.1 response ---- */
                     if (request_handler_process_http(&req, resp_buf,
                                                      sizeof(resp_buf))
@@ -634,12 +684,18 @@ int epoll_server_run(const char *host, int port) {
                                  "500 Internal Server Error\n");
                     }
 
-                    /* extract and log response status (v1.0: single log with fd/path/status) */
+                    /* extract and log response status (v1.1: Worker-N prefix in worker mode) */
                     if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
                         resp_status = atoi(resp_buf + 9);
-                        snprintf(msg, sizeof(msg),
-                                 "[EpollServer] fd=%d %s %s -> %d",
-                                 ready_fd, method, path, resp_status);
+                        if (g_worker_mode) {
+                            snprintf(msg, sizeof(msg),
+                                     "[Worker-%d] fd=%d %s %s -> %d",
+                                     g_worker_id, ready_fd, method, path, resp_status);
+                        } else {
+                            snprintf(msg, sizeof(msg),
+                                     "[EpollServer] fd=%d %s %s -> %d",
+                                     ready_fd, method, path, resp_status);
+                        }
                     } else {
                         resp_status = 0;
                         snprintf(msg, sizeof(msg),
@@ -653,6 +709,15 @@ int epoll_server_run(const char *host, int port) {
                            method, path, resp_status);
                     fflush(stdout);
 
+                    /* ---- v1.1: patch Connection header if HTTP wants close ---- */
+                    if (!req.keep_alive) {
+                        char *ka = strstr(resp_buf, "Connection: Keep-Alive");
+                        if (ka) {
+                            /* "Keep-Alive" is 10 chars → pad "close" to same length */
+                            memcpy(ka + 12, "close     ", 10);
+                        }
+                    }
+
                     /* ---- send response ---- */
                     sent = send(ready_fd, resp_buf, strlen(resp_buf), 0);
                     if (sent < 0) {
@@ -662,7 +727,7 @@ int epoll_server_run(const char *host, int port) {
                         log_error(msg);
                         /* send failure — close connection */
                         epoll_ctl(epfd, EPOLL_CTL_DEL, ready_fd, NULL);
-                        close(ready_fd);
+                        safe_close(ready_fd);
                         conn->fd = -1;
                         g_active_conns--;
                         log_info("[EpollServer] connection closed "
@@ -673,15 +738,21 @@ int epoll_server_run(const char *host, int port) {
                         continue;
                     }
 
-                    /* ---- keep-alive: check limits ---- */
+                    /* ---- keep-alive: check limits + HTTP version negotiation ---- */
                     conn->request_count++;
 
-                    if (conn->request_count >= MAX_KEEP_ALIVE_REQUESTS) {
-                        /* max requests reached — close connection */
-                        snprintf(msg, sizeof(msg),
-                                 "[EpollServer] max requests (%d) reached "
-                                 "on fd=%d, closing",
-                                 MAX_KEEP_ALIVE_REQUESTS, ready_fd);
+                    if (conn->request_count >= MAX_KEEP_ALIVE_REQUESTS || !req.keep_alive) {
+                        /* max requests reached or HTTP wants close — close connection */
+                        if (!req.keep_alive) {
+                            snprintf(msg, sizeof(msg),
+                                     "[EpollServer] HTTP close requested "
+                                     "on fd=%d, closing", ready_fd);
+                        } else {
+                            snprintf(msg, sizeof(msg),
+                                     "[EpollServer] max requests (%d) reached "
+                                     "on fd=%d, closing",
+                                     MAX_KEEP_ALIVE_REQUESTS, ready_fd);
+                        }
                         log_info(msg);
 
                         printf("[-] max requests (%d), disconnecting: "
@@ -692,7 +763,7 @@ int epoll_server_run(const char *host, int port) {
                         fflush(stdout);
 
                         epoll_ctl(epfd, EPOLL_CTL_DEL, ready_fd, NULL);
-                        close(ready_fd);
+                        safe_close(ready_fd);
                         conn->fd = -1;
                         g_active_conns--;
                         log_info("[EpollServer] connection closed "
@@ -716,7 +787,7 @@ int epoll_server_run(const char *host, int port) {
     for (int i = 0; i < EPOLL_MAX_CONNS; i++) {
         if (connections[i].fd != -1) {
             epoll_ctl(epfd, EPOLL_CTL_DEL, connections[i].fd, NULL);
-            close(connections[i].fd);
+            safe_close(connections[i].fd);
             connections[i].fd = -1;
             g_active_conns--;
         }
@@ -771,8 +842,9 @@ cleanup:
  *
  * Returns 0 on clean shutdown.
  */
-int epoll_server_worker_run(int listen_fd) {
+int epoll_server_worker_run(int listen_fd, int worker_id) {
     g_worker_mode       = 1;
+    g_worker_id         = worker_id;
     g_master_listen_fd  = listen_fd;
     g_shutdown          = 0;
     g_worker_shutdown   = 0;

@@ -1,10 +1,316 @@
 <!doctype html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <title>MiniWeb</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MiniWeb Server v1.1</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card-bg: #fff;
+      --text: #333;
+      --muted: #666;
+      --border: #e0e0e0;
+      --accent: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --orange: #ea580c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ---- header ---- */
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      color: #fff;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { margin-top: 8px; opacity: 0.8; font-size: 1rem; }
+    .pid-badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* ---- layout ---- */
+    .container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+    /* ---- stat cards ---- */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat-card .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .stat-card .value.green { color: var(--green); }
+
+    /* ---- section ---- */
+    section { margin-bottom: 32px; }
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* ---- API list ---- */
+    .api-table { width: 100%; border-collapse: collapse; }
+    .api-table th, .api-table td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .api-table th { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .api-table td { font-size: 0.92rem; }
+    .api-table .method {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+    .method.get    { background: #dcfce7; color: var(--green); }
+    .method.post   { background: #dbeafe; color: var(--accent); }
+    .method.delete { background: #fee2e2; color: var(--red); }
+    .api-table a { color: var(--accent); text-decoration: none; }
+    .api-table a:hover { text-decoration: underline; }
+
+    /* ---- try-it cards ---- */
+    .try-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .try-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.15s;
+    }
+    .try-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .try-card h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .try-card p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .try-card a  {
+      display: inline-block;
+      padding: 6px 16px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .try-card a:hover { opacity: 0.9; }
+
+    /* ---- footer ---- */
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, MiniWeb</h1>
+
+<header>
+  <h1>&#9881; MiniWeb Server</h1>
+  <p>一个用 C 语言编写的轻量 HTTP/1.1 服务器 &middot; Nginx 风格 master-worker 架构</p>
+  <div class="pid-badge">Powered by epoll &middot; v1.1</div>
+</header>
+
+<div class="container">
+
+  <!-- ======== 状态卡片 ======== -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">HTTP 版本</div>
+      <div class="value">HTTP/1.1</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">进程模型</div>
+      <div class="value">Master + 2&#215;Worker</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">I/O 模型</div>
+      <div class="value">epoll</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">状态</div>
+      <div class="value green">&#9679; Running</div>
+    </div>
+  </div>
+
+  <!-- ======== 试试看 ======== -->
+  <section>
+    <h2>&#128269; 快速体验</h2>
+    <div class="try-row">
+      <div class="try-card">
+        <h3>Hello 端点</h3>
+        <p>最简单的文本响应</p>
+        <a href="/hello" target="_blank">GET /hello</a>
+      </div>
+      <div class="try-card">
+        <h3>用户列表</h3>
+        <p>BST 中序遍历全部 100K 用户</p>
+        <a href="/users" target="_blank">GET /users</a>
+      </div>
+      <div class="try-card">
+        <h3>查找用户</h3>
+        <p>在 10 万用户中查找 "baianai"</p>
+        <a href="/users/baianai" target="_blank">GET /users/baianai</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== 完整 API 列表 ======== -->
+  <section>
+    <h2>&#128295; API 端点一览</h2>
+    <table class="api-table">
+      <thead>
+        <tr>
+          <th>方法</th>
+          <th>路径</th>
+          <th>说明</th>
+          <th>Content-Type</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/</code> 或 <code>/index.html</code></td>
+          <td>本页面（静态 HTML 文件服务）</td>
+          <td>text/html</td>
+          <td><a href="/" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/hello</code></td>
+          <td>Hello 响应</td>
+          <td>text/plain</td>
+          <td><a href="/hello" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/sleep/&lt;ms&gt;</code></td>
+          <td>延迟响应（测试并发隔离，上限 5000ms）</td>
+          <td>text/plain</td>
+          <td><a href="/sleep/1000" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/help</code></td>
+          <td>API 帮助文本</td>
+          <td>text/plain</td>
+          <td><a href="/help" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/users</code></td>
+          <td>列出全部用户（BST 中序遍历）</td>
+          <td>text/plain</td>
+          <td><a href="/users" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/users/&lt;name&gt;</code></td>
+          <td>按名称查找用户（链表遍历）</td>
+          <td>text/plain</td>
+          <td><a href="/users/baianai" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/user/&lt;name&gt;</code></td>
+          <td>按名称查找用户（简化路径）</td>
+          <td>text/plain</td>
+          <td><a href="/user/baianai" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/users/find-index/&lt;name&gt;</code></td>
+          <td>通过 RBT 索引查找用户</td>
+          <td>text/plain</td>
+          <td><a href="/users/find-index/baianai" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/users/compare/&lt;name&gt;</code></td>
+          <td>链表 vs RBT 搜索性能对比</td>
+          <td>text/plain</td>
+          <td><a href="/users/compare/baianai" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method post">POST</span></td>
+          <td><code>/users</code></td>
+          <td>添加用户（body: CSV 行）</td>
+          <td>text/plain</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="method delete">DELETE</span></td>
+          <td><code>/users/&lt;name&gt;</code></td>
+          <td>删除用户</td>
+          <td>text/plain</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ======== 技术栈 ======== -->
+  <section>
+    <h2>&#128218; 技术栈</h2>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="label">语言</div>
+        <div class="value" style="font-size:1.2rem">C (gcc)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">I/O 多路复用</div>
+        <div class="value" style="font-size:1.2rem">epoll</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">并发模型</div>
+        <div class="value" style="font-size:1.2rem">pre-fork</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">用户索引</div>
+        <div class="value" style="font-size:1.2rem">Red-Black Tree</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  MiniWeb Server v1.1 &middot; Built with C + epoll + love
+</footer>
+
 </body>
 </html>

@@ -357,6 +357,12 @@ void user_store_print_index(void) {
     bst_inorder(&user_bst);
 }
 
+/* v1.1: format users to buffer (safe, no pipe deadlock) */
+void user_store_format_users(char *buf, int buf_size, int *total, int *offset) {
+    if (!buf || buf_size <= 0 || !total || !offset) return;
+    bst_format_users(&user_bst, buf, buf_size, total, offset);
+}
+
 ListNode *user_store_find_index(const char *name) {
     return bst_find(&user_bst, name);
 }

@@ -10,10 +10,19 @@ make
 ```
 
 编译生成可执行文件：
+
 - `mini_web_server` — 主程序（TCP 服务器模式 / 多进程 fork 模式 / 多线程 thread 模式 / 线程池 pool 模式 / select I/O 多路复用模式 / epoll I/O 多路复用模式 / master-worker 模式 / 用户管理 / 多线程请求处理）
 - `EpollServer` — 独立 epoll TCP/HTTP 服务器二进制文件（v0.10 新增）
 - `epoll_client` — TCP 测试客户端（v0.10 新增）
 - `request_worker` — 请求处理工作进程（遗留独立二进制，由旧版 fork+exec 模式使用）
+
+## 版本历史
+
+| 版本    | 主要特性                                                                          |
+| ----- | ----------------------------------------------------------------------------- |
+| v0.10 | epoll I/O 多路复用、select 模式、线程池动态扩缩、HTTP keep-alive                              |
+| v1.0  | Nginx 风格 master-worker 多进程架构、优雅关闭（SIGTERM → SIGKILL）、日志合并（fd + path + status） |
+| v1.1  | HTTP/1.1 协议增强：请求头解析、动态 Content-Type、静态文件服务、Keep-Alive 协商、`ab` 基准测试            |
 
 ## 使用方法
 
@@ -40,7 +49,7 @@ Nginx 风格多进程架构，详见下方 [Master-Worker 模式 (v1.0)](#master
 ./mini_web_server fork
 ```
 
-父进程监听 127.0.0.1:8080，每个客户端连接 fork 一个子进程处理，支持并发请求。处理 MAX_CLIENTS (5) 个连接后自动退出。
+父进程监听 127.0.0.1:8080，每个客户端连接 fork 一个子进程处理，支持并发请求。处理 MAX\_CLIENTS (5) 个连接后自动退出。
 
 使用 curl 测试：
 
@@ -66,7 +75,7 @@ curl -X POST -d "name,password,20000101,010-11111111,13900000000,test@test.com" 
 curl -X DELETE http://127.0.0.1:8080/users/name
 ```
 
-**注意:** conf/server.conf 模式下服务器循环处理连接，按 Ctrl-C 退出。fork 模式与 pool 模式下处理 MAX_CLIENTS 个连接后自动退出。如需再次测试，需重新启动服务器。
+**注意:** conf/server.conf 模式下服务器循环处理连接，按 Ctrl-C 退出。fork 模式与 pool 模式下处理 MAX\_CLIENTS 个连接后自动退出。如需再次测试，需重新启动服务器。
 
 ### 线程池 Pool 模式 (多线程 TCP/HTTP 服务器)
 
@@ -74,7 +83,7 @@ curl -X DELETE http://127.0.0.1:8080/users/name
 ./mini_web_server pool
 ```
 
-主线程读取 `conf/server.conf`，创建监听套接字（127.0.0.1:8080），启动固定大小的线程池（4 个 worker 线程），循环 `accept()` 客户端连接，将每个 `client_fd` 作为任务加入工作队列。worker 线程从队列中取出任务，调用已有的 HTTP 请求处理函数，处理完毕后关闭 `client_fd`。队列为空时 worker 线程阻塞等待。达到 MAX_CLIENTS (5) 后停止接收新连接，关闭线程池，唤醒所有 worker，等待所有线程退出。
+主线程读取 `conf/server.conf`，创建监听套接字（127.0.0.1:8080），启动固定大小的线程池（4 个 worker 线程），循环 `accept()` 客户端连接，将每个 `client_fd` 作为任务加入工作队列。worker 线程从队列中取出任务，调用已有的 HTTP 请求处理函数，处理完毕后关闭 `client_fd`。队列为空时 worker 线程阻塞等待。达到 MAX\_CLIENTS (5) 后停止接收新连接，关闭线程池，唤醒所有 worker，等待所有线程退出。
 
 **架构:**
 
@@ -94,24 +103,24 @@ curl -X DELETE http://127.0.0.1:8080/users/name
   └─ 输出统计（accepted / processed / errors）→ 退出
 ```
 
-**同步机制（POSIX 风格，参考 os_course）:**
+**同步机制（POSIX 风格，参考 os\_course）:**
 
-| 原语 | 用途 |
-|---|---|
-| `pthread_mutex_t mutex` | 互斥量保护任务队列和 shutdown 标志 |
-| `pthread_cond_t not_empty` | 条件变量，队列非空时唤醒等待的 worker 线程 |
-| `pthread_cond_t not_full` | 条件变量，队列有空间时唤醒等待的 enqueuer |
-| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数） |
+| 原语                            | 用途                        |
+| ----------------------------- | ------------------------- |
+| `pthread_mutex_t mutex`       | 互斥量保护任务队列和 shutdown 标志    |
+| `pthread_cond_t not_empty`    | 条件变量，队列非空时唤醒等待的 worker 线程 |
+| `pthread_cond_t not_full`     | 条件变量，队列有空间时唤醒等待的 enqueuer |
+| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数）     |
 
 **对比 fork 模式和 pool 模式:**
 
-| 特性 | fork 模式 | pool 模式 |
-|---|---|---|
-| 并发模型 | 多进程（fork per connection） | 多线程（固定线程池） |
-| 资源开销 | 每个连接一个进程 | 固定数量线程复用 |
-| 地址空间 | 独立地址空间 | 共享地址空间 |
-| 同步原语 | SIGCHLD + waitpid | mutex + condition variable |
-| 适用场景 | 隔离性要求高 | 高并发低延迟 |
+| 特性   | fork 模式                  | pool 模式                    |
+| ---- | ------------------------ | -------------------------- |
+| 并发模型 | 多进程（fork per connection） | 多线程（固定线程池）                 |
+| 资源开销 | 每个连接一个进程                 | 固定数量线程复用                   |
+| 地址空间 | 独立地址空间                   | 共享地址空间                     |
+| 同步原语 | SIGCHLD + waitpid        | mutex + condition variable |
+| 适用场景 | 隔离性要求高                   | 高并发低延迟                     |
 
 使用 curl 测试：
 
@@ -155,6 +164,7 @@ curl http://127.0.0.1:8080/hello
 ```
 
 **特性:**
+
 - 单线程，无锁，无上下文切换开销
 - 通过 `fd_set` 同时管理多达 1024 个连接
 - 请求处理是同步的——慢请求会阻塞事件循环（适合快速响应的场景）
@@ -171,7 +181,7 @@ curl http://127.0.0.1:8080/hello
 # 例如: ./EpollServer 127.0.0.3 8888
 ```
 
-单线程事件驱动服务器，使用 `epoll_create1()` / `epoll_ctl()` / `epoll_wait()` 系统调用同时监听多个文件描述符（监听 socket + 所有客户端连接）。当某个 fd 就绪时，epoll_wait 以 O(1) 复杂度返回就绪事件列表（无需像 select 那样 O(n) 扫描全部 fd）。
+单线程事件驱动服务器，使用 `epoll_create1()` / `epoll_ctl()` / `epoll_wait()` 系统调用同时监听多个文件描述符（监听 socket + 所有客户端连接）。当某个 fd 就绪时，epoll\_wait 以 O(1) 复杂度返回就绪事件列表（无需像 select 那样 O(n) 扫描全部 fd）。
 
 **架构:**
 
@@ -193,7 +203,8 @@ curl http://127.0.0.1:8080/hello
 ```
 
 **特性:**
-- 使用 epoll 替代 select，无 FD_SETSIZE 限制（系统级 fd 限制）
+
+- 使用 epoll 替代 select，无 FD\_SETSIZE 限制（系统级 fd 限制）
 - O(1) 就绪事件交付，高并发下性能远优于 select 的 O(n) 扫描
 - Level-Triggered (LT) 模式，与 select 语义一致，简单可靠
 - 实时 stdout 输出：连接数、客户端地址、客户端类型、请求消息
@@ -264,23 +275,23 @@ master-worker 模式借鉴 Nginx 的进程模型：一个 master 进程管理多
 
 **Master 进程职责:**
 
-| 职责 | 说明 |
-|---|---|
-| 读取配置 | 解析 `worker_processes`、`worker_shutdown_timeout_ms` 等 v1.0 新增字段 |
-| 加载用户数据 | 调用 `user_store_load_csv()` 一次，fork 后各 worker 通过 CoW 继承 |
+| 职责          | 说明                                                              |
+| ----------- | --------------------------------------------------------------- |
+| 读取配置        | 解析 `worker_processes`、`worker_shutdown_timeout_ms` 等 v1.0 新增字段  |
+| 加载用户数据      | 调用 `user_store_load_csv()` 一次，fork 后各 worker 通过 CoW 继承          |
 | 创建监听 socket | `socket()` → `setsockopt(SO_REUSEADDR)` → `bind()` → `listen()` |
-| fork worker | 根据 `worker_processes` 配置 fork 若干个子进程 |
-| 接收完成通知 | SIGCHLD 处理器通过 `waitpid(WNOHANG)` 回收已退出的 worker |
-| 处理退出信号 | SIGINT 触发优雅关闭流程 |
-| waitpid 回收 | 先 SIGTERM 超时等待，再 SIGKILL 确保所有 worker 被回收 |
+| fork worker | 根据 `worker_processes` 配置 fork 若干个子进程                            |
+| 接收完成通知      | SIGCHLD 处理器通过 `waitpid(WNOHANG)` 回收已退出的 worker                  |
+| 处理退出信号      | SIGINT 触发优雅关闭流程                                                 |
+| waitpid 回收  | 先 SIGTERM 超时等待，再 SIGKILL 确保所有 worker 被回收                        |
 
 **Worker 进程职责:**
 
-| 职责 | 说明 |
-|---|---|
-| 独立 epoll 事件循环 | 每个 worker 在继承的监听 fd 上独立运行 epoll_wait / accept |
-| 处理 HTTP 请求 | 复用 v0.10 的 epoll HTTP 请求解析与路由逻辑 |
-| 优雅关闭 | 收到 SIGTERM 后设置 `g_shutdown` 标志，完成当前请求后退出 |
+| 职责            | 说明                                             |
+| ------------- | ---------------------------------------------- |
+| 独立 epoll 事件循环 | 每个 worker 在继承的监听 fd 上独立运行 epoll\_wait / accept |
+| 处理 HTTP 请求    | 复用 v0.10 的 epoll HTTP 请求解析与路由逻辑                |
+| 优雅关闭          | 收到 SIGTERM 后设置 `g_shutdown` 标志，完成当前请求后退出       |
 
 **信号处理流程:**
 
@@ -363,20 +374,86 @@ kill -INT $(pgrep -f "mini_web_server master" | head -1)
 #   [Master] shutdown complete
 ```
 
+### HTTP/1.1 协议增强 (v1.1)
+
+#### 请求解析
+
+v1.1 新增 `src/http_parser.c` 模块，实现完整的 HTTP/1.1 请求解析：
+
+| 组件  | 解析内容                                                            |
+| --- | --------------------------------------------------------------- |
+| 请求行 | `METHOD`、`URI`、`HTTP/1.x` 版本号                                   |
+| 请求头 | 逐行解析 `Name: Value` 键值对，自动提取 `Content-Length`、`Connection` 等关键头部 |
+| 请求体 | 基于 `Content-Length` 头部精确读取 body 字节数                             |
+
+#### 响应头增强
+
+| 头部             | v1.0            | v1.1                                             |
+| -------------- | --------------- | ------------------------------------------------ |
+| `Content-Type` | 始终 `text/plain` | 动态映射：`.html` → `text/html`，`.css` → `text/css` 等 |
+| `Server`       | 无               | `MiniWeb/1.1`                                    |
+| `Date`         | 无               | HTTP-date 格式（GMT）                                |
+| `Connection`   | 始终 `keep-alive` | 根据 HTTP 版本和客户端头部动态协商                             |
+
+#### 静态文件服务
+
+- `GET /` → 返回 `www/index.html`（Content-Type: `text/html; charset=utf-8`）
+- `GET /*.html` → 返回 `www/` 下对应文件
+- 浏览器访问 `http://127.0.0.1:8080/` 可看到渲染后的 HTML 页面
+
+#### Keep-Alive 协商
+
+v1.1 遵循 HTTP/1.1 规范进行连接协商：
+
+| 客户端请求                                 | 服务器响应                    | 连接行为  |
+| ------------------------------------- | ------------------------ | ----- |
+| `HTTP/1.0`，无 `Connection` 头           | `Connection: close`      | 请求后关闭 |
+| `HTTP/1.0` + `Connection: keep-alive` | `Connection: keep-alive` | 保持连接  |
+| `HTTP/1.1`（默认）                        | `Connection: keep-alive` | 保持连接  |
+| `HTTP/1.1` + `Connection: close`      | `Connection: close`      | 请求后关闭 |
+
+空闲超时 5s，单连接最多 100 个请求后自动关闭。
+
+#### Keep-Alive 性能对比
+
+使用 Apache Bench 对比开启/关闭 keep-alive 的性能：
+
+```bash
+bash tests/bench_keepalive.sh
+```
+
+| 指标      | Keep-Alive ON   | Keep-Alive OFF | 提升       |
+| ------- | --------------- | -------------- | -------- |
+| 吞吐量     | **2,543 req/s** | 764 req/s      | **3.3x** |
+| 平均延迟    | **19.7ms**      | 65.4ms         | **3.3x** |
+| P100 延迟 | **451ms**       | 769ms          | **1.7x** |
+| 失败请求    | 0               | 0              | —        |
+| Keep-Alive 复用 | **10,000**  | —              | 100%     |
+
+测试命令：
+
+```bash
+# Keep-Alive OFF: ab 发 HTTP/1.0 请求，每次新建 TCP 连接
+ab -c 50 -n 10000 http://127.0.0.1:8080/hello
+
+# Keep-Alive ON: ab -k 发 HTTP/1.0 + Connection: Keep-Alive，复用 TCP 连接
+ab -k -c 50 -n 10000 http://127.0.0.1:8080/hello
+```
+
 **对比五种并发模式:**
 
-| 特性 | fork 模式 | pool 模式 | select 模式 | epoll 模式 | master-worker 模式 |
-|---|---|---|---|---|---|
-| 版本 | v0.7 | v0.8 | v0.9 | v0.10 | v1.0 |
-| 并发模型 | 多进程 (fork) | 线程池 (2→8) | 单线程 I/O 复用 | 单线程 I/O 复用 | 多进程 epoll (pre-fork) |
-| I/O 机制 | 阻塞 accept | 阻塞 accept | select() | epoll_wait() | epoll_wait() × N worker |
-| fd 上限 | 系统限制 | 系统限制 | FD_SETSIZE (1024) | 系统限制 | 系统限制 × worker 数 |
-| 事件复杂度 | — | — | O(n) 扫描 | O(1) 就绪交付 | O(1) 就绪交付 |
-| 每连接开销 | 高（独立进程） | 中（共享线程） | 低（事件驱动） | 低（事件驱动） | 低（事件驱动 + 进程级隔离） |
-| 内存占用 | 独立地址空间 | 共享地址空间 | 单一地址空间 | 单一地址空间 | 共享监听 socket + CoW |
-| 慢请求影响 | 进程隔离 | 其他 worker 不受影响 | 阻塞整个事件循环 | 阻塞整个事件循环 | 阻塞单个 worker |
-| 进程管理 | SIGCHLD | — | — | — | Master 管理生命周期 |
-| 适用场景 | 隔离性要求高 | 通用高并发 | 中等并发短连接 | 高并发海量连接 | 生产环境多核利用 |
+| 特性     | fork 模式    | pool 模式        | select 模式          | epoll 模式      | master-worker 模式         |
+| ------ | ---------- | -------------- | ------------------ | ------------- | ------------------------ |
+| 版本     | v0.7       | v0.8           | v0.9               | v0.10         | v1.0                     |
+| 并发模型   | 多进程 (fork) | 线程池 (2→8)      | 单线程 I/O 复用         | 单线程 I/O 复用    | 多进程 epoll (pre-fork)     |
+| I/O 机制 | 阻塞 accept  | 阻塞 accept      | select()           | epoll\_wait() | epoll\_wait() × N worker |
+| fd 上限  | 系统限制       | 系统限制           | FD\_SETSIZE (1024) | 系统限制          | 系统限制 × worker 数          |
+| 事件复杂度  | —          | —              | O(n) 扫描            | O(1) 就绪交付     | O(1) 就绪交付                |
+| 每连接开销  | 高（独立进程）    | 中（共享线程）        | 低（事件驱动）            | 低（事件驱动）       | 低（事件驱动 + 进程级隔离）          |
+| 内存占用   | 独立地址空间     | 共享地址空间         | 单一地址空间             | 单一地址空间        | 共享监听 socket + CoW        |
+| 慢请求影响  | 进程隔离       | 其他 worker 不受影响 | 阻塞整个事件循环           | 阻塞整个事件循环      | 阻塞单个 worker              |
+| 进程管理   | SIGCHLD    | —              | —                  | —             | Master 管理生命周期            |
+| 适用场景   | 隔离性要求高     | 通用高并发          | 中等并发短连接            | 高并发海量连接       | 生产环境多核利用                 |
 
 使用 curl 测试：
 
@@ -432,15 +509,15 @@ mini_web_server process (主线程)
   └─ pthread_join × 4 → 统计结果
 ```
 
-**同步机制（POSIX 风格，参考 os_course）:**
+**同步机制（POSIX 风格，参考 os\_course）:**
 
-| 原语 | 用途 |
-|---|---|
-| `sem_t tasks_sem` | 计数信号量，计数可用任务数，worker 通过 `sem_wait` 等待 |
-| `pthread_mutex_t queue_mutex` | 互斥量保护请求队列 |
-| `pthread_cond_t queue_cond` | 条件变量，队列非空时唤醒等待的 worker 线程 |
-| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数） |
-| `pthread_mutex_t log_mutex` | 互斥量保护日志写入 |
+| 原语                            | 用途                                    |
+| ----------------------------- | ------------------------------------- |
+| `sem_t tasks_sem`             | 计数信号量，计数可用任务数，worker 通过 `sem_wait` 等待 |
+| `pthread_mutex_t queue_mutex` | 互斥量保护请求队列                             |
+| `pthread_cond_t queue_cond`   | 条件变量，队列非空时唤醒等待的 worker 线程             |
+| `pthread_mutex_t stats_mutex` | 互斥量保护统计数据（已处理数 / 错误数）                 |
+| `pthread_mutex_t log_mutex`   | 互斥量保护日志写入                             |
 
 ### 多进程 TCP 服务器 (fork 模式)
 
@@ -450,7 +527,7 @@ mini_web_server process (主线程)
 
 父进程创建监听套接字（127.0.0.1:8080），对每个客户端连接 `fork()` 一个子进程处理 HTTP 请求，处理完成后子进程退出。父进程通过 `SIGCHLD` 信号 + `waitpid(WNOHANG)` 回收僵尸进程，避免资源泄漏。
 
-服务器在处理 MAX_CLIENTS (5) 个连接后自动退出，适用于自动化测试。
+服务器在处理 MAX\_CLIENTS (5) 个连接后自动退出，适用于自动化测试。
 
 **架构:**
 
@@ -471,11 +548,11 @@ mini_web_server process (主线程)
 
 **信号处理:**
 
-| 信号 | 处理方式 | 说明 |
-|---|---|---|
-| SIGCHLD | `waitpid(-1, &stat, WNOHANG)` 循环回收 | 避免僵尸进程 |
-| SIGPIPE | `SIG_IGN` 忽略 | 客户端异常断开时 send() 返回 EPIPE，不会终止进程 |
-| EINTR | `accept()` 返回 -1 且 errno==EINTR 时 continue | 被 SIGCHLD 打断后继续等待连接 |
+| 信号      | 处理方式                                       | 说明                              |
+| ------- | ------------------------------------------ | ------------------------------- |
+| SIGCHLD | `waitpid(-1, &stat, WNOHANG)` 循环回收         | 避免僵尸进程                          |
+| SIGPIPE | `SIG_IGN` 忽略                               | 客户端异常断开时 send() 返回 EPIPE，不会终止进程 |
+| EINTR   | `accept()` 返回 -1 且 errno==EINTR 时 continue | 被 SIGCHLD 打断后继续等待连接             |
 
 **并发测试:**
 
@@ -506,33 +583,33 @@ worker_processes=2               # v1.0: worker 进程数
 worker_shutdown_timeout_ms=3000  # v1.0: worker 关闭超时
 ```
 
-| 字段 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `host` | string | 必填 | 监听地址 |
-| `port` | int | 必填 | 监听端口 |
-| `www_root` | string | 必填 | Web 文档根目录 |
-| `user_file` | string | 必填 | CSV 用户数据库路径 |
-| `log` | string | 必填 | 日志文件路径 |
-| `server_name` | string | "" | 服务器名称 |
-| `max_connections` | int | 256 | 最大并发连接数 |
-| `max_request_bytes` | int | 4096 | 最大请求体字节数 |
-| `worker_processes` | int | 2 | **v1.0**: worker 进程数 |
-| `worker_shutdown_timeout_ms` | int | 3000 | **v1.0**: worker 优雅关闭超时 |
+| 字段                           | 类型     | 默认值  | 说明                      |
+| ---------------------------- | ------ | ---- | ----------------------- |
+| `host`                       | string | 必填   | 监听地址                    |
+| `port`                       | int    | 必填   | 监听端口                    |
+| `www_root`                   | string | 必填   | Web 文档根目录               |
+| `user_file`                  | string | 必填   | CSV 用户数据库路径             |
+| `log`                        | string | 必填   | 日志文件路径                  |
+| `server_name`                | string | ""   | 服务器名称                   |
+| `max_connections`            | int    | 256  | 最大并发连接数                 |
+| `max_request_bytes`          | int    | 4096 | 最大请求体字节数                |
+| `worker_processes`           | int    | 2    | **v1.0**: worker 进程数    |
+| `worker_shutdown_timeout_ms` | int    | 3000 | **v1.0**: worker 优雅关闭超时 |
 
 `requests/` 目录下的 `.req` 文件，文件名与输出文件对应（`<name>.req` → `outputs/<name>.out`）。
 
 ### 支持的命令一览
 
-| 请求文件内容 | 对应 CLI 命令 | 说明 |
-|---|---|---|
-| `GET /hello` | — | 返回 HTTP hello 响应 |
-| `GET /user/<name>` | `findusr <name>` | 在链表中查找用户 |
-| `GET /users` | `users index` | 列出全部用户（BST 中序遍历） |
-| `GET /users/find-index/<name>` | `users find-index <name>` | 通过 BST 索引查找用户 |
-| `GET /users/compare/<name>` | `users compare_search_method <name>` | 对比链表 vs BST 搜索性能 |
-| `GET /users/compare-verbose/<name>` | `users compare_search_method --verbose <name>` | 详细对比（含遍历路径） |
-| `POST /users` | `addusr <csv>` | 添加用户，CSV 数据放在第二行 |
-| `DELETE /users/<name>` | `delusr <name>` | 删除用户 |
+| 请求文件内容                              | 对应 CLI 命令                                      | 说明               |
+| ----------------------------------- | ---------------------------------------------- | ---------------- |
+| `GET /hello`                        | —                                              | 返回 HTTP hello 响应 |
+| `GET /user/<name>`                  | `findusr <name>`                               | 在链表中查找用户         |
+| `GET /users`                        | `users index`                                  | 列出全部用户（BST 中序遍历） |
+| `GET /users/find-index/<name>`      | `users find-index <name>`                      | 通过 BST 索引查找用户    |
+| `GET /users/compare/<name>`         | `users compare_search_method <name>`           | 对比链表 vs BST 搜索性能 |
+| `GET /users/compare-verbose/<name>` | `users compare_search_method --verbose <name>` | 详细对比（含遍历路径）      |
+| `POST /users`                       | `addusr <csv>`                                 | 添加用户，CSV 数据放在第二行 |
+| `DELETE /users/<name>`              | `delusr <name>`                                | 删除用户             |
 
 ### GET 请求示例
 
@@ -605,7 +682,7 @@ Server: MiniWeb
 
 ### v1.0 日志增强
 
-**多进程写入:** 日志文件以追加模式 (`fopen("a")`) 打开，每次 `fprintf` + `fflush` 对应一次原子 `write()` 系统调用（O_APPEND 保证）。worker 在 fork 后调用 `log_reopen()` 获取独立的 `FILE*` 和 stdio 缓冲区，避免跨进程缓冲污染。
+**多进程写入:** 日志文件以追加模式 (`fopen("a")`) 打开，每次 `fprintf` + `fflush` 对应一次原子 `write()` 系统调用（O\_APPEND 保证）。worker 在 fork 后调用 `log_reopen()` 获取独立的 `FILE*` 和 stdio 缓冲区，避免跨进程缓冲污染。
 
 **请求日志合并:** 每条 HTTP 请求仅产生一条日志记录，同时包含 PID、连接 fd、请求路径和状态码：
 
@@ -661,3 +738,4 @@ bash tests/test_day09.sh   # select I/O 多路复用服务器（select 事件驱
 bash tests/test_day10.sh   # epoll I/O 多路复用服务器（epoll 事件驱动，v0.10）
 bash tests/test_day11.sh   # master-worker 多进程服务器（Nginx 风格架构，v1.0）
 ```
+

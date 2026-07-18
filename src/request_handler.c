@@ -1,5 +1,6 @@
 #include "../include/request_handler.h"
 #include "../include/http_response.h"
+#include "../include/http_parser.h"
 #include "../include/log.h"
 #include "../include/user_store.h"
 #include <arpa/inet.h>
@@ -347,7 +348,8 @@ int request_handler_process(const request_t *req, char *output, int size) {
 
 /*
  * Build a complete HTTP/1.1 response.
- * Returns 0 on success, -1 if the buffer is too small.
+ * v1.1: keeps backward-compatible 5-arg signature.
+ * For enhanced responses (dynamic Content-Type), use http_build_response() directly.
  */
 static int build_http_response(char *output, int size,
                                 int status, const char *status_text,
@@ -364,7 +366,7 @@ static int build_http_response(char *output, int size,
         "HTTP/1.1 %d %s\r\n"
         "Content-Type: text/plain\r\n"
         "Content-Length: %d\r\n"
-        "Connection: keep-alive\r\n"
+        "Connection: Keep-Alive\r\n"
         "\r\n"
         "%s",
         status, status_text, body_len, body);
@@ -404,7 +406,7 @@ static int format_user_info(const ListNode *user, char *buf, int size) {
  *  proper HTTP/1.1 response with status codes.
  * ================================================================ */
 int request_handler_process_http(const request_t *req, char *output, int size) {
-    char body[8192];
+    char body[16384];
     int status;
     const char *status_text;
 
@@ -413,6 +415,22 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
     }
 
     memset(body, 0, sizeof(body));
+
+    /* ---- GET / (v1.1: serve www/index.html with text/html Content-Type) ---- */
+    if (strcmp(req->method, "GET") == 0 &&
+        (strcmp(req->path, "/") == 0)) {
+        const char *ct;
+        int file_len = http_serve_file("www", "/", body, sizeof(body), &ct);
+        if (file_len > 0) {
+            /* Use enhanced response builder with dynamic Content-Type */
+            if (http_build_response(200, "OK", ct, body, file_len,
+                                     req->keep_alive > 0 ? req->keep_alive : 1,
+                                     output, size) < 0)
+                return -1;
+            return 0;
+        }
+        /* file not found — fall through to 404 */
+    }
 
     /* ---- GET /hello ---- */
     if (strcmp(req->method, "GET") == 0 &&
@@ -468,13 +486,21 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         return build_http_response(output, size, 200, "OK", help_text);
     }
 
-    /* ---- GET /users (list all, BST inorder) ---- */
+    /* ---- GET /users (list first 500, BST inorder — safe against pipe deadlock) ---- */
     if (strcmp(req->method, "GET") == 0 &&
         strcmp(req->path, "/users") == 0) {
-        if (capture_stdout(do_print_index_wrapper, body, sizeof(body)) < 0) {
-            return build_http_response(output, size, 500,
-                                       "INTERNAL SERVER ERROR",
-                                       "500 Internal Server Error\n");
+        /*
+         * v1.1 fix: capture_stdout() uses a pipe with limited kernel buffer (~64KB).
+         * 100K users = ~4MB output → pipe fills up → fflush blocks → deadlock.
+         * We generate the output directly into the body buffer with a safe limit.
+         */
+        int total = 0;
+        int offset = 0;
+        user_store_format_users(body, sizeof(body) - 1, &total, &offset);
+        if (offset >= sizeof(body) - 200) {
+            /* buffer near full — append truncation note */
+            offset += snprintf(body + offset, sizeof(body) - offset,
+                     "\n... (showing first entries out of %d total users)\n", total);
         }
         return build_http_response(output, size, 200, "OK", body);
     }

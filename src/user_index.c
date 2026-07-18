@@ -806,6 +806,64 @@ void bst_inorder(BST *tree) {
     bst_inorder_node(tree->root, &tree->nil);
 }
 
+/*
+ * v1.1: inorder traversal writing to a buffer (safe for large datasets).
+ * The traversal is done iteratively via the existing recursive helper,
+ * but writes to buf instead of stdout.
+ */
+typedef struct {
+    char *buf;
+    int   buf_size;
+    int  *total;
+    int  *offset;
+} bst_format_ctx;
+
+static void bst_format_node(BSTnode *node, BSTnode *nil, bst_format_ctx *ctx) {
+    char line[256];
+    int n;
+
+    if (node == nil) return;
+    if (!ctx || !ctx->buf || ctx->buf_size <= 0) return;
+
+    bst_format_node(node->left, nil, ctx);
+
+    /* check if buffer has room */
+    if (*(ctx->offset) >= ctx->buf_size - 256) return;
+
+    (*(ctx->total))++;
+
+    n = snprintf(line, sizeof(line), "%s,%s,%s,%s,%s,%s\n",
+                 node->user->data.name,
+                 node->user->data.password,
+                 node->user->data.birthdate,
+                 node->user->data.phone,
+                 node->user->data.mobile,
+                 node->user->data.email);
+
+    if (*(ctx->offset) + n < ctx->buf_size) {
+        memcpy(ctx->buf + *(ctx->offset), line, n);
+        *(ctx->offset) += n;
+    }
+
+    bst_format_node(node->right, nil, ctx);
+}
+
+void bst_format_users(BST *tree, char *buf, int buf_size, int *total, int *offset) {
+    bst_format_ctx ctx;
+
+    if (!tree || !buf || buf_size <= 0) return;
+
+    *total  = 0;
+    *offset = 0;
+
+    ctx.buf      = buf;
+    ctx.buf_size = buf_size;
+    ctx.total    = total;
+    ctx.offset   = offset;
+
+    bst_format_node(tree->root, &tree->nil, &ctx);
+}
+
 /* ================================================================
  * bst_free (post-order — free tree nodes, not the nil sentinel)
  * ================================================================ */
