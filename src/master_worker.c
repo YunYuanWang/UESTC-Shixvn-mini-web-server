@@ -224,7 +224,6 @@ int master_worker_run(const server_config_t *config) {
     int listen_fd;
     int num_workers;
     int timeout_ms;
-    const char *log_path;
     int ret = -1;
 
     num_workers = config->worker_processes;
@@ -233,8 +232,6 @@ int master_worker_run(const server_config_t *config) {
 
     timeout_ms = config->worker_shutdown_timeout_ms;
     if (timeout_ms <= 0) timeout_ms = 3000;
-
-    log_path = config->log_path;
 
     /* ---- Phase 1: install master signal handlers ---- */
     {
@@ -303,7 +300,7 @@ int master_worker_run(const server_config_t *config) {
              * This avoids cross-process buffer corruption from the
              * inherited FILE* state.  O_APPEND ensures atomic appends.
              */
-            log_reopen(log_path);
+            log_reopen();
 
             /*
              * Reset signal handlers inherited from master.

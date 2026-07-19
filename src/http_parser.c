@@ -408,7 +408,7 @@ int http_build_response(int status, const char *status_text,
 
     header_len = snprintf(output, (size_t)size,
         "HTTP/1.1 %d %s\r\n"
-        "Server: MiniWeb/1.1\r\n"
+        "Server: MiniWeb/1.2\r\n"
         "Date: %s\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %d\r\n"
@@ -431,4 +431,98 @@ int http_build_response(int status, const char *status_text,
     }
 
     return header_len + body_len;
+}
+
+/* ================================================================
+ *  http_build_redirect — 301/302 redirect response
+ * ================================================================ */
+int http_build_redirect(int status, const char *location,
+                        char *output, int size) {
+    char body[512];
+    int body_len;
+
+    if (!output || size <= 0 || !location) return -1;
+
+    body_len = snprintf(body, sizeof(body),
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head><title>%d Redirect</title></head>\n"
+        "<body>\n"
+        "<h1>%d Moved</h1>\n"
+        "<p>The document has moved to <a href=\"%s\">%s</a>.</p>\n"
+        "</body>\n"
+        "</html>\n",
+        status, status, location, location);
+
+    /* Build response with Location header */
+    {
+        char date_buf[64];
+        time_t now = time(NULL);
+        struct tm tm_info;
+        int header_len;
+
+        gmtime_r(&now, &tm_info);
+        strftime(date_buf, sizeof(date_buf),
+                 "%a, %d %b %Y %H:%M:%S GMT", &tm_info);
+
+        header_len = snprintf(output, (size_t)size,
+            "HTTP/1.1 %d %s\r\n"
+            "Server: MiniWeb/1.2\r\n"
+            "Date: %s\r\n"
+            "Content-Type: text/html; charset=utf-8\r\n"
+            "Content-Length: %d\r\n"
+            "Location: %s\r\n"
+            "Connection: Keep-Alive\r\n"
+            "\r\n",
+            status,
+            status == 301 ? "MOVED PERMANENTLY" : "FOUND",
+            date_buf,
+            body_len,
+            location);
+
+        if (header_len < 0 || header_len >= size) return -1;
+
+        {
+            int remaining = size - header_len;
+            if (body_len >= remaining) return -1;
+            memcpy(output + header_len, body, body_len);
+            output[header_len + body_len] = '\0';
+        }
+
+        return header_len + body_len;
+    }
+}
+
+/* ================================================================
+ *  http_is_safe_path — check for directory traversal attacks
+ * ================================================================ */
+int http_is_safe_path(const char *uri) {
+    if (!uri) return 0;
+
+    /* reject paths containing ".." (directory traversal) */
+    if (strstr(uri, "..")) return 0;
+
+    /* reject paths with null bytes */
+    {
+        const char *p;
+        for (p = uri; *p; p++) {
+            if (*p == '\0') return 0;
+        }
+    }
+
+    /* reject paths starting with ~ or containing backslashes */
+    if (uri[0] == '~') return 0;
+    if (strchr(uri, '\\')) return 0;
+
+    return 1;
+}
+
+/* ================================================================
+ *  http_get_file_mtime — get file last modification time
+ * ================================================================ */
+time_t http_get_file_mtime(const char *filepath) {
+    struct stat st;
+    if (!filepath) return 0;
+    if (stat(filepath, &st) != 0) return 0;
+    return st.st_mtime;
 }

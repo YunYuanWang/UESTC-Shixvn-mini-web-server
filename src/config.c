@@ -93,6 +93,14 @@ int load_config(const char *path, server_config_t *config) {
             copy_text(config->data_path, sizeof(config->data_path), value);
         } else if (strcmp(key, "log") == 0) {
             copy_text(config->log_path, sizeof(config->log_path), value);
+        } else if (strcmp(key, "system_log") == 0) {
+            copy_text(config->system_log, sizeof(config->system_log), value);
+        } else if (strcmp(key, "access_log") == 0) {
+            copy_text(config->access_log, sizeof(config->access_log), value);
+        } else if (strcmp(key, "log_max_lines") == 0) {
+            config->log_max_lines = atoi(value);
+        } else if (strcmp(key, "log_max_roll_files") == 0) {
+            config->log_max_roll_files = atoi(value);
         } else if (strcmp(key, "max_connections") == 0) {
             config->max_connections = atoi(value);
         } else if (strcmp(key, "max_request_bytes") == 0) {
@@ -141,6 +149,21 @@ int load_config(const char *path, server_config_t *config) {
     if (config->worker_shutdown_timeout_ms <= 0) {
         config->worker_shutdown_timeout_ms = 3000;
     }
+    if (config->log_max_lines <= 0) {
+        config->log_max_lines = 10000;
+    }
+    if (config->log_max_roll_files <= 0) {
+        config->log_max_roll_files = 5;
+    }
+    /* v1.2: if system_log/access_log not set, fall back to log_path */
+    if (config->system_log[0] == '\0') {
+        copy_text(config->system_log, sizeof(config->system_log),
+                  config->log_path);
+    }
+    if (config->access_log[0] == '\0') {
+        copy_text(config->access_log, sizeof(config->access_log),
+                  config->log_path);
+    }
 
     if (config->host[0] == '\0' ||
         config->port <= 0 ||
@@ -164,4 +187,8 @@ void print_config(const server_config_t *config) {
     printf("max_request_bytes=%d\n", config->max_request_bytes);
     printf("worker_processes=%d\n", config->worker_processes);
     printf("worker_shutdown_timeout_ms=%d\n", config->worker_shutdown_timeout_ms);
+    printf("system_log=%s\n", config->system_log);
+    printf("access_log=%s\n", config->access_log);
+    printf("log_max_lines=%d\n", config->log_max_lines);
+    printf("log_max_roll_files=%d\n", config->log_max_roll_files);
 }

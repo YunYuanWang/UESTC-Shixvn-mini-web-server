@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>架构介绍 — Mini Web Server</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="img/logo.png" alt="Logo" class="logo" width="167" height="56">
+            <h1>服务器架构介绍</h1>
+            <p class="subtitle">深入理解 Epoll + Master-Worker 高性能架构</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="index.html">首页</a>
+            <a href="about.html" class="active">架构介绍</a>
+            <a href="article.html">实验心得</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <article>
+                <h2>整体架构</h2>
+                <p>Mini Web Server 采用 <strong>Master-Worker 多进程模型</strong>，参考了 Nginx 的设计理念：</p>
+
+                <pre><code>                    ┌─────────────┐
+                    │   Master    │
+                    │   Process   │
+                    └──────┬──────┘
+                           │ fork()
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+        ┌──────────┐ ┌──────────┐ ┌──────────┐
+        │ Worker-1 │ │ Worker-2 │ │ Worker-N │
+        │ (Epoll)  │ │ (Epoll)  │ │ (Epoll)  │
+        └──────────┘ └──────────┘ └──────────┘
+              │            │            │
+              └────────────┼────────────┘
+                           ▼
+                    ┌─────────────┐
+                    │  Listen FD  │
+                    │  (SO_REUSEADDR) │
+                    └─────────────┘</code></pre>
+
+                <h2>Epoll 事件驱动</h2>
+                <p>每个 Worker 进程运行独立的 epoll 事件循环：</p>
+                <ul>
+                    <li><strong>epoll_create1(0)</strong>: 创建 epoll 实例</li>
+                    <li><strong>epoll_ctl(ADD)</strong>: 注册 listen_fd 和 client_fd 到 epoll</li>
+                    <li><strong>epoll_wait()</strong>: 阻塞等待事件，O(1) 事件分发</li>
+                    <li><strong>Level-Triggered (LT)</strong>: 默认水平触发模式，与 select 语义兼容</li>
+                </ul>
+
+                <h2>Keep-Alive 连接管理</h2>
+                <p>每个连接维护状态：fd、IP、port、recv_buf、request_count、last_activity。超时空闲连接（5秒）自动清理，最大请求数限制（10,000次）防止资源泄漏。</p>
+
+                <h2>优雅关闭</h2>
+                <p>safe_close() 机制：shutdown(SHUT_RDWR) → drain → close()，避免 TCP RST 包。Master 发送 SIGTERM → Worker 优雅退出 → 超时后 SIGKILL 强制终止。</p>
+
+                <h2>多模式支持</h2>
+                <table>
+                    <tr><th>模式</th><th>命令</th><th>说明</th></tr>
+                    <tr><td>Master-Worker</td><td><code>./mini_web_server master conf/server.conf</code></td><td>Nginx 风格多进程</td></tr>
+                    <tr><td>Epoll</td><td><code>./mini_web_server epoll 0.0.0.0 8080</code></td><td>单进程 epoll</td></tr>
+                    <tr><td>Select</td><td><code>./mini_web_server select 0.0.0.0 8080</code></td><td>select 多路复用</td></tr>
+                    <tr><td>Fork</td><td><code>./mini_web_server fork 0.0.0.0 8080</code></td><td>每连接 fork</td></tr>
+                    <tr><td>Thread</td><td><code>./mini_web_server thread 0.0.0.0 8080</code></td><td>每连接线程</td></tr>
+                    <tr><td>Pool</td><td><code>./mini_web_server pool 0.0.0.0 8080</code></td><td>线程池</td></tr>
+                </table>
+            </article>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <img src="img/avatar.gif" alt="Avatar" class="avatar" width="32" height="32">
+            <p>Mini Web Server v1.2 &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

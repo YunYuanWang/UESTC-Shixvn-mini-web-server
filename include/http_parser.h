@@ -1,6 +1,8 @@
 #ifndef HTTP_PARSER_H
 #define HTTP_PARSER_H
 
+#include <time.h>
+
 /*
  * http_parser.h — HTTP/1.x request parser (v1.1)
  *
@@ -79,5 +81,15 @@ int http_build_response(int status, const char *status_text,
                         const char *body, int body_len,
                         int keep_alive,
                         char *output, int size);
+
+/* ---- redirect response (301/302) ---- */
+int http_build_redirect(int status, const char *location,
+                        char *output, int size);
+
+/* ---- security: check path for directory traversal ---- */
+int http_is_safe_path(const char *uri);
+
+/* ---- get file last modified time (for 304 Not Modified) ---- */
+time_t http_get_file_mtime(const char *filepath);
 
 #endif /* HTTP_PARSER_H */

@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     out_path = argv[5];
 
     /* ---- initialize log ---- */
-    if (log_init(log_path) != 0) {
+    if (log_init_single(log_path) != 0) {
         fprintf(stderr, "[Worker] failed to open log file: %s\n", log_path);
         exit(EXIT_FAILURE);
     }

@@ -8,7 +8,11 @@ typedef struct {
     char www_root[128];          /* v0.10: renamed from root */
     char user_file[128];         /* v0.10: renamed from data_path */
     char log_path[128];
-    int  max_connections;        /* v0.10: max concurrent connections */
+    char system_log[128];          /* v1.2: separate system log path */
+    char access_log[128];          /* v1.2: separate access log path */
+    int  log_max_lines;            /* v1.2: rotate after N lines (0=no rotation) */
+    int  log_max_roll_files;       /* v1.2: keep N old log files */
+    int  max_connections;          /* v0.10: max concurrent connections */
     int  max_request_bytes;      /* v0.10: max request body size in bytes */
 
     /* v1.0: master-worker process model */

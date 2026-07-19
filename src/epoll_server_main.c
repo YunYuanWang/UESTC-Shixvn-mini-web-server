@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (log_init("logs/server.log") != 0) {
+    if (log_init_single("logs/server.log") != 0) {
         fprintf(stderr, "failed to open log file\n");
         return 1;
     }

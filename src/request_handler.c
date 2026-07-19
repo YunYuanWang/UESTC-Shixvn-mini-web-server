@@ -374,7 +374,7 @@ static int build_http_response(char *output, int size,
     if (written < 0 || written >= size) {
         return -1;
     }
-    return 0;
+    return written;
 }
 
 /*
@@ -405,8 +405,20 @@ static int format_user_info(const ListNode *user, char *buf, int size) {
  *  Same routing logic as request_handler_process, but outputs a
  *  proper HTTP/1.1 response with status codes.
  * ================================================================ */
+/* ================================================================
+ *  Static file response
+ * ================================================================ */
+
+/*
+ * v1.2: Large static buffer for file serving (in .bss, not stack).
+ * Supports images up to 5MB (logo 1.3MB, banner 640KB, avatar 4.1MB).
+ */
+#define BLOG_BODY_MAX (5 * 1024 * 1024)
+static char g_body_buf[BLOG_BODY_MAX];
+
 int request_handler_process_http(const request_t *req, char *output, int size) {
-    char body[16384];
+    char *body = g_body_buf;
+    int body_size = BLOG_BODY_MAX;
     int status;
     const char *status_text;
 
@@ -414,22 +426,112 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         return -1;
     }
 
-    memset(body, 0, sizeof(body));
+    memset(body, 0, body_size);
 
     /* ---- GET / (v1.1: serve www/index.html with text/html Content-Type) ---- */
     if (strcmp(req->method, "GET") == 0 &&
         (strcmp(req->path, "/") == 0)) {
         const char *ct;
-        int file_len = http_serve_file("www", "/", body, sizeof(body), &ct);
+        int file_len = http_serve_file("www", "/", body, body_size, &ct);
         if (file_len > 0) {
             /* Use enhanced response builder with dynamic Content-Type */
-            if (http_build_response(200, "OK", ct, body, file_len,
+            return http_build_response(200, "OK", ct, body, file_len,
                                      req->keep_alive > 0 ? req->keep_alive : 1,
-                                     output, size) < 0)
-                return -1;
-            return 0;
+                                     output, size);
         }
         /* file not found — fall through to 404 */
+    }
+
+    /* ================================================================
+     *  GET /blog or /blog/* — serve blog static files (v1.2)
+     *
+     *  Status codes handled:
+     *    301 — /blog without trailing slash → redirect to /blog/
+     *    403 — path traversal attempt (.. in path)
+     *    404 — file not found
+     *    405 — method not allowed (non-GET/HEAD)
+     * ================================================================ */
+    if (strncmp(req->path, "/blog", 5) == 0) {
+
+        /* ---- 405 Method Not Allowed ---- */
+        if (strcmp(req->method, "GET") != 0 &&
+            strcmp(req->method, "HEAD") != 0) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html><head><title>405 Method Not Allowed</title></head>\n"
+                "<body><h1>405 Method Not Allowed</h1>\n"
+                "<p>The method %s is not allowed for %s.</p>\n"
+                "</body></html>\n",
+                req->method, req->path);
+            return http_build_response(405, "METHOD NOT ALLOWED",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        /* ---- 403 Forbidden: path traversal check ---- */
+        if (!http_is_safe_path(req->path)) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html><head><title>403 Forbidden</title></head>\n"
+                "<body><h1>403 Forbidden</h1>\n"
+                "<p>Access to this resource is forbidden.</p>\n"
+                "</body></html>\n");
+            return http_build_response(403, "FORBIDDEN",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        /* ---- 301: /blog → /blog/ ---- */
+        if (strcmp(req->path, "/blog") == 0) {
+            return http_build_redirect(301, "/blog/", output, size);
+        }
+
+        /* ---- Serve static file from blog/ directory ---- */
+        {
+            const char *ct;
+            int file_len;
+            const char *blog_path;
+
+            /* req->path starts with "/blog" — strip the "/blog" prefix
+             * to get the relative path within blog/ directory.
+             * "/blog/"       → ""   → index.html
+             * "/blog/css/style.css" → "/css/style.css"
+             */
+            blog_path = req->path + 5;  /* skip "/blog" */
+
+            file_len = http_serve_file("blog", blog_path,
+                                       body, body_size, &ct);
+            if (file_len > 0) {
+                /* ---- 304 Not Modified (if client sent If-Modified-Since) ---- */
+                /* (v1.2: basic 304 support — compare file mtime with request header) */
+                /*
+                 * For full 304 support we would need access to the HTTP request
+                 * headers.  As a minimal implementation, we always serve the file
+                 * with a 200.  Future versions can add full caching support.
+                 */
+
+                return http_build_response(200, "OK", ct, body, file_len,
+                                           req->keep_alive > 0 ? req->keep_alive : 1,
+                                           output, size);
+            }
+
+            /* ---- 404 Not Found ---- */
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html><head><title>404 Not Found</title></head>\n"
+                "<body><h1>404 Not Found</h1>\n"
+                "<p>The requested URL %s was not found on this server.</p>\n"
+                "<p><a href=\"/blog/\">Back to Blog Home</a></p>\n"
+                "</body></html>\n",
+                req->path);
+            return http_build_response(404, "NOT FOUND",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       req->keep_alive > 0 ? req->keep_alive : 1,
+                                       output, size);
+        }
     }
 
     /* ---- GET /hello ---- */
@@ -462,7 +564,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
 
         {
             char body[64];
-            snprintf(body, sizeof(body), "Slept %d ms\n", delay_ms);
+            snprintf(body, body_size, "Slept %d ms\n", delay_ms);
             return build_http_response(output, size, 200, "OK", body);
         }
     }
@@ -496,10 +598,10 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
          */
         int total = 0;
         int offset = 0;
-        user_store_format_users(body, sizeof(body) - 1, &total, &offset);
-        if (offset >= sizeof(body) - 200) {
+        user_store_format_users(body, body_size - 1, &total, &offset);
+        if (offset >= body_size - 200) {
             /* buffer near full — append truncation note */
-            offset += snprintf(body + offset, sizeof(body) - offset,
+            offset += snprintf(body + offset, body_size - offset,
                      "\n... (showing first entries out of %d total users)\n", total);
         }
         return build_http_response(output, size, 200, "OK", body);
@@ -512,12 +614,12 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         const char *name = req->path + 18;
         ListNode *user = user_store_find_index(name);
         if (user != NULL) {
-            if (format_user_info(user, body, sizeof(body)) < 0) {
+            if (format_user_info(user, body, body_size) < 0) {
                 return -1;
             }
             return build_http_response(output, size, 200, "OK", body);
         }
-        snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+        snprintf(body, body_size, "NOT_FOUND %s\n", name);
         return build_http_response(output, size, 404, "NOT FOUND", body);
     }
 
@@ -528,7 +630,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         const char *name = req->path + 23;
         g_compare_ctx.name = name;
         g_compare_ctx.verbose = 1;
-        if (capture_stdout(do_compare_search_wrapper, body, sizeof(body)) < 0) {
+        if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
             return build_http_response(output, size, 500,
                                        "INTERNAL SERVER ERROR",
                                        "500 Internal Server Error\n");
@@ -542,7 +644,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         const char *name = req->path + 15;
         g_compare_ctx.name = name;
         g_compare_ctx.verbose = 0;
-        if (capture_stdout(do_compare_search_wrapper, body, sizeof(body)) < 0) {
+        if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
             return build_http_response(output, size, 500,
                                        "INTERNAL SERVER ERROR",
                                        "500 Internal Server Error\n");
@@ -579,12 +681,12 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         {
             ListNode *user = user_store_find(name);
             if (user != NULL) {
-                if (format_user_info(user, body, sizeof(body)) < 0) {
+                if (format_user_info(user, body, body_size) < 0) {
                     return -1;
                 }
                 return build_http_response(output, size, 200, "OK", body);
             }
-            snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+            snprintf(body, body_size, "NOT_FOUND %s\n", name);
             return build_http_response(output, size, 404, "NOT FOUND", body);
         }
     }
@@ -600,12 +702,12 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
         {
             ListNode *user = user_store_find(name);
             if (user != NULL) {
-                if (format_user_info(user, body, sizeof(body)) < 0) {
+                if (format_user_info(user, body, body_size) < 0) {
                     return -1;
                 }
                 return build_http_response(output, size, 200, "OK", body);
             }
-            snprintf(body, sizeof(body), "NOT_FOUND %s\n", name);
+            snprintf(body, body_size, "NOT_FOUND %s\n", name);
             return build_http_response(output, size, 404, "NOT FOUND", body);
         }
     }
@@ -626,7 +728,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
     }
 
     /* ---- fallback: 404 ---- */
-    snprintf(body, sizeof(body), "404 Not Found: %s %s\n",
+    snprintf(body, body_size, "404 Not Found: %s %s\n",
              req->method, req->path);
     return build_http_response(output, size, 404, "NOT FOUND", body);
 }
@@ -636,7 +738,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
  * ================================================================ */
 
 #define RECV_BUF_SIZE 8192
-#define RESP_BUF_SIZE 16384
+#define RESP_BUF_SIZE (5 * 1024 * 1024 + 4096)  /* v1.2: 5MB + headers for images */
 
 /*
  * Parse the first line of an HTTP request into method and path.
@@ -721,7 +823,7 @@ int request_handler_handle_connection(int conn_fd) {
      * ================================================================ */
     while (request_count < MAX_KEEP_ALIVE_REQUESTS) {
         char recv_buf[RECV_BUF_SIZE];
-        char resp_buf[RESP_BUF_SIZE];
+        static char resp_buf[RESP_BUF_SIZE];  /* v1.2: .bss to avoid stack overflow */
 
         /* ---- read HTTP request ---- */
         n = recv(conn_fd, recv_buf, sizeof(recv_buf) - 1, 0);
@@ -811,43 +913,45 @@ int request_handler_handle_connection(int conn_fd) {
             }
 
             /* generate HTTP response */
-            if (request_handler_process_http(&req, resp_buf,
-                                              sizeof(resp_buf)) < 0) {
-                snprintf(msg, sizeof(msg),
-                         "%srequest_handler_process_http failed",
-                         worker_prefix());
-                log_error(msg);
-                snprintf(resp_buf, sizeof(resp_buf),
-                         "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
-                         "Content-Type: text/plain\r\n"
-                         "Content-Length: 25\r\n"
-                         "Connection: close\r\n"
-                         "\r\n"
-                         "500 Internal Server Error\n");
-            }
-
-            /* extract and log response status */
-            if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
-                resp_status = atoi(resp_buf + 9);
-                snprintf(msg, sizeof(msg),
-                         "%sresponse: %s %s -> %d",
-                         worker_prefix(), method, path, resp_status);
-            } else {
-                resp_status = 0;
-                snprintf(msg, sizeof(msg),
-                         "%sresponse: %s %s -> (unknown status)",
-                         worker_prefix(), method, path);
-            }
-            log_info(msg);
-
-            /* console output */
-            printf("%s %s -> %d\n", method, path, resp_status);
-
-            /* ---- send response ---- */
             {
-                ssize_t total = 0;
-                ssize_t remaining = (ssize_t)strlen(resp_buf);
-                const char *ptr = resp_buf;
+                int resp_len = request_handler_process_http(&req, resp_buf,
+                                              sizeof(resp_buf));
+                if (resp_len < 0) {
+                    snprintf(msg, sizeof(msg),
+                             "%srequest_handler_process_http failed",
+                             worker_prefix());
+                    log_error(msg);
+                    resp_len = snprintf(resp_buf, sizeof(resp_buf),
+                             "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
+                             "Content-Type: text/plain\r\n"
+                             "Content-Length: 25\r\n"
+                             "Connection: close\r\n"
+                             "\r\n"
+                             "500 Internal Server Error\n");
+                }
+
+                /* extract and log response status */
+                if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
+                    resp_status = atoi(resp_buf + 9);
+                    snprintf(msg, sizeof(msg),
+                             "%sresponse: %s %s -> %d",
+                             worker_prefix(), method, path, resp_status);
+                } else {
+                    resp_status = 0;
+                    snprintf(msg, sizeof(msg),
+                             "%sresponse: %s %s -> (unknown status)",
+                             worker_prefix(), method, path);
+                }
+                log_info(msg);
+
+                /* console output */
+                printf("%s %s -> %d\n", method, path, resp_status);
+
+                /* ---- send response (v1.2: use actual length for binary) ---- */
+                {
+                    ssize_t total = 0;
+                    ssize_t remaining = (ssize_t)resp_len;
+                    const char *ptr = resp_buf;
 
                 while (remaining > 0) {
                     ssize_t sent = send(conn_fd, ptr, (size_t)remaining, 0);
@@ -861,7 +965,8 @@ int request_handler_handle_connection(int conn_fd) {
                     ptr += sent;
                     remaining -= sent;
                 }
-            }
+            }  /* end send response block */
+            }  /* end generate HTTP response block (v1.2 resp_len scope) */
         }
 
         request_count++;

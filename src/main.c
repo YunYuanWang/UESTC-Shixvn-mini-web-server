@@ -351,18 +351,12 @@ int main(int argc, char *argv[]) {
 
     /* --- process mode (multi-process request handler) --- */
     if (argc == 2 && strcmp(argv[1], "process") == 0) {
-        if (log_init("logs/server.log") != 0) {
+        if (log_init("logs/system.log", "logs/access.log", 10000, 5) != 0) {
             printf("failed to open log file\n");
             return 1;
         }
 
-        log_info("========================================");
-        {
-            char buf[64];
-            snprintf(buf, sizeof(buf), "  Parent PID: %d", (int)getpid());
-            log_info(buf);
-        }
-        log_info("========================================");
+        log_infof("Parent PID: %d", (int)getpid());
 
         if (user_store_load_csv("data/users.csv") < 0) {
             printf("error: cannot open data/users.csv\n");
@@ -388,7 +382,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init("logs/server.log") != 0) {
+        if (log_init_single("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
         }
@@ -425,7 +419,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init("logs/server.log") != 0) {
+        if (log_init_single("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
         }
@@ -462,7 +456,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init("logs/server.log") != 0) {
+        if (log_init_single("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
         }
@@ -498,7 +492,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init("logs/server.log") != 0) {
+        if (log_init_single("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
         }
@@ -534,7 +528,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init("logs/server.log") != 0) {
+        if (log_init_single("logs/server.log") != 0) {
             printf("failed to open log file\n");
             return 1;
         }
@@ -570,14 +564,14 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        if (log_init(master_config.log_path) != 0) {
+        if (log_init(master_config.system_log, master_config.access_log,
+                     master_config.log_max_lines,
+                     master_config.log_max_roll_files) != 0) {
             printf("failed to open log file\n");
             return 1;
         }
 
-        log_info("========================================");
-        log_info("  Master-Worker Mode (epoll I/O multiplexing)");
-        log_info("========================================");
+        log_info("Master-Worker Mode (epoll I/O multiplexing) v1.2");
 
         if (user_store_load_csv(master_config.user_file) < 0) {
             printf("error: cannot open '%s'\n", master_config.user_file);
@@ -607,12 +601,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (log_init(config.log_path) != 0) {
+    if (log_init(config.system_log, config.access_log,
+                 config.log_max_lines, config.log_max_roll_files) != 0) {
         printf("failed to open log file\n");
         return 1;
     }
 
-    log_info("server config loaded");
+    log_info("server config loaded (v1.2)");
     log_info("document root loaded");
 
     if (user_store_load_csv(config.data_path) < 0) {

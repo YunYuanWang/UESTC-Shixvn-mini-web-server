@@ -42,7 +42,7 @@
 
 /* ---- per-connection state ---- */
 #define RECV_BUF_SIZE  8192
-#define RESP_BUF_SIZE 16384
+#define RESP_BUF_SIZE (5 * 1024 * 1024 + 4096)  /* v1.2: 5MB + headers for images */
 
 typedef struct {
     int    fd;               /* -1 = slot free */
@@ -469,7 +469,7 @@ int epoll_server_run(const char *host, int port) {
                  * Process the HTTP request.
                  */
                 {
-                    char resp_buf[RESP_BUF_SIZE];
+                    static char resp_buf[RESP_BUF_SIZE];  /* v1.2: .bss to avoid stack overflow */
                     char *method = NULL;
                     char *path   = NULL;
                     char line_copy[512];
@@ -672,54 +672,56 @@ int epoll_server_run(const char *host, int port) {
                     }
 
                     /* ---- generate HTTP/1.1 response ---- */
-                    if (request_handler_process_http(&req, resp_buf,
-                                                     sizeof(resp_buf))
-                        < 0) {
-                        snprintf(resp_buf, sizeof(resp_buf),
-                                 "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
-                                 "Content-Type: text/plain\r\n"
-                                 "Content-Length: 25\r\n"
-                                 "Connection: close\r\n"
-                                 "\r\n"
-                                 "500 Internal Server Error\n");
-                    }
+                    {
+                        int resp_len = request_handler_process_http(&req, resp_buf,
+                                                     sizeof(resp_buf));
+                        if (resp_len < 0) {
+                            resp_len = snprintf(resp_buf, sizeof(resp_buf),
+                                     "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
+                                     "Content-Type: text/plain\r\n"
+                                     "Content-Length: 25\r\n"
+                                     "Connection: close\r\n"
+                                     "\r\n"
+                                     "500 Internal Server Error\n");
+                        }
 
-                    /* extract and log response status (v1.1: Worker-N prefix in worker mode) */
-                    if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
-                        resp_status = atoi(resp_buf + 9);
-                        if (g_worker_mode) {
-                            snprintf(msg, sizeof(msg),
-                                     "[Worker-%d] fd=%d %s %s -> %d",
-                                     g_worker_id, ready_fd, method, path, resp_status);
+                        /* extract and log response status (v1.1: Worker-N prefix in worker mode) */
+                        if (strncmp(resp_buf, "HTTP/1.1 ", 9) == 0) {
+                            resp_status = atoi(resp_buf + 9);
+                            if (g_worker_mode) {
+                                snprintf(msg, sizeof(msg),
+                                         "[Worker-%d] fd=%d %s %s -> %d",
+                                         g_worker_id, ready_fd, method, path, resp_status);
+                            } else {
+                                snprintf(msg, sizeof(msg),
+                                         "[EpollServer] fd=%d %s %s -> %d",
+                                         ready_fd, method, path, resp_status);
+                            }
                         } else {
+                            resp_status = 0;
                             snprintf(msg, sizeof(msg),
-                                     "[EpollServer] fd=%d %s %s -> %d",
-                                     ready_fd, method, path, resp_status);
+                                     "[EpollServer] fd=%d %s %s -> (unknown status)",
+                                     ready_fd, method, path);
                         }
-                    } else {
-                        resp_status = 0;
-                        snprintf(msg, sizeof(msg),
-                                 "[EpollServer] fd=%d %s %s -> (unknown status)",
-                                 ready_fd, method, path);
-                    }
-                    log_info(msg);
+                        log_info(msg);
 
-                    printf("[client %s:%d] %s %s -> %d\n",
-                           conn->client_ip, conn->client_port,
-                           method, path, resp_status);
-                    fflush(stdout);
+                        printf("[client %s:%d] %s %s -> %d\n",
+                               conn->client_ip, conn->client_port,
+                               method, path, resp_status);
+                        fflush(stdout);
 
-                    /* ---- v1.1: patch Connection header if HTTP wants close ---- */
-                    if (!req.keep_alive) {
-                        char *ka = strstr(resp_buf, "Connection: Keep-Alive");
-                        if (ka) {
-                            /* "Keep-Alive" is 10 chars → pad "close" to same length */
-                            memcpy(ka + 12, "close     ", 10);
+                        /* ---- v1.1: patch Connection header if HTTP wants close ---- */
+                        if (!req.keep_alive) {
+                            char *ka = strstr(resp_buf, "Connection: Keep-Alive");
+                            if (ka) {
+                                /* "Keep-Alive" is 10 chars → pad "close" to same length */
+                                memcpy(ka + 12, "close     ", 10);
+                            }
                         }
-                    }
 
-                    /* ---- send response ---- */
-                    sent = send(ready_fd, resp_buf, strlen(resp_buf), 0);
+                        /* ---- send response (v1.2: use actual length for binary) ---- */
+                        sent = send(ready_fd, resp_buf, (size_t)resp_len, 0);
+                    }
                     if (sent < 0) {
                         snprintf(msg, sizeof(msg),
                                  "[EpollServer] send() failed on fd=%d",
@@ -737,6 +739,10 @@ int epoll_server_run(const char *host, int port) {
                         print_conn_count();
                         continue;
                     }
+
+                    /* ---- v1.2: write access log ---- */
+                    log_access(conn->client_ip, method, path,
+                               resp_status, (int)sent);
 
                     /* ---- keep-alive: check limits + HTTP version negotiation ---- */
                     conn->request_count++;

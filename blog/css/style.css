@@ -1,0 +1,306 @@
+/* ================================================================
+ * Mini Web Server Blog — Style Sheet
+ * ================================================================ */
+
+/* ---- Reset & Base ---- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ---- Header ---- */
+header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff;
+    padding: 50px 0;
+    text-align: center;
+}
+
+header .logo {
+    width: 167px;
+    height: auto;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+header h1 {
+    font-size: 2.2em;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+header .subtitle {
+    font-size: 1.1em;
+    opacity: 0.85;
+    color: #a8d8ea;
+}
+
+/* ---- Navigation ---- */
+nav {
+    background: #fff;
+    border-bottom: 2px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav .container {
+    display: flex;
+    gap: 0;
+}
+
+nav a {
+    display: inline-block;
+    padding: 16px 24px;
+    color: #555;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+nav a:hover {
+    color: #0f3460;
+    background: #f8f9fa;
+    border-bottom-color: #0f3460;
+}
+
+nav a.active {
+    color: #0f3460;
+    border-bottom-color: #0f3460;
+    font-weight: 600;
+}
+
+/* ---- Main Content ---- */
+main {
+    padding: 40px 0;
+}
+
+main h2 {
+    font-size: 1.6em;
+    color: #1a1a2e;
+    margin: 30px 0 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+main h3 {
+    font-size: 1.2em;
+    color: #333;
+    margin: 20px 0 10px;
+}
+
+main p {
+    margin-bottom: 16px;
+    color: #555;
+}
+
+main ul, main ol {
+    margin: 0 0 16px 24px;
+    color: #555;
+}
+
+main li {
+    margin-bottom: 6px;
+}
+
+/* ---- Hero Section ---- */
+.hero {
+    text-align: center;
+    padding: 20px 0 40px;
+}
+
+/* ---- Bottom Banner ---- */
+.banner-bottom {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+}
+
+.banner-bottom .banner-full {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ---- Feature Grid ---- */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin: 20px 0 30px;
+}
+
+.feature-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid #0f3460;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.feature-card h3 {
+    margin-top: 0;
+    color: #0f3460;
+}
+
+/* ---- Tables ---- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+thead {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ---- Code Blocks ---- */
+pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 20px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin: 16px 0;
+}
+
+code {
+    background: #e8e8e8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+    font-size: 0.9em;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* ---- Links ---- */
+a {
+    color: #0f3460;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Footer ---- */
+footer {
+    background: #1a1a2e;
+    color: #aaa;
+    text-align: center;
+    padding: 24px 0;
+    margin-top: 40px;
+}
+
+footer .avatar {
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.6em;
+    }
+
+    nav .container {
+        flex-wrap: wrap;
+    }
+
+    nav a {
+        padding: 12px 16px;
+        font-size: 0.95em;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    main {
+        padding: 20px 0;
+    }
+
+    pre {
+        font-size: 0.8em;
+        padding: 12px;
+    }
+}
+
+/* ---- Article styles ---- */
+article h2:first-child {
+    margin-top: 0;
+}
+
+.lesson {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 10px 16px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.95em;
+    color: #856404;
+}
+
+.lesson::before {
+    content: "💡 ";
+}
+
+.summary-table {
+    margin: 24px 0;
+}
+
+.summary-table h4 {
+    margin-bottom: 8px;
+    color: #1a1a2e;
+}
