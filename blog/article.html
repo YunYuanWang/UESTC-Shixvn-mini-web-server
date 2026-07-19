@@ -12,7 +12,7 @@
         <div class="container">
             <img src="img/logo.png" alt="Logo" class="logo" width="167" height="56">
             <h1>调试心得</h1>
-            <p class="subtitle">从 ~1 QPS 到 2,543 req/s — 那些年踩过的坑</p>
+            <p class="subtitle">从 ~1 QPS 到 2,543 req/s — 这些天踩过的坑</p>
         </div>
     </header>
 
@@ -21,6 +21,7 @@
             <a href="index.html">首页</a>
             <a href="about.html">架构介绍</a>
             <a href="article.html" class="active">实验心得</a>
+            <a href="resume.html">关于作者</a>
         </div>
     </nav>
 
@@ -64,12 +65,12 @@
                 <!-- ============================================================ -->
                 <!-- v0.10 调试 -->
                 <!-- ============================================================ -->
-                <h2>v0.10：wrk2 吞吐量仅 ~1 QPS</h2>
+                <h2>v0.10：wrk 吞吐量仅 ~1 QPS</h2>
 
                 <h3>问题现象</h3>
-                <p>使用 wrk2 对三种模式（fork/pool/select）压测时吞吐量仅 <strong>~1 QPS</strong>，而 ab 和 http_bench.py 可达 18,000+ QPS。</p>
+                <p>使用 wrk 对三种模式（fork/pool/select）压测时吞吐量仅 <strong>~1 QPS</strong>，而 ab 和 http_bench.py 可达 18,000+ QPS。</p>
 
-                <pre><code>wrk2 -t2 -c10 -d10s -R1000 --latency http://127.0.0.1:8080/hello
+                <pre><code>wrk -t2 -c10 -d10s -R1000 --latency http://127.0.0.1:8080/hello
 # → Requests/sec: ~1   ← 异常！
 
 ab -c 10 -t 10 http://127.0.0.1:8080/hello
@@ -77,15 +78,15 @@ ab -c 10 -t 10 http://127.0.0.1:8080/hello
 
                 <h3>定位过程</h3>
                 <ol>
-                    <li>阅读 wrk2 文档，确认 wrk2 默认使用 <strong>HTTP/1.1 keep-alive</strong> 连接复用：一个 TCP 连接上连续发送多个请求。</li>
+                    <li>阅读 wrk 文档，确认 wrk 默认使用 <strong>HTTP/1.1 keep-alive</strong> 连接复用：一个 TCP 连接上连续发送多个请求。</li>
                     <li>追踪三种服务器模式的连接处理流程——全部是"一个连接 = 一个请求 + 一个响应"后立即关闭。</li>
                     <li><code>request_handler_handle_connection()</code> 内部只做一次 recv → 处理 → send 后直接 return，没有任何循环。</li>
                     <li>服务器响应虽标明 HTTP/1.1，但未包含 <code>Connection: keep-alive</code> 头，且响应发送完成后立即关闭连接。</li>
-                    <li>wrk2 在第一次请求后尝试复用连接发送第二个请求，但服务器已关闭连接 → RST 或超时 → 必须重新 TCP 握手 → QPS 降到 ~1。</li>
+                    <li>wrk 在第一次请求后尝试复用连接发送第二个请求，但服务器已关闭连接 → RST 或超时 → 必须重新 TCP 握手 → QPS 降到 ~1。</li>
                 </ol>
 
                 <h3>根因</h3>
-                <p>服务器的连接处理模型是 <strong>HTTP/1.0 短连接</strong>（一个连接一个请求），wrk2 的工作模型是 <strong>HTTP/1.1 keep-alive</strong>（连接复用）。两种模型冲突导致 wrk2 大部分时间在等待重建连接。</p>
+                <p>服务器的连接处理模型是 <strong>HTTP/1.0 短连接</strong>（一个连接一个请求），wrk 的工作模型是 <strong>HTTP/1.1 keep-alive</strong>（连接复用）。两种模型冲突导致 wrk 大部分时间在等待重建连接。</p>
 
                 <h3>修改内容（共 3 个文件）</h3>
                 <table>
@@ -96,7 +97,7 @@ ab -c 10 -t 10 http://127.0.0.1:8080/hello
                 </table>
 
                 <h3>验证结果</h3>
-                <p>修复后 wrk2 吞吐量从 ~1 QPS 提升到 ~166 QPS（<strong>165× 提升</strong>），三种模式均通过。</p>
+                <p>修复后 wrk 吞吐量从 ~1 QPS 提升到 ~166 QPS（<strong>165× 提升</strong>），三种模式均通过。</p>
 
                 <!-- ============================================================ -->
                 <!-- v1.1 调试 -->
@@ -148,7 +149,7 @@ ab -c 10 -t 10 http://127.0.0.1:8080/hello
                 <h2>经验总结</h2>
 
                 <ol>
-                    <li><strong>HTTP 头值大小写不敏感是规范要求</strong>，但现实中的工具（如 AB）不一定遵守。服务器应兼容所有大小写变体——不要只测 curl，也要测 ab 和 wrk2。</li>
+                    <li><strong>HTTP 头值大小写不敏感是规范要求</strong>，但现实中的工具（如 AB）不一定遵守。服务器应兼容所有大小写变体——不要只测 curl，也要测 ab 和 wrk。</li>
                     <li><strong>AB 的 -k 标志发送的是 HTTP/1.0 + Connection: Keep-Alive</strong>，而非 HTTP/1.1。设计 keep-alive 协商逻辑时必须考虑 HTTP/1.0 显式 keep-alive 的情况。</li>
                     <li><strong>服务器主动关闭 keep-alive 连接时必须用 shutdown() + drain + close() 三步走</strong>，否则客户端预发送的数据会导致 RST 而非正常挥手。Benchmark 工具的 Connection reset by peer 错误几乎总是因为这个。</li>
                     <li><strong>"长连接"在中文中可指"请求处理时间长"或"HTTP keep-alive 连接复用"</strong>，二者是完全不同的概念，需在文档中明确区分。</li>

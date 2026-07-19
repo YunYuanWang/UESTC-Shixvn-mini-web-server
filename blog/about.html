@@ -12,7 +12,7 @@
         <div class="container">
             <img src="img/logo.png" alt="Logo" class="logo" width="167" height="56">
             <h1>服务器架构介绍</h1>
-            <p class="subtitle">深入理解 Epoll + Master-Worker 高性能架构</p>
+            <p class="subtitle">从 v0.4 到 v1.2 — 一个 C 语言 Web 服务器的演进之路</p>
         </div>
     </header>
 
@@ -21,59 +21,184 @@
             <a href="index.html">首页</a>
             <a href="about.html" class="active">架构介绍</a>
             <a href="article.html">实验心得</a>
+            <a href="resume.html">关于作者</a>
         </div>
     </nav>
 
     <main>
         <div class="container">
             <article>
-                <h2>整体架构</h2>
-                <p>Mini Web Server 采用 <strong>Master-Worker 多进程模型</strong>，参考了 Nginx 的设计理念：</p>
 
-                <pre><code>                    ┌─────────────┐
-                    │   Master    │
-                    │   Process   │
-                    └──────┬──────┘
-                           │ fork()
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ Worker-1 │ │ Worker-2 │ │ Worker-N │
-        │ (Epoll)  │ │ (Epoll)  │ │ (Epoll)  │
-        └──────────┘ └──────────┘ └──────────┘
-              │            │            │
-              └────────────┼────────────┘
-                           ▼
-                    ┌─────────────┐
-                    │  Listen FD  │
-                    │  (SO_REUSEADDR) │
-                    └─────────────┘</code></pre>
+                <!-- ============================================================ -->
+                <!-- 演进路线 -->
+                <!-- ============================================================ -->
+                <h2>演进路线</h2>
 
-                <h2>Epoll 事件驱动</h2>
-                <p>每个 Worker 进程运行独立的 epoll 事件循环：</p>
+                <table>
+                    <thead><tr><th>阶段</th><th>版本</th><th>核心能力</th><th>关键文件</th></tr></thead>
+                    <tbody>
+                        <tr><td>基础框架</td><td>v0.4~0.6</td><td>请求解析、用户 CRUD、TCP 服务器</td><td>request_handler.c, user_store.c, tcp_server.c</td></tr>
+                        <tr><td>并发模型</td><td>v0.7~0.9</td><td>Fork/Thread/Pool/Select 四种并发模式</td><td>tcp_fork_server.c, thread_pool.c, select_server.c</td></tr>
+                        <tr><td>高性能 I/O</td><td>v0.10</td><td>Epoll 事件驱动 + Keep-Alive 初版</td><td>epoll_server.c</td></tr>
+                        <tr><td>生产架构</td><td>v1.0</td><td>Master-Worker 多进程 + 优雅关闭</td><td>master_worker.c</td></tr>
+                        <tr><td>协议完善</td><td>v1.1</td><td>HTTP/1.1 头部解析、动态 MIME、静态文件服务</td><td>http_parser.c</td></tr>
+                        <tr><td>站点与运维</td><td>v1.2</td><td>Blog 网站、分离日志、日志滚动、状态码完整处理</td><td>log.c, blog/</td></tr>
+                    </tbody>
+                </table>
+
+                <!-- ============================================================ -->
+                <!-- 整体架构 -->
+                <!-- ============================================================ -->
+                <h2>整体架构（v1.2 Master-Worker 模式）</h2>
+
+                <pre><code>                    ┌──────────────────────────────────┐
+                    │            conf/server.conf         │
+                    │  host, port, worker_processes, ...  │
+                    └──────────────┬───────────────────┘
+                                   │ load_config()
+                    ┌──────────────▼───────────────────┐
+                    │           Master Process          │
+                    │  ┌─────────────────────────────┐  │
+                    │  │ socket() → bind() → listen() │  │
+                    │  │ user_store_load_csv()        │  │
+                    │  │ fork() × worker_processes    │  │
+                    │  │ SIGINT → graceful shutdown   │  │
+                    │  └─────────────────────────────┘  │
+                    └──────┬──────────┬──────────┬──────┘
+                           │ fork()   │ fork()   │
+                    ┌──────▼───┐ ┌───▼──────┐ ┌▼──────────┐
+                    │ Worker-1 │ │ Worker-2 │ │ Worker-N   │
+                    │ log_reopen()         │ │ ...        │
+                    │ epoll event loop     │ │            │
+                    │ accept → recv → 解析  │ │            │
+                    │ → 路由 → send → log  │ │            │
+                    │ SIGTERM → safe_close │ │            │
+                    └──────────┘ └──────────┘ └────────────┘</code></pre>
+
+                <h3>Master 进程职责</h3>
                 <ul>
-                    <li><strong>epoll_create1(0)</strong>: 创建 epoll 实例</li>
-                    <li><strong>epoll_ctl(ADD)</strong>: 注册 listen_fd 和 client_fd 到 epoll</li>
-                    <li><strong>epoll_wait()</strong>: 阻塞等待事件，O(1) 事件分发</li>
-                    <li><strong>Level-Triggered (LT)</strong>: 默认水平触发模式，与 select 语义兼容</li>
+                    <li><strong>配置加载</strong>：解析 <code>conf/server.conf</code>，读取 host/port/worker 数量等</li>
+                    <li><strong>数据加载</strong>：调用 <code>user_store_load_csv()</code> 一次，fork 后各 Worker 通过 CoW 共享</li>
+                    <li><strong>监听 Socket</strong>：<code>socket() → setsockopt(SO_REUSEADDR) → bind() → listen()</code></li>
+                    <li><strong>Worker 管理</strong>：fork N 个子进程，记录 PID</li>
+                    <li><strong>信号处理</strong>：SIGINT 触发优雅关闭，SIGCHLD 回收已退出 Worker</li>
+                    <li><strong>优雅关闭</strong>：关闭 listen socket → SIGTERM 通知 Worker → waitpid 超时等待 → SIGKILL 兜底</li>
                 </ul>
 
-                <h2>Keep-Alive 连接管理</h2>
-                <p>每个连接维护状态：fd、IP、port、recv_buf、request_count、last_activity。超时空闲连接（5秒）自动清理，最大请求数限制（10,000次）防止资源泄漏。</p>
+                <h3>Worker 进程职责</h3>
+                <ul>
+                    <li><strong>独立 Epoll 事件循环</strong>：每个 Worker 在继承的 listen_fd 上独立运行 epoll_wait/accept</li>
+                    <li><strong>HTTP 请求处理</strong>：recv → 解析请求行/头/体 → 路由分发 → 构建响应 → send</li>
+                    <li><strong>Keep-Alive 管理</strong>：HTTP 版本协商 + Connection 头检测 + 空闲超时 + 最大请求限制</li>
+                    <li><strong>独立日志</strong>：fork 后调用 <code>log_reopen()</code> 获取独立 FILE*，O_APPEND 保证原子写入</li>
+                    <li><strong>优雅退出</strong>：收到 SIGTERM 后设 g_shutdown 标志，完成当前请求后 _exit(0)</li>
+                </ul>
 
-                <h2>优雅关闭</h2>
-                <p>safe_close() 机制：shutdown(SHUT_RDWR) → drain → close()，避免 TCP RST 包。Master 发送 SIGTERM → Worker 优雅退出 → 超时后 SIGKILL 强制终止。</p>
+                <!-- ============================================================ -->
+                <!-- Epoll 事件循环 -->
+                <!-- ============================================================ -->
+                <h2>Epoll 事件驱动核心</h2>
 
-                <h2>多模式支持</h2>
-                <table>
-                    <tr><th>模式</th><th>命令</th><th>说明</th></tr>
-                    <tr><td>Master-Worker</td><td><code>./mini_web_server master conf/server.conf</code></td><td>Nginx 风格多进程</td></tr>
-                    <tr><td>Epoll</td><td><code>./mini_web_server epoll 0.0.0.0 8080</code></td><td>单进程 epoll</td></tr>
-                    <tr><td>Select</td><td><code>./mini_web_server select 0.0.0.0 8080</code></td><td>select 多路复用</td></tr>
-                    <tr><td>Fork</td><td><code>./mini_web_server fork 0.0.0.0 8080</code></td><td>每连接 fork</td></tr>
-                    <tr><td>Thread</td><td><code>./mini_web_server thread 0.0.0.0 8080</code></td><td>每连接线程</td></tr>
-                    <tr><td>Pool</td><td><code>./mini_web_server pool 0.0.0.0 8080</code></td><td>线程池</td></tr>
-                </table>
+                <pre><code>epoll_create1(0)                        // 创建 epoll 实例
+epoll_ctl(ADD, listen_fd, EPOLLIN)      // 注册监听 socket
+
+while (!g_shutdown) {
+    nfds = epoll_wait(epfd, events, MAX, 1000);  // 1s 超时
+
+    for each ready event:
+        if fd == listen_fd:
+            conn_fd = accept()
+            epoll_ctl(ADD, conn_fd, EPOLLIN)      // 注册客户端
+            conn->last_activity = time(NULL)
+
+        else:  // client data
+            n = recv(fd, buf, ...)
+            if n <= 0 → safe_close(fd)
+            else:
+                解析 HTTP → request_handler_process_http()
+                → send(fd, resp_buf, resp_len)
+                → keep-alive 或 close
+
+    // 超时扫描：清理 idle > KEEP_ALIVE_TIMEOUT_SEC 的连接
+}</code></pre>
+
+                <p><strong>关键技术点：</strong></p>
+                <ul>
+                    <li><strong>Level-Triggered (LT)</strong>：默认水平触发模式，与 select 语义一致，简单可靠</li>
+                    <li><strong>conn_t 数组</strong>：固定大小（EPOLL_MAX_CONNS=1024），epoll_event.data.ptr 直接指向 conn_t，O(1) 查找</li>
+                    <li><strong>safe_close()</strong>：shutdown(SHUT_RDWR) → drain → close()，避免 TCP RST</li>
+                    <li><strong>超时扫描</strong>：利用 epoll_wait 的 1s timeout 周期性检查空闲连接</li>
+                </ul>
+
+                <!-- ============================================================ -->
+                <!-- HTTP 请求处理 -->
+                <!-- ============================================================ -->
+                <h2>HTTP 请求处理流程</h2>
+
+                <pre><code>Client → recv() → 解析请求行 (METHOD /uri HTTP/1.x)
+                   → 解析头部 (Content-Length, Connection, ...)
+                   → 解析 Body (基于 Content-Length)
+                   → Keep-Alive 协商 (HTTP 版本 + Connection 头)
+                   → 路由分发 (request_handler_process_http)
+
+路由表:
+  GET  /              → www/index.html (text/html)
+  GET  /blog/         → blog/index.html (博客首页)
+  GET  /blog/*        → blog/ 静态文件 (动态 MIME)
+  GET  /hello         → "Hello, Web!\n"
+  GET  /users         → 用户列表 (BST 中序遍历)
+  GET  /users/<name>  → 查找用户
+  POST /users         → 添加用户 (CSV body)
+  DELETE /users/<name> → 删除用户
+  ...</code></pre>
+
+                <!-- ============================================================ -->
+                <!-- 日志系统 -->
+                <!-- ============================================================ -->
+                <h2>日志系统（v1.2）</h2>
+
+                <p>系统日志与访问日志分离，支持四级日志和行数阈值自动滚动：</p>
+
+                <pre><code>// API 示例
+log_infof("Worker-%d PID: %d", id, pid);       // printf 风格
+log_error("accept() failed");                   // 简单字符串
+log_access(client_ip, method, path, 200, len);  // 访问记录
+
+// 输出格式
+// system.log:  [2026-07-19 15:30:45.123456] [INFO ] [PID 12345] ... message
+// access.log:  [19/Jul/2026:15:30:45 +0800] 127.0.0.1 GET /blog/ 200 4582
+
+// 滚动机制: log_max_lines=10000, log_max_roll_files=5
+// server.log → server.log.1 → server.log.2 → ... → remove</code></pre>
+
+                <!-- ============================================================ -->
+                <!-- 目录结构 -->
+                <!-- ============================================================ -->
+                <h2>项目目录结构</h2>
+
+                <pre><code>miniwebserver/
+├── blog/              # v1.2: 博客网站（HTML/CSS/JS/图片）
+├── conf/server.conf   # 服务器配置
+├── data/              # CSV 用户数据 (10万+)
+├── docs/              # 设计文档与调试日志
+├── include/           # 18 个头文件
+│   ├── config.h, log.h, epoll_server.h
+│   ├── http_parser.h, request_handler.h
+│   ├── master_worker.h, thread_pool.h
+│   └── user_store.h, user_index.h, ...
+├── src/               # 21 个源文件
+│   ├── main.c         # 入口 + 命令分发
+│   ├── epoll_server.c # Epoll 事件循环核心
+│   ├── master_worker.c# Master-Worker 进程管理
+│   ├── http_parser.c  # HTTP 解析 + 静态文件 + MIME
+│   ├── log.c          # 日志系统
+│   ├── config.c       # 配置文件解析
+│   └── ...
+├── tests/             # 测试脚本 + 性能基准
+├── www/               # Web 根目录
+├── Makefile
+└── README.md</code></pre>
+
             </article>
         </div>
     </main>

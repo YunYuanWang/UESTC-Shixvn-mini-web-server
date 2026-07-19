@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于作者 — Mini Web Server</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+    <style>
+        .resume-header {
+            text-align: center;
+            padding: 20px 0 10px;
+        }
+        .resume-top-block {
+            position: relative;
+        }
+        .resume-photo-wrap {
+            position: absolute;
+            right: 0;
+            top: 20px;
+            width: 280px;
+            z-index: 0;
+        }
+        .resume-photo {
+            width: 280px; height: 370px;
+            object-fit: cover;
+            display: block;
+            border-radius: 35% / 38%;
+            -webkit-mask-image: radial-gradient(
+                ellipse 40% 42% at 50% 45%,
+                black 50%,
+                transparent 100%
+            );
+            mask-image: radial-gradient(
+                ellipse 40% 42% at 50% 45%,
+                black 50%,
+                transparent 100%
+            );
+        }
+        @media (max-width: 750px) {
+            .resume-photo-wrap {
+                position: static;
+                width: 180px;
+                margin: 12px auto 0;
+            }
+            .resume-photo {
+                width: 180px; height: 240px;
+                margin: 0 auto;
+            }
+        }
+        .resume-header h2 { border-bottom: none; font-size: 2em; margin-bottom: 4px; }
+        .resume-header h2::after { display: none; }
+        .resume-header .contact { color: var(--text-muted); font-size: 0.95em; margin-bottom: 4px; }
+        .resume-header .position { color: var(--uestc-gold); font-weight: 600; }
+        .resume-section { margin: 32px 0; }
+        .resume-section h3 {
+            color: var(--uestc-blue);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 16px;
+        }
+        .edu-item, .project-item { margin-bottom: 20px; }
+        .edu-item .school { font-weight: 700; color: var(--uestc-dark); }
+        .edu-item .meta { font-size: 0.9em; color: var(--text-muted); }
+        .project-item h4 { font-size: 1.05em; color: var(--uestc-dark); margin-bottom: 2px; }
+        .project-item .role { font-size: 0.9em; color: var(--uestc-gold); margin-bottom: 6px; }
+        .project-item ul { margin: 6px 0 0 20px; }
+        .project-item li { font-size: 0.95em; margin-bottom: 4px; }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 16px; }
+        .skill-tag {
+            display: inline-block;
+            background: rgba(0,42,92,.06);
+            color: var(--uestc-blue);
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-size: 0.88em;
+            border: 1px solid rgba(0,42,92,.12);
+        }
+        .award-list { list-style: none; margin-left: 0; }
+        .award-list li {
+            padding: 4px 0 4px 20px;
+            position: relative;
+        }
+        .award-list li::before {
+            content: "🏆";
+            position: absolute;
+            left: 0;
+            font-size: 0.8em;
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 20px;
+            font-size: 0.93em;
+        }
+        .course-grid .course { padding: 3px 0; color: var(--text-secondary); }
+        .eval-text {
+            background: linear-gradient(135deg, #f0f4fa, #f8f9fb);
+            padding: 18px 22px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--uestc-blue);
+            color: var(--text-secondary);
+            line-height: 1.9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="img/logo.png" alt="Logo" class="logo" width="167" height="56">
+            <h1>关于作者</h1>
+            <p class="subtitle">深度学习 · 计算机视觉 · 生成式 AI</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="index.html">首页</a>
+            <a href="about.html">架构介绍</a>
+            <a href="article.html">实验心得</a>
+            <a href="resume.html" class="active">关于作者</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <article>
+
+                <!-- ============================================================ -->
+                <!-- 基本信息 -->
+                <!-- ============================================================ -->
+                <div class="resume-top-block">
+                    <div class="resume-header">
+                        <h2>王子航</h2>
+                        <p class="contact">📱 18123375523 &nbsp; ✉ wangzihang_chengdu@163.com</p>
+                        <p class="contact">电子科技大学 信息与软件工程学院 智能软件专业 2024级</p>
+                    </div>
+
+                    <div class="resume-photo-wrap">
+                        <img src="img/photo.jpg" alt="Photo" class="resume-photo" width="280" height="370">
+                    </div>
+
+                    <!-- ============================================================ -->
+                    <!-- 教育背景 -->
+                    <!-- ============================================================ -->
+                    <div class="resume-section">
+                        <h3>教育背景</h3>
+                    <div class="edu-item">
+                        <p class="school">电子科技大学（UESTC）<span class="meta">信息与软件工程学院 · 智能软件专业 · 本科在读（2024.09 — 2028.06）</span></p>
+                    </div>
+                    <div class="edu-item">
+                        <p class="school">成都市第七中学 <span class="meta">中学（2018.09 — 2024.06）· 信息学奥林匹克竞赛学习经历，熟练掌握 C++</span></p>
+                    </div>
+                </div>
+                </div><!-- .resume-top-block -->
+
+                <!-- ============================================================ -->
+                <!-- 技术技能 -->
+                <!-- ============================================================ -->
+                <div class="resume-section">
+                    <h3>技术技能</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Python（熟练）</span>
+                        <span class="skill-tag">C++（OI 背景）</span>
+                        <span class="skill-tag">PyTorch</span>
+                        <span class="skill-tag">PaddlePaddle</span>
+                        <span class="skill-tag">EnNeuro（自研框架）</span>
+                        <span class="skill-tag">CNN</span>
+                        <span class="skill-tag">ViT</span>
+                        <span class="skill-tag">Stable Diffusion</span>
+                        <span class="skill-tag">RichDreamer</span>
+                        <span class="skill-tag">持续学习</span>
+                        <span class="skill-tag">Git / Linux</span>
+                        <span class="skill-tag">Arduino</span>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- 项目经历 -->
+                <!-- ============================================================ -->
+                <div class="resume-section">
+                    <h3>项目经历</h3>
+
+                    <div class="project-item">
+                        <h4>EnNeuro 轻量级深度学习框架 + DonkeyCar 仿真自动驾驶</h4>
+                        <p class="role">项目负责人</p>
+                        <ul>
+                            <li>完全基于 Python/NumPy/CuPy 自研 CNN 深度学习框架，并在 DonkeyCar Sim 仿真环境中验证端到端自动驾驶策略</li>
+                            <li>从零实现前向/反向传播（自动微分）、卷积层、池化层、优化器等核心模块，无第三方深度学习依赖</li>
+                            <li>基于 EnNeuro 训练驾驶策略网络，在 DonkeyCar Sim 模拟器中完成多轨道测试与调优</li>
+                            <li>主导项目全周期（需求分析→框架设计→训练验证），培养深度学习底层原理与工程实现能力</li>
+                        </ul>
+                    </div>
+
+                    <div class="project-item">
+                        <h4>跨时间域动物面部识别（服务外包大赛）</h4>
+                        <p class="role">模型设计师 / 模型训练师</p>
+                        <ul>
+                            <li>以山魁（狒狒）为主要数据集，研究动物面部跨时间域识别，目标迁移至人脸识别任务</li>
+                            <li>对身份识别与年龄识别分支进行对抗学习，使模型在识别个体身份时对年龄特征保持不变性，增强时间域鲁棒性</li>
+                            <li>引入正交解耦策略分离身份特征与年龄相关特征，降低跨时间域误识率</li>
+                            <li>以 Top-1 Accuracy 和 TAR@FAR 为主要评估指标，多轮调参验证模型提升</li>
+                        </ul>
+                    </div>
+
+                    <div class="project-item">
+                        <h4>基于 RichDreamer 的文本生成 3D 模型（CVPR 2024 Highlight 方向）</h4>
+                        <p class="role">研究员（论文复现 & 方法融合）— 智能信息技术与应用实验室</p>
+                        <ul>
+                            <li>在 RichDreamer 框架基础上进行论文复现及新方法探索，核心路径：文本 → 法线/深度图 → 3D 网格</li>
+                            <li>深入理解 Stable Diffusion 条件生成机制，完成法线图与深度图联合扩散模型的复现与消融实验</li>
+                            <li>使用 CLIP Score 及主观评判对生成 3D 模型图像质量进行系统评估</li>
+                            <li>在复现基础上推进新方法融合探索，加深对生成式 AI 与三维视觉交叉领域的理解</li>
+                        </ul>
+                    </div>
+
+                    <div class="project-item">
+                        <h4>基于 Prompt 注入的持续学习方法（CVPR 2024 方向）</h4>
+                        <p class="role">算法研究员（论文复现 & 改进）— 智能信息技术与应用实验室</p>
+                        <ul>
+                            <li>对标 CPrompt（CVPR 2024），在 ViT 框架下研究 Prompt-based 持续学习，缓解灾难性遗忘</li>
+                            <li>实现 Prompt 冻结注入机制：将前序 Task 训练所得 Prompt 冻结后注入新 Task 作为先验知识</li>
+                            <li>与前序分类器联合训练，在新旧任务间平衡性能，系统性减少遗忘</li>
+                            <li>复现基线并进行改进实验，深化对 Transformer 注意力机制与持续学习理论的理解</li>
+                        </ul>
+                    </div>
+
+                    <div class="project-item">
+                        <h4>基于 PaddlePaddle 的视觉智能回收系统（电子科技大学新工科展）</h4>
+                        <p class="role">项目负责人 / 模型训练师</p>
+                        <ul>
+                            <li>面向垃圾分类场景，基于 PaddlePaddle 实现端到端视觉识别系统，通过 Arduino 接入实体垃圾桶展示</li>
+                            <li>负责数据集构建、模型选型与训练（目标检测 + 分类），实现多类别垃圾实时图像识别</li>
+                            <li>将模型推理结果通过串口指令驱动 Arduino 控制实体垃圾桶完成自动分拣，软硬件全链路联调</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- 相关课程 -->
+                <!-- ============================================================ -->
+                <div class="resume-section">
+                    <h3>相关课程</h3>
+                    <div class="course-grid">
+                        <span class="course">微积分Ⅰ / Ⅱ（共11学分）</span>
+                        <span class="course">线性代数与空间解析几何Ⅰ（4学分）</span>
+                        <span class="course">概率论与数理统计（3.5学分）</span>
+                        <span class="course">离散数学（3学分）</span>
+                        <span class="course">程序设计与算法基础Ⅰ / Ⅱ（5.5学分）</span>
+                        <span class="course">ACM-ICPC 算法与程序设计（2学分）</span>
+                        <span class="course">数据结构（3学分）</span>
+                        <span class="course">计算机视觉（3.5学分）</span>
+                        <span class="course">人工智能基础（3学分）</span>
+                        <span class="course">人工智能时代（2学分）</span>
+                        <span class="course">操作系统原理与实践（4学分）</span>
+                        <span class="course">计算机网络系统（3学分）</span>
+                        <span class="course">数据库原理及应用（2学分）</span>
+                        <span class="course">软件工程与实践（3学分）</span>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- 获奖情况 -->
+                <!-- ============================================================ -->
+                <div class="resume-section">
+                    <h3>获奖情况</h3>
+                    <ul class="award-list">
+                        <li>2025 电子科技大学专项奖学金</li>
+                        <li>NOIP2022 三等奖</li>
+                        <li>CSP-J/S 2022 第二轮提高级 二等</li>
+                        <li>NOIP2021 三等奖</li>
+                        <li>CSP-J/S 2021 第二轮提高级 二等</li>
+                    </ul>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- 自我评价 -->
+                <!-- ============================================================ -->
+                <div class="resume-section">
+                    <h3>自我评价</h3>
+                    <div class="eval-text">
+                        <p>对深度学习与计算机视觉有浓厚兴趣，拥有从框架底层（自研 EnNeuro）到前沿论文复现（CVPR 2024）的完整实践经历。高中 OI 竞赛背景使其具备扎实的算法思维与 C++ 编程能力，大学期间主导并参与多个视觉类项目，动手实验能力强，善于从数据与实验结果中归纳规律。对计算机视觉、图像质量评价及生成式 AI 有较为深入的理解，工作细致认真，逻辑清晰。</p>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <img src="img/avatar.gif" alt="Avatar" class="avatar" width="32" height="32">
+            <p>Mini Web Server v1.2 &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

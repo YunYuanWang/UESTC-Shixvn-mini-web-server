@@ -602,3 +602,1189 @@
 [2026-07-19 11:43:46.932832] [INFO ] [PID 695401] [TID 136162659239744]   Master PID: 695401  shutdown complete
 [2026-07-19 11:43:46.932855] [INFO ] [PID 695401] [TID 136162659239744] ========================================
 [2026-07-19 11:43:46.932918] [INFO ] [PID 695401] [TID 136162659239744] Logging system shutting down
+[2026-07-19 11:49:05.122951] [INFO ] [PID 728819] [TID 139426661615424] Logging system initialized (v1.2)
+[2026-07-19 11:49:05.123108] [INFO ] [PID 728819] [TID 139426661615424] Master-Worker Mode (epoll I/O multiplexing) v1.2
+[2026-07-19 11:49:05.123132] [INFO ] [PID 728819] [TID 139426661615424] user store: loading data...
+[2026-07-19 11:49:05.243120] [INFO ] [PID 728819] [TID 139426661615424] user store: loaded 100003 users
+[2026-07-19 11:49:05.243329] [INFO ] [PID 728819] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.243371] [INFO ] [PID 728819] [TID 139426661615424]   Master PID: 728819  starting 2 worker(s)  shutdown_timeout: 3000 ms
+[2026-07-19 11:49:05.243387] [INFO ] [PID 728819] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.243461] [INFO ] [PID 728819] [TID 139426661615424] [Master] listening on 127.0.0.1:8080 (fd=20)
+[2026-07-19 11:49:05.244293] [INFO ] [PID 728819] [TID 139426661615424] [Master] forked worker 1, PID 728821
+[2026-07-19 11:49:05.244550] [INFO ] [PID 728821] [TID 139426661615424] [Worker] PID 728821 started, listen_fd=20
+[2026-07-19 11:49:05.244952] [INFO ] [PID 728819] [TID 139426661615424] [Master] forked worker 2, PID 728822
+[2026-07-19 11:49:05.245088] [INFO ] [PID 728819] [TID 139426661615424] [Master] entering wait loop (2 workers)
+[2026-07-19 11:49:05.245242] [INFO ] [PID 728822] [TID 139426661615424] [Worker] PID 728822 started, listen_fd=20
+[2026-07-19 11:49:05.251479] [INFO ] [PID 728821] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.251702] [INFO ] [PID 728821] [TID 139426661615424]   Worker-1 PID: 728821  (epoll I/O multiplexing)
+[2026-07-19 11:49:05.251884] [INFO ] [PID 728821] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.251994] [INFO ] [PID 728821] [TID 139426661615424] [Worker] using inherited listen_fd=20
+[2026-07-19 11:49:05.252309] [INFO ] [PID 728822] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.252362] [INFO ] [PID 728822] [TID 139426661615424]   Worker-2 PID: 728822  (epoll I/O multiplexing)
+[2026-07-19 11:49:05.252378] [INFO ] [PID 728822] [TID 139426661615424] ========================================
+[2026-07-19 11:49:05.252393] [INFO ] [PID 728822] [TID 139426661615424] [Worker] using inherited listen_fd=20
+[2026-07-19 11:49:33.559452] [INFO ] [PID 728822] [TID 139426661615424] [#1] accepted connection from 127.0.0.1:38202 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.568380] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/ -> 200
+[2026-07-19 11:49:33.568536] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.580913] [INFO ] [PID 728822] [TID 139426661615424] [#2] accepted connection from 127.0.0.1:38210 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.581773] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/ -> 200
+[2026-07-19 11:49:33.582546] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.603079] [INFO ] [PID 728822] [TID 139426661615424] [#3] accepted connection from 127.0.0.1:38218 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.604171] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 11:49:33.604272] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.617192] [INFO ] [PID 728821] [TID 139426661615424] [#1] accepted connection from 127.0.0.1:38230 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.628830] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 11:49:33.629521] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.657673] [INFO ] [PID 728822] [TID 139426661615424] [#4] accepted connection from 127.0.0.1:38244 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.658869] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 11:49:33.659766] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.677863] [INFO ] [PID 728821] [TID 139426661615424] [#2] accepted connection from 127.0.0.1:38246 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.678610] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 11:49:33.678942] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.705204] [INFO ] [PID 728822] [TID 139426661615424] [#5] accepted connection from 127.0.0.1:38256 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.706956] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 11:49:33.709441] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.723865] [INFO ] [PID 728821] [TID 139426661615424] [#3] accepted connection from 127.0.0.1:38260 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.725661] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 11:49:33.725852] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.752084] [INFO ] [PID 728822] [TID 139426661615424] [#6] accepted connection from 127.0.0.1:38266 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.755266] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 11:49:33.755848] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.772026] [INFO ] [PID 728821] [TID 139426661615424] [#4] accepted connection from 127.0.0.1:38272 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.776161] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 11:49:33.777068] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.802720] [INFO ] [PID 728821] [TID 139426661615424] [#5] accepted connection from 127.0.0.1:38280 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.815283] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 11:49:33.819393] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.837626] [INFO ] [PID 728821] [TID 139426661615424] [#6] accepted connection from 127.0.0.1:38286 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.839620] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 11:49:33.845779] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.873964] [INFO ] [PID 728821] [TID 139426661615424] [#7] accepted connection from 127.0.0.1:38288 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.874792] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/icon/favicon.ico -> 200
+[2026-07-19 11:49:33.874943] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.887239] [INFO ] [PID 728822] [TID 139426661615424] [#7] accepted connection from 127.0.0.1:38300 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.887932] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/icon/favicon.ico -> 200
+[2026-07-19 11:49:33.888090] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.910692] [INFO ] [PID 728821] [TID 139426661615424] [#8] accepted connection from 127.0.0.1:38310 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.912336] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog -> 301
+[2026-07-19 11:49:33.912482] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.933938] [INFO ] [PID 728821] [TID 139426661615424] [#9] accepted connection from 127.0.0.1:38312 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.934852] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/../etc/passwd -> 403
+[2026-07-19 11:49:33.935136] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.950152] [INFO ] [PID 728822] [TID 139426661615424] [#8] accepted connection from 127.0.0.1:38320 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.951347] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/nonexistent-page.html -> 404
+[2026-07-19 11:49:33.952926] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.967557] [INFO ] [PID 728821] [TID 139426661615424] [#10] accepted connection from 127.0.0.1:38334 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.968659] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 POST /blog/index.html -> 405
+[2026-07-19 11:49:33.971101] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:33.987361] [INFO ] [PID 728822] [TID 139426661615424] [#9] accepted connection from 127.0.0.1:38344 (fd=22) type=ephemeral
+[2026-07-19 11:49:33.988246] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/ -> 200
+[2026-07-19 11:49:33.988479] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:34.003550] [INFO ] [PID 728821] [TID 139426661615424] [#11] accepted connection from 127.0.0.1:56458 (fd=22) type=ephemeral
+[2026-07-19 11:49:34.004618] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /blog/about.html -> 200
+[2026-07-19 11:49:34.004811] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:34.020756] [INFO ] [PID 728822] [TID 139426661615424] [#10] accepted connection from 127.0.0.1:56470 (fd=22) type=ephemeral
+[2026-07-19 11:49:34.021591] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 11:49:34.021791] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:34.039112] [INFO ] [PID 728822] [TID 139426661615424] [#11] accepted connection from 127.0.0.1:56474 (fd=22) type=ephemeral
+[2026-07-19 11:49:34.041427] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET /blog/README.md -> 200
+[2026-07-19 11:49:34.042103] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:34.063604] [INFO ] [PID 728821] [TID 139426661615424] [#12] accepted connection from 127.0.0.1:56480 (fd=22) type=ephemeral
+[2026-07-19 11:49:34.065994] [INFO ] [PID 728821] [TID 139426661615424] [Worker-1] fd=22 GET /hello -> 200
+[2026-07-19 11:49:34.066632] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:49:34.089378] [INFO ] [PID 728822] [TID 139426661615424] [#12] accepted connection from 127.0.0.1:56482 (fd=22) type=ephemeral
+[2026-07-19 11:49:34.090338] [INFO ] [PID 728822] [TID 139426661615424] [Worker-2] fd=22 GET / -> 200
+[2026-07-19 11:49:34.090441] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:54:31.027837] [INFO ] [PID 728822] [TID 139426661615424] [EpollServer] shutting down...
+[2026-07-19 11:54:31.027951] [INFO ] [PID 728822] [TID 139426661615424] [Worker] shutdown — served 12 client(s)
+[2026-07-19 11:54:31.027964] [INFO ] [PID 728819] [TID 139426661615424] [Master] shutting down...
+[2026-07-19 11:54:31.028000] [INFO ] [PID 728819] [TID 139426661615424] [Master] listen socket closed
+[2026-07-19 11:54:31.028016] [INFO ] [PID 728819] [TID 139426661615424] [Master] sending SIGTERM to worker PID 728821
+[2026-07-19 11:54:31.028104] [INFO ] [PID 728819] [TID 139426661615424] [Master] sending SIGTERM to worker PID 728822
+[2026-07-19 11:54:31.028172] [INFO ] [PID 728819] [TID 139426661615424] [Master] waiting up to 3000 ms for workers to exit
+[2026-07-19 11:54:31.028301] [INFO ] [PID 728821] [TID 139426661615424] [EpollServer] shutting down...
+[2026-07-19 11:54:31.028352] [INFO ] [PID 728821] [TID 139426661615424] [Worker] shutdown — served 12 client(s) (SIGTERM)
+[2026-07-19 11:54:31.028557] [INFO ] [PID 728821] [TID 139426661615424] [Worker] PID 728821 shutting down
+[2026-07-19 11:54:31.028573] [INFO ] [PID 728821] [TID 139426661615424] Logging system shutting down
+[2026-07-19 11:54:31.029413] [INFO ] [PID 728822] [TID 139426661615424] [Worker] PID 728822 shutting down
+[2026-07-19 11:54:31.029446] [INFO ] [PID 728822] [TID 139426661615424] Logging system shutting down
+[2026-07-19 11:54:31.030156] [INFO ] [PID 728819] [TID 139426661615424] [Master] worker PID 728821 exited (status 0)
+[2026-07-19 11:54:31.030379] [INFO ] [PID 728819] [TID 139426661615424] [Master] worker PID 728822 exited (status 0)
+[2026-07-19 11:54:31.030445] [INFO ] [PID 728819] [TID 139426661615424] [Master] all workers stopped
+[2026-07-19 11:54:31.030460] [INFO ] [PID 728819] [TID 139426661615424] ========================================
+[2026-07-19 11:54:31.030479] [INFO ] [PID 728819] [TID 139426661615424]   Master PID: 728819  shutdown complete
+[2026-07-19 11:54:31.030502] [INFO ] [PID 728819] [TID 139426661615424] ========================================
+[2026-07-19 11:54:31.030549] [INFO ] [PID 728819] [TID 139426661615424] Logging system shutting down
+[2026-07-19 11:58:50.640802] [INFO ] [PID 734318] [TID 136457533425472] Logging system initialized (v1.2)
+[2026-07-19 11:58:50.640914] [INFO ] [PID 734318] [TID 136457533425472] Master-Worker Mode (epoll I/O multiplexing) v1.2
+[2026-07-19 11:58:50.640939] [INFO ] [PID 734318] [TID 136457533425472] user store: loading data...
+[2026-07-19 11:58:50.739303] [INFO ] [PID 734318] [TID 136457533425472] user store: loaded 100003 users
+[2026-07-19 11:58:50.740846] [INFO ] [PID 734318] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.740903] [INFO ] [PID 734318] [TID 136457533425472]   Master PID: 734318  starting 2 worker(s)  shutdown_timeout: 3000 ms
+[2026-07-19 11:58:50.740921] [INFO ] [PID 734318] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.740981] [INFO ] [PID 734318] [TID 136457533425472] [Master] listening on 127.0.0.1:8080 (fd=20)
+[2026-07-19 11:58:50.742366] [INFO ] [PID 734318] [TID 136457533425472] [Master] forked worker 1, PID 734319
+[2026-07-19 11:58:50.742604] [INFO ] [PID 734319] [TID 136457533425472] [Worker] PID 734319 started, listen_fd=20
+[2026-07-19 11:58:50.742990] [INFO ] [PID 734318] [TID 136457533425472] [Master] forked worker 2, PID 734320
+[2026-07-19 11:58:50.743491] [INFO ] [PID 734318] [TID 136457533425472] [Master] entering wait loop (2 workers)
+[2026-07-19 11:58:50.743483] [INFO ] [PID 734320] [TID 136457533425472] [Worker] PID 734320 started, listen_fd=20
+[2026-07-19 11:58:50.756106] [INFO ] [PID 734320] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.756603] [INFO ] [PID 734319] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.756630] [INFO ] [PID 734319] [TID 136457533425472]   Worker-1 PID: 734319  (epoll I/O multiplexing)
+[2026-07-19 11:58:50.756646] [INFO ] [PID 734319] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.756661] [INFO ] [PID 734319] [TID 136457533425472] [Worker] using inherited listen_fd=20
+[2026-07-19 11:58:50.757792] [INFO ] [PID 734320] [TID 136457533425472]   Worker-2 PID: 734320  (epoll I/O multiplexing)
+[2026-07-19 11:58:50.757840] [INFO ] [PID 734320] [TID 136457533425472] ========================================
+[2026-07-19 11:58:50.757855] [INFO ] [PID 734320] [TID 136457533425472] [Worker] using inherited listen_fd=20
+[2026-07-19 11:58:53.832989] [INFO ] [PID 734320] [TID 136457533425472] [#1] accepted connection from 127.0.0.1:33852 (fd=22) type=ephemeral
+[2026-07-19 11:58:53.847476] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 11:58:53.848581] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:53.889694] [INFO ] [PID 734319] [TID 136457533425472] [#1] accepted connection from 127.0.0.1:33860 (fd=22) type=ephemeral
+[2026-07-19 11:58:53.890321] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 11:58:53.890715] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:53.891547] [INFO ] [PID 734320] [TID 136457533425472] [#2] accepted connection from 127.0.0.1:33870 (fd=23) type=ephemeral
+[2026-07-19 11:58:53.891950] [INFO ] [PID 734320] [TID 136457533425472] [#3] accepted connection from 127.0.0.1:33872 (fd=24) type=ephemeral
+[2026-07-19 11:58:53.895980] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=24 GET /blog/img/banner.jpg -> 200
+[2026-07-19 11:58:53.899069] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:53.899648] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 11:58:53.899811] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:53.914164] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 11:58:53.917155] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 11:58:53.917657] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:53.960798] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:58:58.922116] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 11:58:58.965173] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 11:58:58.965939] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 11:58:58.966230] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 11:59:05.724966] [INFO ] [PID 734319] [TID 136457533425472] [#2] accepted connection from 127.0.0.1:55646 (fd=22) type=ephemeral
+[2026-07-19 11:59:06.105555] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/about.html -> 200
+[2026-07-19 11:59:06.107122] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:06.158816] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 11:59:06.159623] [INFO ] [PID 734320] [TID 136457533425472] [#4] accepted connection from 127.0.0.1:55656 (fd=22) type=ephemeral
+[2026-07-19 11:59:06.160167] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:06.160884] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 11:59:06.162293] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:06.167591] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 11:59:06.168993] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:06.169103] [INFO ] [PID 734319] [TID 136457533425472] [#3] accepted connection from 127.0.0.1:55660 (fd=23) type=ephemeral
+[2026-07-19 11:59:06.169333] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 11:59:06.184988] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:11.174255] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 11:59:11.174433] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 11:59:11.933115] [INFO ] [PID 734320] [TID 136457533425472] [#5] accepted connection from 127.0.0.1:55670 (fd=23) type=ephemeral
+[2026-07-19 11:59:11.934819] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 11:59:11.937441] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:12.005233] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 11:59:12.005348] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:12.005796] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 11:59:12.005936] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:12.007323] [INFO ] [PID 734319] [TID 136457533425472] [#4] accepted connection from 127.0.0.1:55676 (fd=22) type=ephemeral
+[2026-07-19 11:59:12.007422] [INFO ] [PID 734319] [TID 136457533425472] [#5] accepted connection from 127.0.0.1:55684 (fd=23) type=ephemeral
+[2026-07-19 11:59:12.012096] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 11:59:12.028236] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:12.030088] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 11:59:12.031946] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 11:59:17.014283] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 11:59:17.014996] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 11:59:17.036547] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 11:59:17.037011] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 2 request(s)
+[2026-07-19 11:59:24.312842] [INFO ] [PID 734320] [TID 136457533425472] [#6] accepted connection from 127.0.0.1:42250 (fd=22) type=ephemeral
+[2026-07-19 12:00:51.570460] [INFO ] [PID 734319] [TID 136457533425472] [#6] accepted connection from 127.0.0.1:42560 (fd=22) type=ephemeral
+[2026-07-19 12:00:51.578002] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/article.html -> 200
+[2026-07-19 12:00:51.578455] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:00:51.628737] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:00:51.628870] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:00:51.629971] [INFO ] [PID 734320] [TID 136457533425472] [#7] accepted connection from 127.0.0.1:42564 (fd=22) type=ephemeral
+[2026-07-19 12:00:51.630840] [INFO ] [PID 734320] [TID 136457533425472] [#8] accepted connection from 127.0.0.1:42572 (fd=23) type=ephemeral
+[2026-07-19 12:00:51.637192] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 12:00:51.637361] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:00:51.645022] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 12:00:51.646822] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:00:51.656683] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:00:51.672487] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:00:56.632496] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 12:00:56.677127] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 12:00:56.677291] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 2 request(s)
+[2026-07-19 12:01:29.338650] [INFO ] [PID 734320] [TID 136457533425472] [#9] accepted connection from 127.0.0.1:59836 (fd=22) type=ephemeral
+[2026-07-19 12:01:29.347403] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 12:01:29.349980] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:01:29.382876] [INFO ] [PID 734319] [TID 136457533425472] [#7] accepted connection from 127.0.0.1:59844 (fd=22) type=ephemeral
+[2026-07-19 12:01:29.384712] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:01:29.384847] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:01:29.386216] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:01:29.386354] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:01:29.395105] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:01:29.395372] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:01:29.395409] [INFO ] [PID 734320] [TID 136457533425472] [#10] accepted connection from 127.0.0.1:59846 (fd=23) type=ephemeral
+[2026-07-19 12:01:29.426636] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:01:29.446214] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:01:34.403138] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 12:01:34.403379] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 12:02:11.478397] [INFO ] [PID 734319] [TID 136457533425472] [#8] accepted connection from 127.0.0.1:51390 (fd=23) type=ephemeral
+[2026-07-19 12:02:11.480799] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/article.html -> 200
+[2026-07-19 12:02:11.480933] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:02:11.513001] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:02:11.513148] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:02:11.513824] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 12:02:11.514000] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:02:11.516275] [INFO ] [PID 734320] [TID 136457533425472] [#11] accepted connection from 127.0.0.1:51400 (fd=22) type=ephemeral
+[2026-07-19 12:02:11.516845] [INFO ] [PID 734320] [TID 136457533425472] [#12] accepted connection from 127.0.0.1:51412 (fd=23) type=ephemeral
+[2026-07-19 12:02:11.520628] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:02:11.530877] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:02:11.531480] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 12:02:11.533521] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:02:16.520597] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 12:02:16.520988] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 12:02:16.538461] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 12:02:16.538634] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 2 request(s)
+[2026-07-19 12:03:33.034794] [INFO ] [PID 734320] [TID 136457533425472] [#13] accepted connection from 127.0.0.1:38830 (fd=22) type=ephemeral
+[2026-07-19 12:03:33.036506] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 12:03:33.036950] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:33.066506] [INFO ] [PID 734319] [TID 136457533425472] [#9] accepted connection from 127.0.0.1:38846 (fd=22) type=ephemeral
+[2026-07-19 12:03:33.066807] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:03:33.066901] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:33.067860] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:03:33.068005] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:33.069681] [INFO ] [PID 734319] [TID 136457533425472] [#10] accepted connection from 127.0.0.1:38856 (fd=23) type=ephemeral
+[2026-07-19 12:03:33.077612] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:03:33.081149] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:33.082463] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:03:33.104668] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:38.073515] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 12:03:38.111273] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 12:03:38.111737] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 12:03:41.320673] [INFO ] [PID 734320] [TID 136457533425472] [#14] accepted connection from 127.0.0.1:56260 (fd=22) type=ephemeral
+[2026-07-19 12:03:41.978518] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/about.html -> 200
+[2026-07-19 12:03:41.978672] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:42.041306] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:03:42.043456] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:42.044250] [INFO ] [PID 734319] [TID 136457533425472] [#11] accepted connection from 127.0.0.1:56262 (fd=22) type=ephemeral
+[2026-07-19 12:03:42.045599] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:03:42.045772] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:42.050585] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:03:42.050811] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:42.061836] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:03:42.076818] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.450465] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 12:03:43.450594] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.504649] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:03:43.504799] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.506809] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:03:43.508577] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.517006] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:03:43.517369] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.525221] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:03:43.530294] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:43.540102] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 12:03:43.541869] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:03:48.534842] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 6 request(s)
+[2026-07-19 12:03:48.547500] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 12:03:49.564910] [INFO ] [PID 734320] [TID 136457533425472] [#15] accepted connection from 127.0.0.1:49818 (fd=22) type=ephemeral
+[2026-07-19 12:03:54.570139] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 12:03:59.295666] [INFO ] [PID 734319] [TID 136457533425472] [#12] accepted connection from 127.0.0.1:34844 (fd=22) type=ephemeral
+[2026-07-19 12:05:03.680416] [INFO ] [PID 734320] [TID 136457533425472] [#16] accepted connection from 127.0.0.1:56886 (fd=22) type=ephemeral
+[2026-07-19 12:05:03.681449] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 12:05:03.682660] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:03.716899] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:05:03.717171] [INFO ] [PID 734319] [TID 136457533425472] [#13] accepted connection from 127.0.0.1:56902 (fd=22) type=ephemeral
+[2026-07-19 12:05:03.718199] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:03.718521] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:05:03.719220] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:03.722962] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 12:05:03.723664] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:03.727459] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:05:03.727670] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:03.731327] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:05:03.739961] [INFO ] [PID 734320] [TID 136457533425472] [#17] accepted connection from 127.0.0.1:56906 (fd=23) type=ephemeral
+[2026-07-19 12:05:03.741741] [INFO ] [PID 734320] [TID 136457533425472] [#18] accepted connection from 127.0.0.1:56908 (fd=24) type=ephemeral
+[2026-07-19 12:05:03.754314] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:05:08.747384] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 12:05:08.747622] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 12:05:08.747703] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 0 request(s)
+[2026-07-19 12:05:08.759469] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 12:06:04.836169] [INFO ] [PID 734320] [TID 136457533425472] [#19] accepted connection from 127.0.0.1:52686 (fd=22) type=ephemeral
+[2026-07-19 12:06:04.836710] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 12:06:04.836793] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:04.871521] [INFO ] [PID 734319] [TID 136457533425472] [#14] accepted connection from 127.0.0.1:52702 (fd=22) type=ephemeral
+[2026-07-19 12:06:04.872426] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 12:06:04.873321] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 12:06:04.873632] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:04.874210] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:04.879288] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 12:06:04.879937] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 12:06:04.880383] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:04.882537] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:04.884497] [INFO ] [PID 734320] [TID 136457533425472] [#20] accepted connection from 127.0.0.1:52708 (fd=23) type=ephemeral
+[2026-07-19 12:06:04.886777] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 12:06:04.908282] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 12:06:09.889094] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 12:06:09.889252] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 12:06:09.913126] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 12:06:11.744766] [INFO ] [PID 734319] [TID 136457533425472] [#15] accepted connection from 127.0.0.1:52714 (fd=22) type=ephemeral
+[2026-07-19 13:56:23.230201] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 13:57:45.764598] [INFO ] [PID 734320] [TID 136457533425472] [#21] accepted connection from 127.0.0.1:60488 (fd=22) type=ephemeral
+[2026-07-19 13:57:45.781301] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 13:57:45.781535] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:45.872730] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 13:57:45.872983] [INFO ] [PID 734319] [TID 136457533425472] [#16] accepted connection from 127.0.0.1:60504 (fd=22) type=ephemeral
+[2026-07-19 13:57:45.873980] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:45.884786] [INFO ] [PID 734320] [TID 136457533425472] [#22] accepted connection from 127.0.0.1:60516 (fd=23) type=ephemeral
+[2026-07-19 13:57:45.903295] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 13:57:45.910212] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:45.910276] [INFO ] [PID 734320] [TID 136457533425472] [#23] accepted connection from 127.0.0.1:60520 (fd=24) type=ephemeral
+[2026-07-19 13:57:45.913612] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 13:57:45.914075] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:45.925098] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 13:57:45.927147] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:45.958239] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=24 GET /blog/img/avatar.gif -> 200
+[2026-07-19 13:57:46.030943] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:57:50.034949] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 13:57:50.035105] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 13:57:50.035189] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 13:57:50.931708] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 13:59:04.182856] [INFO ] [PID 734319] [TID 136457533425472] [#17] accepted connection from 127.0.0.1:54418 (fd=22) type=ephemeral
+[2026-07-19 13:59:04.183810] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/index.html -> 200
+[2026-07-19 13:59:04.184349] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:04.208978] [INFO ] [PID 734320] [TID 136457533425472] [#24] accepted connection from 127.0.0.1:54434 (fd=22) type=ephemeral
+[2026-07-19 13:59:04.210332] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 13:59:04.210456] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:04.210503] [INFO ] [PID 734320] [TID 136457533425472] [#25] accepted connection from 127.0.0.1:54440 (fd=23) type=ephemeral
+[2026-07-19 13:59:04.211112] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 13:59:04.211309] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:04.212435] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 13:59:04.213942] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:04.221197] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 13:59:04.221611] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:09.227015] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 13:59:09.227582] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 13:59:19.075956] [INFO ] [PID 734320] [TID 136457533425472] [#26] accepted connection from 127.0.0.1:47622 (fd=22) type=ephemeral
+[2026-07-19 13:59:19.360631] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/about.html -> 200
+[2026-07-19 13:59:19.361484] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:19.411343] [INFO ] [PID 734319] [TID 136457533425472] [#18] accepted connection from 127.0.0.1:47630 (fd=23) type=ephemeral
+[2026-07-19 13:59:19.412540] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 13:59:19.414076] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:19.415234] [INFO ] [PID 734320] [TID 136457533425472] [#27] accepted connection from 127.0.0.1:47644 (fd=23) type=ephemeral
+[2026-07-19 13:59:19.418068] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 13:59:19.418315] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:19.428856] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 13:59:19.445848] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:19.446344] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 13:59:19.446721] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:24.424767] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 13:59:24.425255] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 13:59:24.451078] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 13:59:24.451259] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 13:59:30.623444] [INFO ] [PID 734319] [TID 136457533425472] [#19] accepted connection from 127.0.0.1:37332 (fd=22) type=ephemeral
+[2026-07-19 13:59:31.885824] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/index.html -> 200
+[2026-07-19 13:59:31.887806] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:31.943349] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 13:59:31.944464] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:31.944524] [INFO ] [PID 734319] [TID 136457533425472] [#20] accepted connection from 127.0.0.1:37340 (fd=23) type=ephemeral
+[2026-07-19 13:59:31.946790] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 13:59:31.947017] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:31.947997] [INFO ] [PID 734320] [TID 136457533425472] [#28] accepted connection from 127.0.0.1:37350 (fd=22) type=ephemeral
+[2026-07-19 13:59:31.949928] [INFO ] [PID 734320] [TID 136457533425472] [#29] accepted connection from 127.0.0.1:37356 (fd=23) type=ephemeral
+[2026-07-19 13:59:31.951005] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 13:59:31.951336] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:31.960085] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 13:59:31.962495] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 13:59:31.962749] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:31.992274] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 13:59:36.800733] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 13:59:36.801351] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 13:59:36.830824] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 13:59:36.831126] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 3 request(s)
+[2026-07-19 14:04:33.023028] [INFO ] [PID 734320] [TID 136457533425472] [#30] accepted connection from 127.0.0.1:47296 (fd=22) type=ephemeral
+[2026-07-19 14:04:33.025770] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:04:33.026326] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:33.072384] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:04:33.072644] [INFO ] [PID 734319] [TID 136457533425472] [#21] accepted connection from 127.0.0.1:47300 (fd=22) type=ephemeral
+[2026-07-19 14:04:33.073437] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:04:33.073548] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:33.074796] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:33.078498] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:04:33.079202] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:33.087552] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:04:33.089024] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:36.306539] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:04:36.306743] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:36.336799] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:04:36.337235] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:36.338295] [INFO ] [PID 734320] [TID 136457533425472] [#31] accepted connection from 127.0.0.1:40176 (fd=23) type=ephemeral
+[2026-07-19 14:04:36.339947] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:04:36.340647] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:04:36.340798] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:36.353159] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:36.353988] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:04:36.354693] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:04:41.345691] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 6 request(s)
+[2026-07-19 14:04:41.359662] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:04:41.360185] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:05:01.866513] [INFO ] [PID 734320] [TID 136457533425472] [#32] accepted connection from 127.0.0.1:44956 (fd=22) type=ephemeral
+[2026-07-19 14:07:11.219435] [INFO ] [PID 734319] [TID 136457533425472] [#22] accepted connection from 127.0.0.1:41554 (fd=22) type=ephemeral
+[2026-07-19 14:07:11.220871] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:07:11.221397] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:11.263247] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:11.263488] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:11.266629] [INFO ] [PID 734319] [TID 136457533425472] [#23] accepted connection from 127.0.0.1:41562 (fd=23) type=ephemeral
+[2026-07-19 14:07:11.266755] [INFO ] [PID 734319] [TID 136457533425472] [#24] accepted connection from 127.0.0.1:41572 (fd=24) type=ephemeral
+[2026-07-19 14:07:11.266839] [INFO ] [PID 734319] [TID 136457533425472] [#25] accepted connection from 127.0.0.1:41578 (fd=26) type=ephemeral
+[2026-07-19 14:07:11.267347] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=26 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:11.267482] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:11.271243] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=24 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:11.271665] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:11.272975] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:11.299638] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:16.304649] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:07:16.304809] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:07:16.304897] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:07:16.305653] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=26 (slot 3), closing after 1 request(s)
+[2026-07-19 14:07:21.635795] [INFO ] [PID 734319] [TID 136457533425472] [#26] accepted connection from 127.0.0.1:60722 (fd=22) type=ephemeral
+[2026-07-19 14:07:26.640857] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 14:07:28.783687] [INFO ] [PID 734319] [TID 136457533425472] [#27] accepted connection from 127.0.0.1:48998 (fd=22) type=ephemeral
+[2026-07-19 14:07:29.306090] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:07:29.307847] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:29.378522] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:29.379465] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:29.379858] [INFO ] [PID 734319] [TID 136457533425472] [#28] accepted connection from 127.0.0.1:49012 (fd=23) type=ephemeral
+[2026-07-19 14:07:29.381460] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:29.382015] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:29.383392] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:07:29.384624] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:29.387616] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:29.388637] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:29.390467] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:29.463954] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:30.795848] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/about.html -> 200
+[2026-07-19 14:07:30.796520] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:30.846660] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:30.846872] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:30.847922] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:30.850022] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:30.850636] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:30.850806] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:30.851817] [INFO ] [PID 734320] [TID 136457533425472] [#33] accepted connection from 127.0.0.1:49016 (fd=22) type=ephemeral
+[2026-07-19 14:07:30.853526] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:30.861459] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:31.994144] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/article.html -> 200
+[2026-07-19 14:07:31.994741] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:32.048227] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:32.048595] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:32.065773] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:32.066985] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:32.080317] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:32.081507] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:32.083098] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:32.140595] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.386359] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/index.html -> 200
+[2026-07-19 14:07:33.386658] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.429806] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:33.431325] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:33.431861] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.434807] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.435478] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:33.437848] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.438827] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:33.441159] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:07:33.441785] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:33.444793] [INFO ] [PID 734319] [TID 136457533425472] [#29] accepted connection from 127.0.0.1:49018 (fd=24) type=ephemeral
+[2026-07-19 14:07:33.444963] [INFO ] [PID 734319] [TID 136457533425472] [#30] accepted connection from 127.0.0.1:49022 (fd=26) type=ephemeral
+[2026-07-19 14:07:33.471822] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:35.325080] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/resume.html -> 200
+[2026-07-19 14:07:35.325217] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:35.357470] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:35.357710] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:35.359336] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:35.360659] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:35.363079] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:35.363446] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:35.365214] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:35.375170] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:38.377681] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:07:38.378138] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 0 request(s)
+[2026-07-19 14:07:38.379634] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=26 (slot 3), closing after 0 request(s)
+[2026-07-19 14:07:39.731285] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:07:39.732506] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:39.772866] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:07:39.772980] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:39.773482] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:07:39.773695] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:39.780694] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:07:39.780950] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:39.784538] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:07:39.784915] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:39.789557] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:07:39.798600] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:07:44.789942] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 8 request(s)
+[2026-07-19 14:07:44.803643] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 20 request(s)
+[2026-07-19 14:09:55.481131] [INFO ] [PID 734320] [TID 136457533425472] [#34] accepted connection from 127.0.0.1:49752 (fd=22) type=ephemeral
+[2026-07-19 14:09:57.040971] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:09:57.041098] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:09:57.095369] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:09:57.095514] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:09:57.099295] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:09:57.102402] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:09:57.102457] [INFO ] [PID 734320] [TID 136457533425472] [#35] accepted connection from 127.0.0.1:49760 (fd=23) type=ephemeral
+[2026-07-19 14:09:57.103043] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:09:57.103218] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:09:57.107351] [INFO ] [PID 734319] [TID 136457533425472] [#31] accepted connection from 127.0.0.1:49766 (fd=22) type=ephemeral
+[2026-07-19 14:09:57.110463] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:09:57.114857] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:09:59.988289] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/index.html -> 200
+[2026-07-19 14:09:59.988427] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:00.049536] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:10:00.049738] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:00.051232] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:10:00.051683] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:00.059318] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:10:00.059532] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:00.060443] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:10:00.060808] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:00.065326] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:10:00.070277] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:01.593992] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/about.html -> 200
+[2026-07-19 14:10:01.597000] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:01.647703] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:10:01.647854] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:01.653482] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:10:01.654301] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:10:01.655077] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:01.656196] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:01.657674] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:10:01.681900] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:03.060766] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/article.html -> 200
+[2026-07-19 14:10:03.060932] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:03.101090] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:10:03.101428] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:03.102714] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:10:03.102832] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:03.109379] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:10:03.109727] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:03.112288] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:10:03.136035] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.252284] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:10:04.252437] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.291157] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/css/style.css -> 200
+[2026-07-19 14:10:04.291268] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.295954] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:10:04.296425] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.304528] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:10:04.305188] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.309689] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:10:04.311863] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:04.313357] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:10:04.321632] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:10:09.315695] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 6 request(s)
+[2026-07-19 14:10:09.326640] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:10:09.326829] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 16 request(s)
+[2026-07-19 14:10:15.041285] [INFO ] [PID 734320] [TID 136457533425472] [#36] accepted connection from 127.0.0.1:43400 (fd=22) type=ephemeral
+[2026-07-19 14:10:29.855692] [INFO ] [PID 734320] [TID 136457533425472] [#37] accepted connection from 127.0.0.1:45730 (fd=22) type=ephemeral
+[2026-07-19 14:10:39.807968] [INFO ] [PID 734320] [TID 136457533425472] [#38] accepted connection from 127.0.0.1:40846 (fd=22) type=ephemeral
+[2026-07-19 14:11:51.730489] [INFO ] [PID 734320] [TID 136457533425472] [#39] accepted connection from 127.0.0.1:52970 (fd=22) type=ephemeral
+[2026-07-19 14:11:52.602749] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:11:52.603153] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:52.645754] [INFO ] [PID 734319] [TID 136457533425472] [#32] accepted connection from 127.0.0.1:52976 (fd=22) type=ephemeral
+[2026-07-19 14:11:52.646034] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:11:52.646207] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:52.647943] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:11:52.648374] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:52.649146] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:11:52.650505] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:11:52.652629] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:52.652933] [INFO ] [PID 734320] [TID 136457533425472] [#40] accepted connection from 127.0.0.1:52988 (fd=23) type=ephemeral
+[2026-07-19 14:11:52.653256] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:52.653304] [INFO ] [PID 734319] [TID 136457533425472] [#33] accepted connection from 127.0.0.1:52996 (fd=23) type=ephemeral
+[2026-07-19 14:11:52.656435] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:11:52.699716] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:11:57.664677] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:11:57.665350] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:11:57.706638] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:11:57.706973] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:12:00.853968] [INFO ] [PID 734319] [TID 136457533425472] [#34] accepted connection from 127.0.0.1:36902 (fd=22) type=ephemeral
+[2026-07-19 14:12:01.541083] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:12:01.541196] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:01.584782] [INFO ] [PID 734320] [TID 136457533425472] [#41] accepted connection from 127.0.0.1:36914 (fd=22) type=ephemeral
+[2026-07-19 14:12:01.584912] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:12:01.585380] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:12:01.585412] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:01.585487] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:01.590166] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:12:01.590378] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:01.594181] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:12:01.595904] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:01.610146] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:12:01.641465] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:06.601641] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:12:06.646644] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:12:06.685550] [INFO ] [PID 734319] [TID 136457533425472] [#35] accepted connection from 127.0.0.1:57590 (fd=22) type=ephemeral
+[2026-07-19 14:12:08.090375] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:12:08.090942] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:08.134876] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:12:08.136702] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:08.136751] [INFO ] [PID 734319] [TID 136457533425472] [#36] accepted connection from 127.0.0.1:57594 (fd=23) type=ephemeral
+[2026-07-19 14:12:08.136852] [INFO ] [PID 734319] [TID 136457533425472] [#37] accepted connection from 127.0.0.1:57600 (fd=24) type=ephemeral
+[2026-07-19 14:12:08.136921] [INFO ] [PID 734319] [TID 136457533425472] [#38] accepted connection from 127.0.0.1:57602 (fd=26) type=ephemeral
+[2026-07-19 14:12:08.137009] [INFO ] [PID 734319] [TID 136457533425472] [#39] accepted connection from 127.0.0.1:57606 (fd=27) type=ephemeral
+[2026-07-19 14:12:08.142400] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=27 GET /blog/js/main.js -> 200
+[2026-07-19 14:12:08.143337] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:08.143881] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=26 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:12:08.144642] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:08.145152] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=24 GET /blog/img/logo.png -> 200
+[2026-07-19 14:12:08.146307] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:08.147761] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:12:08.208971] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:13.214630] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:12:13.214774] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:12:13.214850] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:12:13.214911] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=26 (slot 3), closing after 1 request(s)
+[2026-07-19 14:12:13.216741] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=27 (slot 4), closing after 1 request(s)
+[2026-07-19 14:12:19.275006] [INFO ] [PID 734320] [TID 136457533425472] [#42] accepted connection from 127.0.0.1:46084 (fd=22) type=ephemeral
+[2026-07-19 14:12:19.965340] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:12:19.966170] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:20.012072] [INFO ] [PID 734319] [TID 136457533425472] [#40] accepted connection from 127.0.0.1:46098 (fd=22) type=ephemeral
+[2026-07-19 14:12:20.012931] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:12:20.014111] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:20.015061] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:12:20.015774] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:20.017517] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:12:20.018177] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:20.020693] [INFO ] [PID 734320] [TID 136457533425472] [#43] accepted connection from 127.0.0.1:46114 (fd=23) type=ephemeral
+[2026-07-19 14:12:20.020862] [INFO ] [PID 734320] [TID 136457533425472] [#44] accepted connection from 127.0.0.1:46126 (fd=24) type=ephemeral
+[2026-07-19 14:12:20.021970] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:12:20.022199] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:20.022756] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=24 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:12:20.057323] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:12:25.025798] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:12:25.062040] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:12:25.062246] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:12:25.062347] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:13:06.335791] [INFO ] [PID 734320] [TID 136457533425472] [#45] accepted connection from 127.0.0.1:58348 (fd=22) type=ephemeral
+[2026-07-19 14:15:06.260902] [INFO ] [PID 734320] [TID 136457533425472] [#46] accepted connection from 127.0.0.1:40534 (fd=22) type=ephemeral
+[2026-07-19 14:15:06.261780] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:15:06.261876] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:06.305386] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:15:06.305669] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:06.307974] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:15:06.308563] [INFO ] [PID 734319] [TID 136457533425472] [#41] accepted connection from 127.0.0.1:40548 (fd=22) type=ephemeral
+[2026-07-19 14:15:06.309269] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:06.311485] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:15:06.311736] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:06.314450] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:15:06.314767] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:06.329209] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:15:06.351527] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.184096] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:15:08.184290] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.236645] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:15:08.240706] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.241208] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:15:08.242237] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.243425] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:15:08.245972] [INFO ] [PID 734320] [TID 136457533425472] [#47] accepted connection from 127.0.0.1:40556 (fd=23) type=ephemeral
+[2026-07-19 14:15:08.246285] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.248188] [INFO ] [PID 734320] [TID 136457533425472] [#48] accepted connection from 127.0.0.1:40572 (fd=24) type=ephemeral
+[2026-07-19 14:15:08.249801] [INFO ] [PID 734319] [TID 136457533425472] [#42] accepted connection from 127.0.0.1:40586 (fd=23) type=ephemeral
+[2026-07-19 14:15:08.257126] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:15:08.287999] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:08.289916] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:15:08.290737] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:15:13.256666] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:15:13.256861] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:15:13.256943] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 0 request(s)
+[2026-07-19 14:15:13.295646] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 6 request(s)
+[2026-07-19 14:15:13.296054] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:16:03.374231] [INFO ] [PID 734320] [TID 136457533425472] [#49] accepted connection from 127.0.0.1:59246 (fd=22) type=ephemeral
+[2026-07-19 14:16:03.377354] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:16:03.377675] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:03.409242] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:16:03.409540] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:03.409626] [INFO ] [PID 734320] [TID 136457533425472] [#50] accepted connection from 127.0.0.1:59254 (fd=23) type=ephemeral
+[2026-07-19 14:16:03.410058] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:16:03.410135] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:03.414138] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:16:03.414348] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:03.417525] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:16:03.419538] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:03.428960] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:16:03.440685] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:16:08.445841] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:16:08.446035] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 3 request(s)
+[2026-07-19 14:18:50.647668] [INFO ] [PID 734320] [TID 136457533425472] [#51] accepted connection from 127.0.0.1:52516 (fd=22) type=ephemeral
+[2026-07-19 14:18:50.648408] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:18:50.648739] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:50.690801] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:18:50.690938] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:50.690976] [INFO ] [PID 734320] [TID 136457533425472] [#52] accepted connection from 127.0.0.1:52520 (fd=23) type=ephemeral
+[2026-07-19 14:18:50.691042] [INFO ] [PID 734320] [TID 136457533425472] [#53] accepted connection from 127.0.0.1:52526 (fd=24) type=ephemeral
+[2026-07-19 14:18:50.691124] [INFO ] [PID 734320] [TID 136457533425472] [#54] accepted connection from 127.0.0.1:52528 (fd=26) type=ephemeral
+[2026-07-19 14:18:50.691223] [INFO ] [PID 734320] [TID 136457533425472] [#55] accepted connection from 127.0.0.1:52536 (fd=27) type=ephemeral
+[2026-07-19 14:18:50.691681] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=27 GET /blog/js/main.js -> 200
+[2026-07-19 14:18:50.691802] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:50.700627] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=26 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:18:50.727594] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:50.728186] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=24 GET /blog/img/logo.png -> 200
+[2026-07-19 14:18:50.730416] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:50.730917] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:18:50.732115] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:18:55.735461] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:18:55.735684] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:18:55.735763] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:18:55.735819] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=26 (slot 3), closing after 1 request(s)
+[2026-07-19 14:18:55.735875] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=27 (slot 4), closing after 1 request(s)
+[2026-07-19 14:18:56.479121] [INFO ] [PID 734319] [TID 136457533425472] [#43] accepted connection from 127.0.0.1:34148 (fd=22) type=ephemeral
+[2026-07-19 14:19:01.483662] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 14:21:14.701453] [INFO ] [PID 734320] [TID 136457533425472] [#56] accepted connection from 127.0.0.1:53502 (fd=22) type=ephemeral
+[2026-07-19 14:21:14.704484] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:21:14.705038] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:14.775019] [INFO ] [PID 734319] [TID 136457533425472] [#44] accepted connection from 127.0.0.1:53506 (fd=22) type=ephemeral
+[2026-07-19 14:21:14.775180] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:21:14.775268] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:14.777004] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:21:14.777115] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:14.779543] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:21:14.780788] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:14.787369] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:21:14.792664] [INFO ] [PID 734320] [TID 136457533425472] [#57] accepted connection from 127.0.0.1:53514 (fd=23) type=ephemeral
+[2026-07-19 14:21:14.795262] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:21:14.795554] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:14.806806] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:21:19.800699] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:21:19.800967] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:21:19.812774] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:23:03.978582] [INFO ] [PID 734320] [TID 136457533425472] [#58] accepted connection from 127.0.0.1:37656 (fd=22) type=ephemeral
+[2026-07-19 14:23:03.979940] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:23:03.980104] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:04.013326] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:23:04.013456] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:04.015403] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:23:04.015516] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:04.021738] [INFO ] [PID 734319] [TID 136457533425472] [#45] accepted connection from 127.0.0.1:37658 (fd=22) type=ephemeral
+[2026-07-19 14:23:04.022404] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:23:04.022552] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:04.023288] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:23:04.023400] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:04.028411] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:23:04.028418] [INFO ] [PID 734320] [TID 136457533425472] [#59] accepted connection from 127.0.0.1:37662 (fd=23) type=ephemeral
+[2026-07-19 14:23:04.037097] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:09.032642] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 4 request(s)
+[2026-07-19 14:23:09.032863] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:23:09.041859] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:23:50.767802] [INFO ] [PID 734320] [TID 136457533425472] [#60] accepted connection from 127.0.0.1:37098 (fd=22) type=ephemeral
+[2026-07-19 14:23:50.772121] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:23:50.772600] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:50.814865] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:23:50.815022] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:50.817757] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:23:50.818368] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:50.830894] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:23:50.833269] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:50.838874] [INFO ] [PID 734319] [TID 136457533425472] [#46] accepted connection from 127.0.0.1:37110 (fd=22) type=ephemeral
+[2026-07-19 14:23:50.840733] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:23:50.842506] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:23:50.844251] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:50.883521] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:23:55.849155] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:23:55.886053] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:26:09.273519] [INFO ] [PID 734320] [TID 136457533425472] [#61] accepted connection from 127.0.0.1:56848 (fd=22) type=ephemeral
+[2026-07-19 14:26:09.278751] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:26:09.280289] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:09.311458] [INFO ] [PID 734319] [TID 136457533425472] [#47] accepted connection from 127.0.0.1:56852 (fd=22) type=ephemeral
+[2026-07-19 14:26:09.311616] [INFO ] [PID 734319] [TID 136457533425472] [#48] accepted connection from 127.0.0.1:56868 (fd=23) type=ephemeral
+[2026-07-19 14:26:09.312830] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:26:09.312943] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:09.313686] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:26:09.313800] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:09.319059] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:26:09.319209] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:09.319726] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:26:09.319878] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:09.319936] [INFO ] [PID 734319] [TID 136457533425472] [#49] accepted connection from 127.0.0.1:56884 (fd=24) type=ephemeral
+[2026-07-19 14:26:09.326496] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:26:09.337011] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:26:14.317677] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:26:14.341359] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:26:14.341533] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 3 request(s)
+[2026-07-19 14:26:14.341668] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 0 request(s)
+[2026-07-19 14:27:31.776367] [INFO ] [PID 734320] [TID 136457533425472] [#62] accepted connection from 127.0.0.1:46152 (fd=22) type=ephemeral
+[2026-07-19 14:27:31.780079] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:27:31.780262] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:31.812907] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:27:31.813239] [INFO ] [PID 734319] [TID 136457533425472] [#50] accepted connection from 127.0.0.1:46164 (fd=22) type=ephemeral
+[2026-07-19 14:27:31.816099] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:27:31.816201] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:31.817214] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:31.833868] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:27:31.834057] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:31.840213] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:27:31.845815] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:27:31.846042] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:31.875618] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:27:36.853002] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:27:36.883059] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:28:19.904031] [INFO ] [PID 734320] [TID 136457533425472] [#63] accepted connection from 127.0.0.1:59708 (fd=22) type=ephemeral
+[2026-07-19 14:28:19.905652] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:28:19.906482] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:19.926280] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:28:19.926834] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:19.931553] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:28:19.931732] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:19.941545] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:28:19.941985] [INFO ] [PID 734319] [TID 136457533425472] [#51] accepted connection from 127.0.0.1:59722 (fd=22) type=ephemeral
+[2026-07-19 14:28:19.942982] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:19.943018] [INFO ] [PID 734320] [TID 136457533425472] [#64] accepted connection from 127.0.0.1:59726 (fd=23) type=ephemeral
+[2026-07-19 14:28:19.947384] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:28:19.949944] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:28:19.950110] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:19.981640] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:24.954304] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:28:24.986647] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 4 request(s)
+[2026-07-19 14:28:24.986816] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:28:29.335114] [INFO ] [PID 734320] [TID 136457533425472] [#65] accepted connection from 127.0.0.1:56470 (fd=22) type=ephemeral
+[2026-07-19 14:28:30.983480] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 14:28:30.986080] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.054086] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:28:31.055855] [INFO ] [PID 734319] [TID 136457533425472] [#52] accepted connection from 127.0.0.1:56472 (fd=22) type=ephemeral
+[2026-07-19 14:28:31.056030] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.060320] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:28:31.063150] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.075903] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:28:31.077078] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.086742] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:28:31.118674] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.557722] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:28:31.557960] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.628480] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:28:31.630233] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.631154] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:28:31.632682] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.647513] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:28:31.647859] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.651372] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:28:31.667717] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:28:31.670323] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:31.697503] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:28:36.675225] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:28:36.703739] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 6 request(s)
+[2026-07-19 14:31:00.935800] [INFO ] [PID 734320] [TID 136457533425472] [#66] accepted connection from 127.0.0.1:54162 (fd=22) type=ephemeral
+[2026-07-19 14:31:00.936933] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:31:00.937646] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:00.963919] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:31:00.964048] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:00.964095] [INFO ] [PID 734320] [TID 136457533425472] [#67] accepted connection from 127.0.0.1:54172 (fd=23) type=ephemeral
+[2026-07-19 14:31:00.964510] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:31:00.965530] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:00.965890] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:31:00.966051] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:00.967878] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:31:00.974387] [INFO ] [PID 734319] [TID 136457533425472] [#53] accepted connection from 127.0.0.1:54188 (fd=22) type=ephemeral
+[2026-07-19 14:31:00.976434] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:00.981784] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:31:00.989434] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:31:05.979619] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 14:31:05.994208] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:31:05.996909] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 3 request(s)
+[2026-07-19 14:33:30.246058] [INFO ] [PID 734320] [TID 136457533425472] [#68] accepted connection from 127.0.0.1:35508 (fd=22) type=ephemeral
+[2026-07-19 14:33:30.249315] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:33:30.250627] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:30.287055] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:33:30.287197] [INFO ] [PID 734319] [TID 136457533425472] [#54] accepted connection from 127.0.0.1:35514 (fd=22) type=ephemeral
+[2026-07-19 14:33:30.287362] [INFO ] [PID 734319] [TID 136457533425472] [#55] accepted connection from 127.0.0.1:35526 (fd=23) type=ephemeral
+[2026-07-19 14:33:30.287538] [INFO ] [PID 734319] [TID 136457533425472] [#56] accepted connection from 127.0.0.1:35540 (fd=24) type=ephemeral
+[2026-07-19 14:33:30.288014] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:30.292776] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=24 GET /blog/css/style.css -> 200
+[2026-07-19 14:33:30.293759] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:30.296195] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:33:30.302490] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:30.304687] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:33:30.305995] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:33:30.308312] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:30.333031] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:35.312662] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:33:35.313215] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:33:35.313344] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:33:35.339474] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:33:38.045660] [INFO ] [PID 734320] [TID 136457533425472] [#69] accepted connection from 127.0.0.1:53310 (fd=22) type=ephemeral
+[2026-07-19 14:33:38.557013] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/about.html -> 200
+[2026-07-19 14:33:38.557151] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:38.614312] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:33:38.616442] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:38.617323] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:33:38.618156] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:38.618971] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:33:38.619606] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:38.625748] [INFO ] [PID 734319] [TID 136457533425472] [#57] accepted connection from 127.0.0.1:53324 (fd=22) type=ephemeral
+[2026-07-19 14:33:38.627753] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:33:38.652917] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:33:43.623231] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 4 request(s)
+[2026-07-19 14:33:43.662626] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:34:21.123476] [INFO ] [PID 734319] [TID 136457533425472] [#58] accepted connection from 127.0.0.1:43440 (fd=22) type=ephemeral
+[2026-07-19 14:34:26.127663] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 14:34:26.660879] [INFO ] [PID 734319] [TID 136457533425472] [#59] accepted connection from 127.0.0.1:47334 (fd=22) type=ephemeral
+[2026-07-19 14:36:54.238012] [INFO ] [PID 734320] [TID 136457533425472] [#70] accepted connection from 127.0.0.1:57970 (fd=22) type=ephemeral
+[2026-07-19 14:36:54.239031] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/about.html -> 200
+[2026-07-19 14:36:54.239147] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:36:54.277087] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:36:54.277948] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:36:54.278989] [INFO ] [PID 734319] [TID 136457533425472] [#60] accepted connection from 127.0.0.1:57978 (fd=22) type=ephemeral
+[2026-07-19 14:36:54.279711] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:36:54.282334] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:36:54.284167] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:36:54.288177] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:36:54.288333] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:36:54.288389] [INFO ] [PID 734320] [TID 136457533425472] [#71] accepted connection from 127.0.0.1:57990 (fd=23) type=ephemeral
+[2026-07-19 14:36:54.307243] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:36:59.294772] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:36:59.295297] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 0 request(s)
+[2026-07-19 14:37:05.519618] [INFO ] [PID 734319] [TID 136457533425472] [#61] accepted connection from 127.0.0.1:35122 (fd=23) type=ephemeral
+[2026-07-19 14:37:05.523530] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/article.html -> 200
+[2026-07-19 14:37:05.523981] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:05.593798] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:37:05.596880] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:05.597347] [INFO ] [PID 734320] [TID 136457533425472] [#72] accepted connection from 127.0.0.1:35134 (fd=22) type=ephemeral
+[2026-07-19 14:37:05.597649] [INFO ] [PID 734320] [TID 136457533425472] [#73] accepted connection from 127.0.0.1:35142 (fd=23) type=ephemeral
+[2026-07-19 14:37:05.598316] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:37:05.601670] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:37:05.601854] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:05.605301] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:11.609851] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:37:57.653916] [INFO ] [PID 734320] [TID 136457533425472] [#74] accepted connection from 127.0.0.1:37946 (fd=22) type=ephemeral
+[2026-07-19 14:37:57.655632] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/article.html -> 200
+[2026-07-19 14:37:57.655766] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.671370] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:37:57.671539] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.672266] [INFO ] [PID 734319] [TID 136457533425472] [#62] accepted connection from 127.0.0.1:37950 (fd=24) type=ephemeral
+[2026-07-19 14:37:57.673755] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/article.html -> 200
+[2026-07-19 14:37:57.673856] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.675322] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:37:57.677798] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:37:57.678072] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.689629] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.690175] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=24 GET /blog/js/main.js -> 200
+[2026-07-19 14:37:57.691347] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:37:57.691379] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] error/hangup on fd=23
+[2026-07-19 14:38:02.683374] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:38:02.698423] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 5 request(s)
+[2026-07-19 14:38:02.698610] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:38:21.881909] [INFO ] [PID 734320] [TID 136457533425472] [#75] accepted connection from 127.0.0.1:39540 (fd=22) type=ephemeral
+[2026-07-19 14:38:23.040497] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/resume.html -> 200
+[2026-07-19 14:38:23.040675] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:23.091078] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:38:23.091686] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:23.096699] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:38:23.096850] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:23.098868] [INFO ] [PID 734320] [TID 136457533425472] [#76] accepted connection from 127.0.0.1:39554 (fd=23) type=ephemeral
+[2026-07-19 14:38:23.106371] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:38:23.112574] [INFO ] [PID 734319] [TID 136457533425472] [#63] accepted connection from 127.0.0.1:39558 (fd=22) type=ephemeral
+[2026-07-19 14:38:23.113429] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/photo.jpg -> 200
+[2026-07-19 14:38:23.113609] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:23.146755] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:23.147357] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/logo.png -> 200
+[2026-07-19 14:38:23.147553] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:28.117678] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:38:28.153788] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 4 request(s)
+[2026-07-19 14:38:28.154000] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:38:35.116927] [INFO ] [PID 734320] [TID 136457533425472] [#77] accepted connection from 127.0.0.1:37226 (fd=22) type=ephemeral
+[2026-07-19 14:38:35.802417] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:38:35.802531] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:35.856815] [INFO ] [PID 734319] [TID 136457533425472] [#64] accepted connection from 127.0.0.1:47020 (fd=22) type=ephemeral
+[2026-07-19 14:38:35.857239] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:38:35.858168] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:35.861418] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:38:35.862429] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:35.866097] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:38:35.868332] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:35.868472] [INFO ] [PID 734320] [TID 136457533425472] [#78] accepted connection from 127.0.0.1:47024 (fd=23) type=ephemeral
+[2026-07-19 14:38:35.869218] [INFO ] [PID 734320] [TID 136457533425472] [#79] accepted connection from 127.0.0.1:47040 (fd=24) type=ephemeral
+[2026-07-19 14:38:35.871658] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:38:35.872530] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:35.873008] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:38:35.904754] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:38:40.909836] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 3 request(s)
+[2026-07-19 14:38:40.910046] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:38:40.910133] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 0 request(s)
+[2026-07-19 14:40:04.324212] [INFO ] [PID 734320] [TID 136457533425472] [#80] accepted connection from 127.0.0.1:39202 (fd=22) type=ephemeral
+[2026-07-19 14:40:04.324890] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=22 GET / -> 200
+[2026-07-19 14:40:04.325045] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:09.329417] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 1 request(s)
+[2026-07-19 14:40:14.351330] [INFO ] [PID 734319] [TID 136457533425472] [#65] accepted connection from 127.0.0.1:45212 (fd=23) type=ephemeral
+[2026-07-19 14:40:14.351989] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET / -> 200
+[2026-07-19 14:40:14.352533] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.352619] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] error/hangup on fd=22
+[2026-07-19 14:40:14.911187] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/ -> 200
+[2026-07-19 14:40:14.911419] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.957749] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=23 GET /blog/js/main.js -> 200
+[2026-07-19 14:40:14.958518] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.958628] [INFO ] [PID 734319] [TID 136457533425472] [#66] accepted connection from 127.0.0.1:45218 (fd=22) type=ephemeral
+[2026-07-19 14:40:14.960394] [INFO ] [PID 734320] [TID 136457533425472] [#81] accepted connection from 127.0.0.1:45232 (fd=22) type=ephemeral
+[2026-07-19 14:40:14.961063] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:40:14.961144] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.961190] [INFO ] [PID 734319] [TID 136457533425472] [#67] accepted connection from 127.0.0.1:45238 (fd=24) type=ephemeral
+[2026-07-19 14:40:14.961531] [INFO ] [PID 734320] [TID 136457533425472] [#82] accepted connection from 127.0.0.1:45246 (fd=23) type=ephemeral
+[2026-07-19 14:40:14.964316] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:40:14.965028] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.968551] [INFO ] [PID 734320] [TID 136457533425472] [Worker-2] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:40:14.971723] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:14.973773] [INFO ] [PID 734319] [TID 136457533425472] [Worker-1] fd=24 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:40:14.999321] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:40:19.003670] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 2 request(s)
+[2026-07-19 14:40:19.004159] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 2 request(s)
+[2026-07-19 14:40:19.004270] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] idle timeout on fd=24 (slot 2), closing after 1 request(s)
+[2026-07-19 14:40:19.980857] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=22 (slot 0), closing after 0 request(s)
+[2026-07-19 14:40:19.981058] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] idle timeout on fd=23 (slot 1), closing after 1 request(s)
+[2026-07-19 14:43:56.663518] [INFO ] [PID 734320] [TID 136457533425472] [EpollServer] shutting down...
+[2026-07-19 14:43:56.663486] [INFO ] [PID 734318] [TID 136457533425472] [Master] shutting down...
+[2026-07-19 14:43:56.663619] [INFO ] [PID 734318] [TID 136457533425472] [Master] listen socket closed
+[2026-07-19 14:43:56.663638] [INFO ] [PID 734318] [TID 136457533425472] [Master] sending SIGTERM to worker PID 734319
+[2026-07-19 14:43:56.663662] [INFO ] [PID 734318] [TID 136457533425472] [Master] sending SIGTERM to worker PID 734320
+[2026-07-19 14:43:56.663671] [INFO ] [PID 734319] [TID 136457533425472] [EpollServer] shutting down...
+[2026-07-19 14:43:56.663682] [INFO ] [PID 734318] [TID 136457533425472] [Master] waiting up to 3000 ms for workers to exit
+[2026-07-19 14:43:56.663726] [INFO ] [PID 734319] [TID 136457533425472] [Worker] shutdown — served 67 client(s) (SIGTERM)
+[2026-07-19 14:43:56.664054] [INFO ] [PID 734319] [TID 136457533425472] [Worker] PID 734319 shutting down
+[2026-07-19 14:43:56.664073] [INFO ] [PID 734319] [TID 136457533425472] Logging system shutting down
+[2026-07-19 14:43:56.664694] [INFO ] [PID 734320] [TID 136457533425472] [Worker] shutdown — served 82 client(s) (SIGTERM)
+[2026-07-19 14:43:56.665246] [INFO ] [PID 734320] [TID 136457533425472] [Worker] PID 734320 shutting down
+[2026-07-19 14:43:56.665265] [INFO ] [PID 734320] [TID 136457533425472] Logging system shutting down
+[2026-07-19 14:43:56.667209] [INFO ] [PID 734318] [TID 136457533425472] [Master] worker PID 734319 exited (status 0)
+[2026-07-19 14:43:56.667780] [INFO ] [PID 734318] [TID 136457533425472] [Master] worker PID 734320 exited (status 0)
+[2026-07-19 14:43:56.667831] [INFO ] [PID 734318] [TID 136457533425472] [Master] all workers stopped
+[2026-07-19 14:43:56.667848] [INFO ] [PID 734318] [TID 136457533425472] ========================================
+[2026-07-19 14:43:56.667867] [INFO ] [PID 734318] [TID 136457533425472]   Master PID: 734318  shutdown complete
+[2026-07-19 14:43:56.667890] [INFO ] [PID 734318] [TID 136457533425472] ========================================
+[2026-07-19 14:43:56.667958] [INFO ] [PID 734318] [TID 136457533425472] Logging system shutting down
+[2026-07-19 14:43:59.736819] [INFO ] [PID 839623] [TID 140100962867008] Logging system initialized (v1.2)
+[2026-07-19 14:43:59.736936] [INFO ] [PID 839623] [TID 140100962867008] Master-Worker Mode (epoll I/O multiplexing) v1.2
+[2026-07-19 14:43:59.736960] [INFO ] [PID 839623] [TID 140100962867008] user store: loading data...
+[2026-07-19 14:43:59.847558] [INFO ] [PID 839623] [TID 140100962867008] user store: loaded 100003 users
+[2026-07-19 14:43:59.848640] [INFO ] [PID 839623] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.848684] [INFO ] [PID 839623] [TID 140100962867008]   Master PID: 839623  starting 2 worker(s)  shutdown_timeout: 3000 ms
+[2026-07-19 14:43:59.848701] [INFO ] [PID 839623] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.848792] [INFO ] [PID 839623] [TID 140100962867008] [Master] listening on 127.0.0.1:80 (fd=20)
+[2026-07-19 14:43:59.849799] [INFO ] [PID 839623] [TID 140100962867008] [Master] forked worker 1, PID 839624
+[2026-07-19 14:43:59.850055] [INFO ] [PID 839624] [TID 140100962867008] [Worker] PID 839624 started, listen_fd=20
+[2026-07-19 14:43:59.850738] [INFO ] [PID 839623] [TID 140100962867008] [Master] forked worker 2, PID 839625
+[2026-07-19 14:43:59.851047] [INFO ] [PID 839625] [TID 140100962867008] [Worker] PID 839625 started, listen_fd=20
+[2026-07-19 14:43:59.852794] [INFO ] [PID 839623] [TID 140100962867008] [Master] entering wait loop (2 workers)
+[2026-07-19 14:43:59.856937] [INFO ] [PID 839624] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.856993] [INFO ] [PID 839624] [TID 140100962867008]   Worker-1 PID: 839624  (epoll I/O multiplexing)
+[2026-07-19 14:43:59.857009] [INFO ] [PID 839624] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.857033] [INFO ] [PID 839624] [TID 140100962867008] [Worker] using inherited listen_fd=20
+[2026-07-19 14:43:59.859233] [INFO ] [PID 839625] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.859290] [INFO ] [PID 839625] [TID 140100962867008]   Worker-2 PID: 839625  (epoll I/O multiplexing)
+[2026-07-19 14:43:59.859306] [INFO ] [PID 839625] [TID 140100962867008] ========================================
+[2026-07-19 14:43:59.859321] [INFO ] [PID 839625] [TID 140100962867008] [Worker] using inherited listen_fd=20
+[2026-07-19 14:44:30.698396] [INFO ] [PID 839625] [TID 140100962867008] [#1] accepted connection from 127.0.0.1:58416 (fd=22) type=ephemeral
+[2026-07-19 14:44:30.727042] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET / -> 200
+[2026-07-19 14:44:30.728366] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:30.879371] [INFO ] [PID 839625] [TID 140100962867008] [#2] accepted connection from 127.0.0.1:58418 (fd=22) type=ephemeral
+[2026-07-19 14:44:30.880445] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /favicon.ico -> 404
+[2026-07-19 14:44:30.881733] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.900455] [INFO ] [PID 839625] [TID 140100962867008] [#3] accepted connection from 127.0.0.1:57372 (fd=22) type=ephemeral
+[2026-07-19 14:44:45.901226] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:44:45.901334] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.953836] [INFO ] [PID 839625] [TID 140100962867008] [#4] accepted connection from 127.0.0.1:57374 (fd=22) type=ephemeral
+[2026-07-19 14:44:45.956086] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:44:45.957422] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.960958] [INFO ] [PID 839625] [TID 140100962867008] [#5] accepted connection from 127.0.0.1:57380 (fd=22) type=ephemeral
+[2026-07-19 14:44:45.962228] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:44:45.962732] [INFO ] [PID 839624] [TID 140100962867008] [#1] accepted connection from 127.0.0.1:57388 (fd=22) type=ephemeral
+[2026-07-19 14:44:45.962808] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.967515] [INFO ] [PID 839625] [TID 140100962867008] [#6] accepted connection from 127.0.0.1:57394 (fd=23) type=ephemeral
+[2026-07-19 14:44:45.968579] [INFO ] [PID 839625] [TID 140100962867008] [#7] accepted connection from 127.0.0.1:57408 (fd=22) type=ephemeral
+[2026-07-19 14:44:45.970482] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=23 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:44:45.970813] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.987103] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:44:45.990210] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:45.998700] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:44:46.006319] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:44:46.114435] [INFO ] [PID 839624] [TID 140100962867008] [#2] accepted connection from 127.0.0.1:57414 (fd=22) type=ephemeral
+[2026-07-19 14:44:46.116891] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/icon/favicon.ico -> 200
+[2026-07-19 14:44:46.118754] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:46:22.832568] [INFO ] [PID 839625] [TID 140100962867008] [#8] accepted connection from 127.0.0.1:40838 (fd=22) type=ephemeral
+[2026-07-19 14:46:22.834433] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog -> 301
+[2026-07-19 14:46:22.835279] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:47:25.900122] [INFO ] [PID 839625] [TID 140100962867008] [#9] accepted connection from 127.0.0.1:44408 (fd=22) type=ephemeral
+[2026-07-19 14:47:25.901104] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog -> 301
+[2026-07-19 14:47:25.901229] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:48:12.796242] [INFO ] [PID 839624] [TID 140100962867008] [#3] accepted connection from 127.0.0.1:54410 (fd=22) type=ephemeral
+[2026-07-19 14:48:12.797353] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/ -> 200
+[2026-07-19 14:48:12.797485] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:48:42.608489] [INFO ] [PID 839625] [TID 140100962867008] [#10] accepted connection from 127.0.0.1:41640 (fd=22) type=ephemeral
+[2026-07-19 14:48:42.609675] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/ -> 200
+[2026-07-19 14:48:42.609813] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:48:50.187127] [INFO ] [PID 839624] [TID 140100962867008] [#4] accepted connection from 127.0.0.1:42520 (fd=22) type=ephemeral
+[2026-07-19 14:48:50.188112] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/ -> 200
+[2026-07-19 14:48:50.189498] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:16.652312] [INFO ] [PID 839625] [TID 140100962867008] [#11] accepted connection from 127.0.0.1:40812 (fd=22) type=ephemeral
+[2026-07-19 14:49:16.653112] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/about.html -> 200
+[2026-07-19 14:49:16.654290] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:16.731458] [INFO ] [PID 839624] [TID 140100962867008] [#5] accepted connection from 127.0.0.1:40826 (fd=22) type=ephemeral
+[2026-07-19 14:49:16.732373] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:49:16.733506] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:16.734144] [INFO ] [PID 839625] [TID 140100962867008] [#12] accepted connection from 127.0.0.1:40840 (fd=22) type=ephemeral
+[2026-07-19 14:49:16.735211] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:49:16.736802] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:16.740008] [INFO ] [PID 839624] [TID 140100962867008] [#6] accepted connection from 127.0.0.1:40846 (fd=22) type=ephemeral
+[2026-07-19 14:49:16.741644] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:49:16.743355] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:16.757844] [INFO ] [PID 839625] [TID 140100962867008] [#13] accepted connection from 127.0.0.1:40848 (fd=22) type=ephemeral
+[2026-07-19 14:49:16.761688] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:49:16.785140] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.262378] [INFO ] [PID 839625] [TID 140100962867008] [#14] accepted connection from 127.0.0.1:40860 (fd=22) type=ephemeral
+[2026-07-19 14:49:18.263789] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:49:18.264682] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.319524] [INFO ] [PID 839624] [TID 140100962867008] [#7] accepted connection from 127.0.0.1:40862 (fd=22) type=ephemeral
+[2026-07-19 14:49:18.321529] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:49:18.321545] [INFO ] [PID 839625] [TID 140100962867008] [#15] accepted connection from 127.0.0.1:40868 (fd=22) type=ephemeral
+[2026-07-19 14:49:18.323069] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:49:18.323244] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.326240] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.331505] [INFO ] [PID 839625] [TID 140100962867008] [#16] accepted connection from 127.0.0.1:40880 (fd=22) type=ephemeral
+[2026-07-19 14:49:18.332535] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:49:18.332951] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.341596] [INFO ] [PID 839624] [TID 140100962867008] [#8] accepted connection from 127.0.0.1:40886 (fd=23) type=ephemeral
+[2026-07-19 14:49:18.342359] [INFO ] [PID 839624] [TID 140100962867008] [#9] accepted connection from 127.0.0.1:40900 (fd=22) type=ephemeral
+[2026-07-19 14:49:18.356209] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:49:18.366067] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:49:18.369634] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:49:18.372101] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.231979] [INFO ] [PID 839625] [TID 140100962867008] [#17] accepted connection from 127.0.0.1:48208 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.235464] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/index.html -> 200
+[2026-07-19 14:50:46.237198] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.304473] [INFO ] [PID 839625] [TID 140100962867008] [#18] accepted connection from 127.0.0.1:48216 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.305062] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/css/style.css -> 200
+[2026-07-19 14:50:46.306486] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.354484] [INFO ] [PID 839624] [TID 140100962867008] [#10] accepted connection from 127.0.0.1:48222 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.358861] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/js/main.js -> 200
+[2026-07-19 14:50:46.362173] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.366559] [INFO ] [PID 839624] [TID 140100962867008] [#11] accepted connection from 127.0.0.1:48228 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.371967] [INFO ] [PID 839625] [TID 140100962867008] [#19] accepted connection from 127.0.0.1:48232 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.373865] [INFO ] [PID 839624] [TID 140100962867008] [Worker-1] fd=22 GET /blog/img/logo.png -> 200
+[2026-07-19 14:50:46.374061] [INFO ] [PID 839625] [TID 140100962867008] [#20] accepted connection from 127.0.0.1:48236 (fd=23) type=ephemeral
+[2026-07-19 14:50:46.377031] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.379141] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/img/banner.jpg -> 200
+[2026-07-19 14:50:46.381021] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.402148] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=23 GET /blog/img/avatar.gif -> 200
+[2026-07-19 14:50:46.427754] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:50:46.618137] [INFO ] [PID 839625] [TID 140100962867008] [#21] accepted connection from 127.0.0.1:48242 (fd=22) type=ephemeral
+[2026-07-19 14:50:46.619311] [INFO ] [PID 839625] [TID 140100962867008] [Worker-2] fd=22 GET /blog/icon/favicon.ico -> 200
+[2026-07-19 14:50:46.620365] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 14:51:56.228937] [INFO ] [PID 839624] [TID 140100962867008] [EpollServer] shutting down...
+[2026-07-19 14:51:56.228953] [INFO ] [PID 839623] [TID 140100962867008] [Master] shutting down...
+[2026-07-19 14:51:56.228991] [INFO ] [PID 839623] [TID 140100962867008] [Master] listen socket closed
+[2026-07-19 14:51:56.229008] [INFO ] [PID 839623] [TID 140100962867008] [Master] sending SIGTERM to worker PID 839624
+[2026-07-19 14:51:56.229031] [INFO ] [PID 839623] [TID 140100962867008] [Master] sending SIGTERM to worker PID 839625
+[2026-07-19 14:51:56.229052] [INFO ] [PID 839623] [TID 140100962867008] [Master] waiting up to 3000 ms for workers to exit
+[2026-07-19 14:51:56.229129] [INFO ] [PID 839624] [TID 140100962867008] [Worker] shutdown — served 11 client(s) (SIGTERM)
+[2026-07-19 14:51:56.229139] [INFO ] [PID 839625] [TID 140100962867008] [EpollServer] shutting down...
+[2026-07-19 14:51:56.229196] [INFO ] [PID 839625] [TID 140100962867008] [Worker] shutdown — served 21 client(s) (SIGTERM)
+[2026-07-19 14:51:56.229434] [INFO ] [PID 839624] [TID 140100962867008] [Worker] PID 839624 shutting down
+[2026-07-19 14:51:56.229458] [INFO ] [PID 839624] [TID 140100962867008] Logging system shutting down
+[2026-07-19 14:51:56.229683] [INFO ] [PID 839625] [TID 140100962867008] [Worker] PID 839625 shutting down
+[2026-07-19 14:51:56.229704] [INFO ] [PID 839625] [TID 140100962867008] Logging system shutting down
+[2026-07-19 14:51:56.232459] [INFO ] [PID 839623] [TID 140100962867008] [Master] worker PID 839625 exited (status 0)
+[2026-07-19 14:51:56.234784] [INFO ] [PID 839623] [TID 140100962867008] [Master] worker PID 839624 exited (status 0)
+[2026-07-19 14:51:56.234995] [INFO ] [PID 839623] [TID 140100962867008] [Master] all workers stopped
+[2026-07-19 14:51:56.235032] [INFO ] [PID 839623] [TID 140100962867008] ========================================
+[2026-07-19 14:51:56.235075] [INFO ] [PID 839623] [TID 140100962867008]   Master PID: 839623  shutdown complete
+[2026-07-19 14:51:56.235094] [INFO ] [PID 839623] [TID 140100962867008] ========================================
+[2026-07-19 14:51:56.235186] [INFO ] [PID 839623] [TID 140100962867008] Logging system shutting down

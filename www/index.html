@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MiniWeb Server v1.1</title>
+  <title>MiniWeb Server v1.2</title>
   <style>
     :root {
       --bg: #f5f5f5;
@@ -141,7 +141,7 @@
 <header>
   <h1>&#9881; MiniWeb Server</h1>
   <p>一个用 C 语言编写的轻量 HTTP/1.1 服务器 &middot; Nginx 风格 master-worker 架构</p>
-  <div class="pid-badge">Powered by epoll &middot; v1.1</div>
+  <div class="pid-badge">Powered by epoll &middot; v1.2</div>
 </header>
 
 <div class="container">
@@ -185,6 +185,11 @@
         <p>在 10 万用户中查找 "baianai"</p>
         <a href="/users/baianai" target="_blank">GET /users/baianai</a>
       </div>
+      <div class="try-card" style="border-color: var(--orange); border-width: 2px;">
+        <h3>&#128214; 实验博客</h3>
+        <p>服务器架构、调试心得、关于作者</p>
+        <a href="/blog/" target="_blank" style="background: var(--orange);">进入 Blog</a>
+      </div>
     </div>
   </section>
 
@@ -208,6 +213,13 @@
           <td>本页面（静态 HTML 文件服务）</td>
           <td>text/html</td>
           <td><a href="/" target="_blank">试试</a></td>
+        </tr>
+        <tr>
+          <td><span class="method get">GET</span></td>
+          <td><code>/blog/</code></td>
+          <td><strong>实验博客</strong> — 架构介绍、调试心得、关于作者</td>
+          <td>text/html</td>
+          <td><a href="/blog/" target="_blank">进入</a></td>
         </tr>
         <tr>
           <td><span class="method get">GET</span></td>
@@ -309,7 +321,7 @@
 </div>
 
 <footer>
-  MiniWeb Server v1.1 &middot; Built with C + epoll + love
+  MiniWeb Server v1.2 &middot; Built with C + epoll + love
 </footer>
 
 </body>

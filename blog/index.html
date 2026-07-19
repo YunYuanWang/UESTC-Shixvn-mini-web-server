@@ -18,76 +18,150 @@
 
     <nav>
         <div class="container">
-            <a href="/blog/" class="active">首页</a>
+            <a href="index.html" class="active">首页</a>
             <a href="about.html">架构介绍</a>
             <a href="article.html">实验心得</a>
+            <a href="resume.html">关于作者</a>
             <a href="https://github.com/YunYuanWang/UESTC-Shixvn-mini-web-server" target="_blank">GitHub</a>
         </div>
     </nav>
 
     <main>
         <div class="container">
+
+            <!-- ============================================================ -->
+            <!-- Hero -->
+            <!-- ============================================================ -->
             <section class="hero">
                 <h2>从零构建一个高性能 Web 服务器</h2>
-                <p>本项目实现了一个支持 HTTP/1.1、Keep-Alive、Epoll I/O 多路复用、Master-Worker 进程模型的轻量级 Web 服务器。</p>
+                <p>一个用 C 语言编写的轻量级 HTTP 服务器，从最简单的单连接 TCP 模型出发，逐步演进为支持 Epoll I/O 多路复用、Nginx 风格 Master-Worker 多进程架构、HTTP/1.1 Keep-Alive 持久连接、完整静态网站托管与分离式日志系统的生产级服务器。</p>
             </section>
 
-            <section class="features">
-                <h2>核心特性</h2>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <h3>Epoll I/O 多路复用</h3>
-                        <p>基于 Linux epoll 实现高效的 I/O 事件驱动，单进程即可管理数千并发连接，相比 select/poll 具有 O(1) 的事件分发性能。</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>Master-Worker 架构</h3>
-                        <p>参考 Nginx 设计，Master 进程负责管理，Worker 进程处理请求。支持多核并行，优雅重启，信号驱动的进程管理。</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>HTTP/1.1 Keep-Alive</h3>
-                        <p>支持持久连接，多个请求复用同一 TCP 连接。经过 3 轮调试，兼容 ApacheBench 和 curl 的不同大小写约定。</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>多模式服务器</h3>
-                        <p>支持多种并发模型：epoll、select、fork-per-client、thread-per-client、线程池，便于性能对比和学习。</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="benchmark">
-                <h2>性能基准测试</h2>
-                <p>测试环境：ab -k -c 50 -n 10000 /hello</p>
+            <!-- ============================================================ -->
+            <!-- 版本演进 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>版本演进</h2>
                 <table>
                     <thead>
-                        <tr>
-                            <th>模式</th>
-                            <th>Keep-Alive</th>
-                            <th>QPS (req/s)</th>
-                            <th>说明</th>
-                        </tr>
+                        <tr><th>版本</th><th>日期</th><th>里程碑</th></tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>基线</td>
-                            <td>关闭</td>
-                            <td>764</td>
-                            <td>每次请求新建 TCP 连接</td>
-                        </tr>
-                        <tr>
-                            <td>v1.1</td>
-                            <td>开启</td>
-                            <td><strong>2,543</strong></td>
-                            <td>连接复用，性能提升 3.3x</td>
-                        </tr>
+                        <tr><td>v0.4</td><td>2026-07-10</td><td>项目初始化，基础请求处理框架</td></tr>
+                        <tr><td>v0.5</td><td>2026-07-10</td><td>多进程/多线程支持，TID 日志区分</td></tr>
+                        <tr><td>v0.6</td><td>2026-07-12</td><td>TCP/HTTP 服务器，curl 可访问</td></tr>
+                        <tr><td>v0.7</td><td>2026-07-14</td><td>多进程 fork 服务器，SIGINT 优雅关闭</td></tr>
+                        <tr><td>v0.8</td><td>2026-07-15</td><td>线程池模式，core/max 动态扩缩</td></tr>
+                        <tr><td>v0.9</td><td>2026-07-15~16</td><td>Select I/O 多路复用，wrk 并发测试</td></tr>
+                        <tr><td>v0.10</td><td>2026-07-16~17</td><td>Epoll I/O 多路复用，Keep-Alive 初版</td></tr>
+                        <tr><td>v1.0</td><td>2026-07-18</td><td>Master-Worker 架构，优雅关闭流程</td></tr>
+                        <tr><td>v1.1</td><td>2026-07-18</td><td>HTTP/1.1 协议增强，动态 MIME，Keep-Alive 调试</td></tr>
+                        <tr><td><strong>v1.2</strong></td><td>2026-07-19</td><td><strong>Blog 网站、分离日志、日志滚动、状态码处理</strong></td></tr>
                     </tbody>
                 </table>
             </section>
 
+            <!-- ============================================================ -->
+            <!-- 核心特性 -->
+            <!-- ============================================================ -->
+            <section class="features">
+                <h2>核心特性</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>六种并发模型</h3>
+                        <p>支持 TCP 单连接、fork-per-client、thread-per-client、线程池（动态扩缩 2→8）、Select、Epoll 共六种模式，可按需切换，便于性能对比与教学。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Master-Worker 架构</h3>
+                        <p>参考 Nginx 设计，Master 进程负责管理与信号分发，Worker 进程独立运行 Epoll 事件循环。fork 后 CoW 共享用户数据，多核并行处理。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>HTTP/1.1 Keep-Alive</h3>
+                        <p>支持持久连接复用，兼容 HTTP/1.0 + Connection: Keep-Alive。SO_RCVTIMEO 空闲超时 + safe_close 优雅关闭，经过三轮 AB/wrk 调试。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>静态网站托管</h3>
+                        <p>动态 Content-Type 映射（12 种 MIME 类型），多级目录，301/403/404/405 完整状态码处理。本 Blog 即运行在该服务器上。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>分离式日志系统</h3>
+                        <p>系统日志与访问日志独立文件，四级日志（DEBUG/INFO/WARNING/ERROR），行数阈值自动滚动，printf 风格格式化 API。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>用户管理系统</h3>
+                        <p>支持 10 万+ 用户 CSV 数据集，链表 + 红黑树 BST 双索引，提供 find/add/delete/index/compare 完整 CRUD 操作。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 六种模式对比 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>六种并发模式对比</h2>
+                <table>
+                    <thead>
+                        <tr><th>模式</th><th>版本</th><th>并发模型</th><th>I/O 机制</th><th>事件复杂度</th><th>适用场景</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>TCP</td><td>v0.6</td><td>单连接阻塞</td><td>阻塞 accept</td><td>—</td><td>调试测试</td></tr>
+                        <tr><td>Fork</td><td>v0.7</td><td>多进程</td><td>阻塞 accept</td><td>—</td><td>进程级隔离</td></tr>
+                        <tr><td>Pool</td><td>v0.8</td><td>线程池 2→8</td><td>阻塞 accept</td><td>—</td><td>通用高并发</td></tr>
+                        <tr><td>Select</td><td>v0.9</td><td>单线程 I/O 复用</td><td>select()</td><td>O(n) 扫描</td><td>学习对比</td></tr>
+                        <tr><td>Epoll</td><td>v0.10</td><td>单线程 I/O 复用</td><td>epoll_wait()</td><td>O(1) 交付</td><td>高并发海量连接</td></tr>
+                        <tr><td>Master-Worker</td><td>v1.0</td><td>多进程 Epoll</td><td>epoll × N worker</td><td>O(1) + 多核</td><td>生产环境</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 性能基准 -->
+            <!-- ============================================================ -->
+            <section class="benchmark">
+                <h2>性能基准测试</h2>
+                <p>测试环境：<code>ab -k -c 50 -n 10000 /hello</code>（ApacheBench，HTTP/1.0 keep-alive）</p>
+                <table>
+                    <thead>
+                        <tr><th>模式</th><th>Keep-Alive</th><th>QPS</th><th>耗时</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>基线</td><td>关闭</td><td>764 req/s</td><td>13.1s</td><td>每次请求新建 TCP 连接</td></tr>
+                        <tr><td>v1.1</td><td>开启</td><td><strong>2,543 req/s</strong></td><td><strong>3.9s</strong></td><td>连接复用，<strong>3.3× 提升</strong></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 技术栈 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>技术栈</h2>
+                <table>
+                    <thead><tr><th>层面</th><th>技术</th></tr></thead>
+                    <tbody>
+                        <tr><td>语言</td><td>C（C99）</td></tr>
+                        <tr><td>构建</td><td>GCC + Makefile</td></tr>
+                        <tr><td>I/O 多路复用</td><td>epoll（Linux）、select</td></tr>
+                        <tr><td>并发模型</td><td>多进程（fork）、多线程（pthread）、线程池</td></tr>
+                        <tr><td>进程管理</td><td>Master-Worker（参考 Nginx），SIGINT/SIGTERM/SIGCHLD 信号</td></tr>
+                        <tr><td>HTTP 协议</td><td>HTTP/1.1，Keep-Alive 协商，动态 MIME 映射</td></tr>
+                        <tr><td>数据结构</td><td>链表 + 红黑树 BST 双索引</td></tr>
+                        <tr><td>同步原语</td><td>mutex、condition variable、semaphore、信号</td></tr>
+                        <tr><td>测试工具</td><td>ApacheBench、wrk、curl、自定义 Python 客户端</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 快速链接 -->
+            <!-- ============================================================ -->
             <section class="links">
                 <h2>快速链接</h2>
                 <ul>
-                    <li><a href="about.html">服务器架构详解</a> — Epoll、Master-Worker 工作原理</li>
-                    <li><a href="article.html">Keep-Alive 调试心得</a> — 三次排错的经历与收获</li>
+                    <li><a href="about.html">服务器架构详解</a> — 从 v0.4 到 v1.2 的完整演进路线</li>
+                    <li><a href="article.html">调试心得</a> — v0.7~v1.1 踩坑记录与经验总结</li>
+                    <li><a href="resume.html">关于作者</a> — 项目作者简介</li>
+                    <li><a href="https://github.com/YunYuanWang/UESTC-Shixvn-mini-web-server" target="_blank">GitHub 仓库</a> — 完整源代码</li>
                 </ul>
             </section>
         </div>
