@@ -1,6 +1,7 @@
 #include "../include/user_store.h"
 #include "../include/user_index.h"
 #include "../include/log.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -488,4 +489,223 @@ void user_store_compare_search_method(const char *name, int verbose) {
     printf("========================================\n");
 
     log_info("user store: search method comparison completed");
+}
+
+/* ================================================================
+ * v1.4: user_store_search — RBT inorder traversal with multi-field
+ *       AND filtering
+ * ================================================================ */
+
+/*
+ * Case-insensitive substring match.
+ * Returns 1 if 'query' is found as a substring of 'text' (case-insensitive),
+ * 0 otherwise.  An empty query matches everything.
+ * Works correctly with UTF-8 multi-byte sequences.
+ */
+static int str_contains(const char *text, const char *query) {
+    const char *t, *q, *p;
+    int tlen, qlen;
+
+    if (!text || !query) return 0;
+
+    tlen = (int)strlen(text);
+    qlen = (int)strlen(query);
+
+    if (qlen == 0) return 1;   /* empty query matches everything */
+    if (qlen > tlen) return 0;
+
+    for (t = text; *t != '\0'; t++) {
+        p = t;
+        q = query;
+        while (*p != '\0' && *q != '\0' &&
+               tolower((unsigned char)*p) == tolower((unsigned char)*q)) {
+            p++;
+            q++;
+        }
+        if (*q == '\0') return 1;  /* full query matched */
+    }
+    return 0;
+}
+
+/*
+ * Check if a user matches ALL active criteria (AND logic).
+ * A criterion is active if its first character is non-null.
+ */
+static int criteria_match(const ElemType *data,
+                          const search_criteria_t *c) {
+    if (c->name[0] != '\0' && !str_contains(data->name, c->name))
+        return 0;
+    if (c->phone[0] != '\0' && !str_contains(data->phone, c->phone))
+        return 0;
+    if (c->email[0] != '\0' && !str_contains(data->email, c->email))
+        return 0;
+    return 1;
+}
+
+/*
+ * Recursive RBT inorder traversal that filters by criteria and writes HTML.
+ */
+static void search_inorder(BSTnode *node, BSTnode *nil,
+                           const search_criteria_t *criteria,
+                           char *buf, int buf_size,
+                           int *offset, int *match_count) {
+    int written;
+
+    if (node == nil || node == NULL || *offset >= buf_size - 512) {
+        return;
+    }
+
+    /* left subtree */
+    search_inorder(node->left, nil, criteria,
+                   buf, buf_size, offset, match_count);
+
+    /* check this node against all active criteria (AND) */
+    if (node->user != NULL && criteria_match(&node->user->data, criteria)) {
+        (*match_count)++;
+
+        written = snprintf(buf + *offset, buf_size - *offset,
+            "<div class=\"result-card\">\n"
+            "  <h2>%s</h2>\n"
+            "  <table>\n"
+            "    <tr><td class=\"label\">Phone:</td>"
+                     "<td>%s</td></tr>\n"
+            "    <tr><td class=\"label\">Birth:</td>"
+                     "<td>%s</td></tr>\n"
+            "    <tr><td class=\"label\">Mobile:</td>"
+                     "<td>%s</td></tr>\n"
+            "    <tr><td class=\"label\">Email:</td>"
+                     "<td>%s</td></tr>\n"
+            "  </table>\n"
+            "</div>\n",
+            node->user->data.name,
+            node->user->data.phone,
+            node->user->data.birthdate,
+            node->user->data.mobile,
+            node->user->data.email);
+        if (written > 0 && written < buf_size - *offset) {
+            *offset += written;
+        }
+    }
+
+    /* right subtree */
+    search_inorder(node->right, nil, criteria,
+                   buf, buf_size, offset, match_count);
+}
+
+/*
+ * Build a human-readable summary of active search criteria.
+ */
+static void criteria_summary(const search_criteria_t *c, char *buf, int size) {
+    int pos = 0, first = 1;
+    buf[0] = '\0';
+
+    if (c->name[0] != '\0') {
+        pos += snprintf(buf + pos, size - pos,
+                        "%sName: %s", first ? "" : ", ", c->name);
+        first = 0;
+    }
+    if (c->phone[0] != '\0') {
+        pos += snprintf(buf + pos, size - pos,
+                        "%sPhone: %s", first ? "" : ", ", c->phone);
+        first = 0;
+    }
+    if (c->email[0] != '\0') {
+        pos += snprintf(buf + pos, size - pos,
+                        "%sEmail: %s", first ? "" : ", ", c->email);
+        first = 0;
+    }
+    if (first) {
+        snprintf(buf, size, "(none)");
+    }
+}
+
+int user_store_search(const search_criteria_t *criteria,
+                      char *buf, int buf_size) {
+    int offset = 0;
+    int match_count = 0;
+    int written;
+    char summary[256];
+
+    if (criteria == NULL || buf == NULL || buf_size <= 0) {
+        return -1;
+    }
+
+    criteria_summary(criteria, summary, sizeof(summary));
+
+    /* build HTML page header */
+    written = snprintf(buf + offset, buf_size - offset,
+        "<!DOCTYPE html>\n"
+        "<html lang=\"zh-CN\">\n<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        "<link rel=\"icon\" href=\"/icon/favicon.ico\">\n"
+        "<title>Search Results</title>\n"
+        "<style>\n"
+        ":root{--bg:#f5f5f5;--card-bg:#fff;--text:#333;--muted:#666;"
+        "--border:#e0e0e0;--accent:#2563eb;}\n"
+        "*{margin:0;padding:0;box-sizing:border-box;}\n"
+        "body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;"
+        "background:var(--bg);color:var(--text);line-height:1.6;}\n"
+        "header{background:linear-gradient(135deg,#1e293b 0%%,#334155 100%%);"
+        "color:#fff;padding:32px 24px;text-align:center;}\n"
+        "header h1{font-size:1.6rem;}\n"
+        "header p{margin-top:8px;opacity:0.8;font-size:0.9rem;}\n"
+        ".container{max-width:720px;margin:0 auto;padding:24px 20px;}\n"
+        ".result-card{background:var(--card-bg);border:1px solid var(--border);"
+        "border-radius:10px;padding:18px;margin-bottom:12px;"
+        "box-shadow:0 1px 3px rgba(0,0,0,0.04);}\n"
+        ".result-card h2{font-size:1.1rem;color:var(--accent);margin-bottom:8px;}\n"
+        ".result-card table{width:100%%;border-collapse:collapse;}\n"
+        ".result-card td{padding:4px 8px;font-size:0.9rem;}\n"
+        ".result-card td.label{color:var(--muted);width:80px;}\n"
+        ".no-results{text-align:center;padding:48px 20px;color:var(--muted);}\n"
+        ".match-count{text-align:center;color:var(--muted);font-size:0.85rem;"
+        "margin-top:16px;}\n"
+        ".back-link{display:inline-block;margin-top:16px;padding:8px 20px;"
+        "background:var(--accent);color:#fff;border-radius:6px;"
+        "text-decoration:none;font-size:0.9rem;}\n"
+        ".back-link:hover{opacity:0.9;}\n"
+        "footer{text-align:center;padding:24px 20px;color:var(--muted);"
+        "font-size:0.82rem;}\n"
+        "</style>\n"
+        "</head>\n<body>\n"
+        "<header>\n"
+        "  <h1>&#128269; Search Results</h1>\n"
+        "  <p>Criteria: <strong>%s</strong></p>\n"
+        "</header>\n"
+        "<div class=\"container\">\n",
+        summary);
+    if (written < 0 || written >= buf_size - offset) return -1;
+    offset += written;
+
+    /* RBT inorder traversal with multi-criteria filtering */
+    search_inorder(user_bst.root, &user_bst.nil, criteria,
+                   buf, buf_size, &offset, &match_count);
+
+    /* no matches message */
+    if (match_count == 0) {
+        written = snprintf(buf + offset, buf_size - offset,
+            "<div class=\"no-results\">\n"
+            "  <p style=\"font-size:1.2rem;\">&#128533;</p>\n"
+            "  <p>No users found matching the criteria.</p>\n"
+            "</div>\n");
+        if (written > 0 && written < buf_size - offset) {
+            offset += written;
+        }
+    }
+
+    /* footer with match count and back link */
+    written = snprintf(buf + offset, buf_size - offset,
+        "<p class=\"match-count\">%d match(es) found</p>\n"
+        "<p style=\"text-align:center;\">"
+        "<a class=\"back-link\" href=\"/\">&larr; Back to Search</a></p>\n"
+        "</div>\n"
+        "<footer>MiniWeb Server v1.4 &middot; RBT Index Search</footer>\n"
+        "</body>\n</html>\n",
+        match_count);
+    if (written > 0 && written < buf_size - offset) {
+        offset += written;
+    }
+
+    return match_count;
 }

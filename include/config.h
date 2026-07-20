@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 /*
- * config.h — Server configuration with Nginx-style virtual host support (v1.2.1)
+ * config.h — Server configuration with Nginx-style virtual host support (v1.4)
  *
  * Supports two config formats:
  *   1. Legacy flat key=value (backward compatible)

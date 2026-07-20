@@ -461,6 +461,57 @@ int epoll_server_run(const char *host, int port) {
                 conn->last_activity = time(NULL);
 
                 /*
+                 * v1.4: 413 Payload Too Large check.
+                 * Use the global config max_request_bytes if available.
+                 */
+                {
+                    int max_bytes = 4096;  /* default */
+                    const server_config_t *cfg = g_epoll_config;
+                    if (cfg && cfg->max_request_bytes > 0) {
+                        max_bytes = cfg->max_request_bytes;
+                    }
+                    if (conn->recv_len > max_bytes) {
+                        static char _413_buf[1024];
+                        int _413_len;
+                        snprintf(_413_buf, sizeof(_413_buf),
+                            "<!DOCTYPE html>\n"
+                            "<html><head><title>413 Payload Too Large</title>"
+                            "<meta charset=\"utf-8\">"
+                            "<style>"
+                            "body{font-family:sans-serif;max-width:640px;"
+                            "margin:48px auto;padding:0 16px;text-align:center;}"
+                            "h1{color:#dc2626;}"
+                            "</style></head><body>\n"
+                            "<h1>413 Payload Too Large</h1>\n"
+                            "<p>Request body exceeds maximum of %d bytes.</p>\n"
+                            "</body></html>\n",
+                            max_bytes);
+                        _413_len = http_build_response(413,
+                            "PAYLOAD TOO LARGE",
+                            "text/html; charset=utf-8",
+                            _413_buf, (int)strlen(_413_buf),
+                            0, _413_buf, sizeof(_413_buf));
+                        if (_413_len > 0) {
+                            send(ready_fd, _413_buf, (size_t)_413_len, 0);
+                        }
+                        snprintf(msg, sizeof(msg),
+                                 "[EpollServer] fd=%d request too large "
+                                 "(%d > %d bytes) -> 413",
+                                 ready_fd, conn->recv_len, max_bytes);
+                        log_info(msg);
+                        printf("[client %s:%d] request too large -> 413\n",
+                               conn->client_ip, conn->client_port);
+                        fflush(stdout);
+                        epoll_ctl(epfd, EPOLL_CTL_DEL, ready_fd, NULL);
+                        safe_close(ready_fd);
+                        conn->fd = -1;
+                        g_active_conns--;
+                        print_conn_count();
+                        continue;
+                    }
+                }
+
+                /*
                  * Log the raw request from the client.
                  */
                 {
@@ -607,6 +658,7 @@ int epoll_server_run(const char *host, int port) {
 
                     /* ---- fill request_t ---- */
                     memset(&req, 0, sizeof(req));
+                    req.content_length_hdr = -1;  /* v1.4: -1 = absent */
                     {
                         int k;
                         for (k = 0;
@@ -645,6 +697,73 @@ int epoll_server_run(const char *host, int port) {
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    /* ---- v1.4: extract Content-Type and Content-Length headers ---- */
+                    {
+                        const char *ct_start = NULL;
+                        const char *cl_start = NULL;
+                        {
+                            char *p = conn->recv_buf;
+                            int limit = conn->recv_len;
+                            while (p < conn->recv_buf + limit - 14) {
+                                if ((p[0] == '\n' || p[0] == '\r') &&
+                                    (p[1] == 'C' || p[1] == 'c') &&
+                                    (p[2] == 'o' || p[2] == 'O') &&
+                                    (p[3] == 'n' || p[3] == 'N')) {
+                                    if ((p[4] == 't' || p[4] == 'T') &&
+                                        (p[5] == 'e' || p[5] == 'E') &&
+                                        (p[6] == 'n' || p[6] == 'N') &&
+                                        (p[7] == 't' || p[7] == 'T') &&
+                                        (p[8] == '-')) {
+                                        if ((p[9] == 'T' || p[9] == 't') &&
+                                            (p[10] == 'y' || p[10] == 'Y') &&
+                                            (p[11] == 'p' || p[11] == 'P') &&
+                                            (p[12] == 'e' || p[12] == 'E') &&
+                                            p[13] == ':') {
+                                            ct_start = p + 14;
+                                        } else if ((p[9] == 'L' || p[9] == 'l') &&
+                                                   (p[10] == 'e' || p[10] == 'E') &&
+                                                   (p[11] == 'n' || p[11] == 'N') &&
+                                                   (p[12] == 'g' || p[12] == 'G') &&
+                                                   (p[13] == 't' || p[13] == 'T') &&
+                                                   p[14] == 'h' && p[15] == ':') {
+                                            cl_start = p + 16;
+                                        }
+                                    }
+                                }
+                                p++;
+                            }
+                        }
+
+                        if (ct_start) {
+                            int k = 0;
+                            while (*ct_start == ' ' || *ct_start == '\t')
+                                ct_start++;
+                            while (ct_start[k] != '\0' &&
+                                   ct_start[k] != '\r' && ct_start[k] != '\n' &&
+                                   k < (int)sizeof(req.content_type) - 1) {
+                                req.content_type[k] = ct_start[k];
+                                k++;
+                            }
+                            req.content_type[k] = '\0';
+                            {
+                                char *e = req.content_type +
+                                          strlen(req.content_type) - 1;
+                                while (e >= req.content_type &&
+                                       (*e == ' ' || *e == '\t')) {
+                                    *e = '\0'; e--;
+                                }
+                            }
+                        }
+
+                        if (cl_start) {
+                            while (*cl_start == ' ' || *cl_start == '\t')
+                                cl_start++;
+                            req.content_length_hdr = atoi(cl_start);
+                            if (req.content_length_hdr < 0)
+                                req.content_length_hdr = 0;
                         }
                     }
 

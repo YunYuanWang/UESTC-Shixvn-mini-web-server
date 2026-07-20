@@ -24,7 +24,8 @@ make
 | v1.0  | Nginx 风格 master-worker 多进程架构、优雅关闭（SIGTERM → SIGKILL）、日志合并（fd + path + status） |
 | v1.1  | HTTP/1.1 协议增强：请求头解析、动态 Content-Type、静态文件服务、Keep-Alive 协商、`ab` 基准测试            |
 | v1.2  | Blog 网站部署、分离式日志系统（system+access）、日志滚动、完整 HTTP 状态码处理（301/403/404/405）         |
-| v1.2.1 | **Nginx 风格 server { } 块、名称虚拟主机（Host 头路由）、多站点托管（www/blog/lab 三个独立站点）**        |
+| v1.3  | **Nginx 风格 server { } 块、名称虚拟主机（Host 头路由）、多站点托管（www/blog/lab 三个独立站点）**        |
+| v1.4  | **POST 用户搜索（search.localhost）、RBT 索引搜索、URL-encoded 表单解析、中文 UTF-8 支持、完整 POST 错误处理（400/413/415）** |
 
 ## 使用方法
 

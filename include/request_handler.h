@@ -10,6 +10,10 @@ typedef struct {
     int  http_version_major;   /* 1 */
     int  http_version_minor;   /* 0 or 1 */
     int  keep_alive;           /* 1=keep connection, 0=close */
+
+    /* v1.4: parsed request headers for POST error handling */
+    char content_type[64];       /* Content-Type header value */
+    int  content_length_hdr;     /* Content-Length header value, -1 = absent */
 } request_t;
 
 /* ---- HTTP/1.1 keep-alive configuration ---- */

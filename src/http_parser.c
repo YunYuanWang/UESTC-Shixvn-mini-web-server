@@ -408,7 +408,7 @@ int http_build_response(int status, const char *status_text,
 
     header_len = snprintf(output, (size_t)size,
         "HTTP/1.1 %d %s\r\n"
-        "Server: MiniWeb/1.2.1\r\n"
+        "Server: MiniWeb/1.4\r\n"
         "Date: %s\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %d\r\n"
@@ -467,7 +467,7 @@ int http_build_redirect(int status, const char *location,
 
         header_len = snprintf(output, (size_t)size,
             "HTTP/1.1 %d %s\r\n"
-            "Server: MiniWeb/1.2.1\r\n"
+            "Server: MiniWeb/1.4\r\n"
             "Date: %s\r\n"
             "Content-Type: text/html; charset=utf-8\r\n"
             "Content-Length: %d\r\n"

@@ -427,6 +427,42 @@ static int format_user_info(const ListNode *user, char *buf, int size) {
 #define BLOG_BODY_MAX (5 * 1024 * 1024)
 static char g_body_buf[BLOG_BODY_MAX];
 
+/*
+ * v1.4: URL-decode a form-encoded value string.
+ * Handles %XX hex sequences and '+' -> ' ' conversion.
+ * Stops at '&' (parameter delimiter).
+ * Returns 0 on success, -1 on invalid %XX sequence.
+ */
+static int url_decode(const char *src, char *dst, int dst_size) {
+    int i = 0, j = 0;
+    if (src == NULL || dst == NULL || dst_size <= 0) return -1;
+
+    while (src[i] != '\0' && j < dst_size - 1) {
+        if (src[i] == '%') {
+            if (isxdigit((unsigned char)src[i + 1]) &&
+                isxdigit((unsigned char)src[i + 2])) {
+                char hex[3];
+                hex[0] = src[i + 1];
+                hex[1] = src[i + 2];
+                hex[2] = '\0';
+                dst[j++] = (char)strtol(hex, NULL, 16);
+                i += 3;
+            } else {
+                return -1;  /* invalid %XX sequence */
+            }
+        } else if (src[i] == '+') {
+            dst[j++] = ' ';
+            i++;
+        } else if (src[i] == '&') {
+            break;  /* next parameter */
+        } else {
+            dst[j++] = src[i++];
+        }
+    }
+    dst[j] = '\0';
+    return 0;
+}
+
 int request_handler_process_http(const request_t *req, char *output, int size) {
     char *body = g_body_buf;
     int body_size = BLOG_BODY_MAX;
@@ -627,6 +663,7 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
             "  GET  /users/compare-verbose/<name>   compare search (verbose)\n"
             "  GET  /user/<name>                    find user by name\n"
             "  POST /users                          add user (body: csv line)\n"
+            "  POST /search                        search users by partial name match\n"
             "  DELETE /users/<name>                 delete user\n";
         return build_http_response(output, size, 200, "OK", help_text);
     }
@@ -768,6 +805,297 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
             return build_http_response(output, size, 200, "OK", "ADDED\n");
         }
         return build_http_response(output, size, 200, "OK", "EXISTS\n");
+    }
+
+    /* ---- POST /search (v1.4: user search with form data) ---- */
+    if (strcmp(req->method, "POST") == 0 &&
+        strcmp(req->path, "/search") == 0) {
+
+        /*
+         * 1. Check Content-Type: only accept application/x-www-form-urlencoded
+         */
+        if (req->content_type[0] == '\0' ||
+            strcasecmp(req->content_type,
+                       "application/x-www-form-urlencoded") != 0) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html lang=\"en\"><head>\n"
+                "<meta charset=\"utf-8\">\n"
+                "<title>415 Unsupported Media Type</title>\n"
+                "<style>"
+                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+                "padding:0 16px;text-align:center;}"
+                "h1{color:#dc2626;}"
+                "</style></head><body>\n"
+                "<h1>415 Unsupported Media Type</h1>\n"
+                "<p>This endpoint only accepts "
+                "<code>application/x-www-form-urlencoded</code>.</p>\n"
+                "<p><a href=\"/\">Back to Search</a></p>\n"
+                "</body></html>\n");
+            return http_build_response(415, "UNSUPPORTED MEDIA TYPE",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        /*
+         * 2. Check Content-Length header is present
+         */
+        if (req->content_length_hdr < 0) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html lang=\"en\"><head>\n"
+                "<meta charset=\"utf-8\">\n"
+                "<title>400 Bad Request</title>\n"
+                "<style>"
+                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+                "padding:0 16px;text-align:center;}"
+                "h1{color:#dc2626;}"
+                "</style></head><body>\n"
+                "<h1>400 Bad Request</h1>\n"
+                "<p>Content-Length header is required.</p>\n"
+                "<p><a href=\"/\">Back to Search</a></p>\n"
+                "</body></html>\n");
+            return http_build_response(400, "BAD REQUEST",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        /*
+         * 3. Check body length matches Content-Length
+         */
+        if ((int)strlen(req->body) != req->content_length_hdr) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html lang=\"en\"><head>\n"
+                "<meta charset=\"utf-8\">\n"
+                "<title>400 Bad Request</title>\n"
+                "<style>"
+                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+                "padding:0 16px;text-align:center;}"
+                "h1{color:#dc2626;}"
+                "</style></head><body>\n"
+                "<h1>400 Bad Request</h1>\n"
+                "<p>Body length (%d bytes) does not match "
+                "Content-Length (%d bytes).</p>\n"
+                "<p><a href=\"/\">Back to Search</a></p>\n"
+                "</body></html>\n",
+                (int)strlen(req->body), req->content_length_hdr);
+            return http_build_response(400, "BAD REQUEST",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        /*
+         * 4. Extract and URL-decode form parameters (name, phone, email)
+         */
+        {
+            search_criteria_t criteria;
+            char name_buf[64], phone_buf[32], email_buf[64];
+            char *p_ptr;
+            int match_count;
+            int has_criteria = 0;
+
+            memset(&criteria, 0, sizeof(criteria));
+            memset(name_buf, 0, sizeof(name_buf));
+            memset(phone_buf, 0, sizeof(phone_buf));
+            memset(email_buf, 0, sizeof(email_buf));
+
+            /* parse "name=..." from body */
+            p_ptr = strstr(req->body, "name=");
+            if (p_ptr != NULL) {
+                p_ptr += 5;
+                if (url_decode(p_ptr, name_buf, sizeof(name_buf)) != 0) {
+                    snprintf(body, body_size,
+                        "<!DOCTYPE html>\n"
+                        "<html lang=\"en\"><head>\n"
+                        "<meta charset=\"utf-8\">\n"
+                        "<title>400 Bad Request</title>\n"
+                        "<style>"
+                        "body{font-family:sans-serif;max-width:640px;"
+                        "margin:48px auto;padding:0 16px;text-align:center;}"
+                        "h1{color:#dc2626;}"
+                        "</style></head><body>\n"
+                        "<h1>400 Bad Request</h1>\n"
+                        "<p>URL encoding error in name parameter.</p>\n"
+                        "<p><a href=\"/\">Back to Search</a></p>\n"
+                        "</body></html>\n");
+                    return http_build_response(400, "BAD REQUEST",
+                                               "text/html; charset=utf-8",
+                                               body, (int)strlen(body),
+                                               0, output, size);
+                }
+                if (name_buf[0] != '\0') {
+                    strncpy(criteria.name, name_buf, sizeof(criteria.name) - 1);
+                    has_criteria = 1;
+                }
+            }
+
+            /* parse "phone=..." from body */
+            p_ptr = strstr(req->body, "phone=");
+            if (p_ptr != NULL) {
+                p_ptr += 6;
+                if (url_decode(p_ptr, phone_buf, sizeof(phone_buf)) != 0) {
+                    snprintf(body, body_size,
+                        "<!DOCTYPE html>\n"
+                        "<html lang=\"en\"><head>\n"
+                        "<meta charset=\"utf-8\">\n"
+                        "<title>400 Bad Request</title>\n"
+                        "<style>"
+                        "body{font-family:sans-serif;max-width:640px;"
+                        "margin:48px auto;padding:0 16px;text-align:center;}"
+                        "h1{color:#dc2626;}"
+                        "</style></head><body>\n"
+                        "<h1>400 Bad Request</h1>\n"
+                        "<p>URL encoding error in phone parameter.</p>\n"
+                        "<p><a href=\"/\">Back to Search</a></p>\n"
+                        "</body></html>\n");
+                    return http_build_response(400, "BAD REQUEST",
+                                               "text/html; charset=utf-8",
+                                               body, (int)strlen(body),
+                                               0, output, size);
+                }
+                if (phone_buf[0] != '\0') {
+                    strncpy(criteria.phone, phone_buf, sizeof(criteria.phone) - 1);
+                    has_criteria = 1;
+                }
+            }
+
+            /* parse "email=..." from body */
+            p_ptr = strstr(req->body, "email=");
+            if (p_ptr != NULL) {
+                p_ptr += 6;
+                if (url_decode(p_ptr, email_buf, sizeof(email_buf)) != 0) {
+                    snprintf(body, body_size,
+                        "<!DOCTYPE html>\n"
+                        "<html lang=\"en\"><head>\n"
+                        "<meta charset=\"utf-8\">\n"
+                        "<title>400 Bad Request</title>\n"
+                        "<style>"
+                        "body{font-family:sans-serif;max-width:640px;"
+                        "margin:48px auto;padding:0 16px;text-align:center;}"
+                        "h1{color:#dc2626;}"
+                        "</style></head><body>\n"
+                        "<h1>400 Bad Request</h1>\n"
+                        "<p>URL encoding error in email parameter.</p>\n"
+                        "<p><a href=\"/\">Back to Search</a></p>\n"
+                        "</body></html>\n");
+                    return http_build_response(400, "BAD REQUEST",
+                                               "text/html; charset=utf-8",
+                                               body, (int)strlen(body),
+                                               0, output, size);
+                }
+                if (email_buf[0] != '\0') {
+                    strncpy(criteria.email, email_buf, sizeof(criteria.email) - 1);
+                    has_criteria = 1;
+                }
+            }
+
+            /* 5. No criteria -> show form with prompt */
+            if (!has_criteria) {
+                snprintf(body, body_size,
+                    "<!DOCTYPE html>\n"
+                    "<html lang=\"zh-CN\"><head>\n"
+                    "<meta charset=\"utf-8\">\n"
+                    "<meta name=\"viewport\" content=\"width=device-width,"
+                    "initial-scale=1\">\n"
+                    "<title>User Search</title>\n"
+                    "<link rel=\"icon\" href=\"/icon/favicon.ico\">\n"
+                    "<style>"
+                    ":root{--bg:#f5f5f5;--card-bg:#fff;--text:#333;"
+                    "--muted:#666;--border:#e0e0e0;--accent:#2563eb;}"
+                    "*{margin:0;padding:0;box-sizing:border-box;}"
+                    "body{font-family:-apple-system,BlinkMacSystemFont,"
+                    "\"Segoe UI\",Roboto,sans-serif;background:var(--bg);"
+                    "color:var(--text);line-height:1.6;}"
+                    "header{background:linear-gradient(135deg,#1e293b 0%%,"
+                    "#334155 100%%);color:#fff;padding:40px 24px;"
+                    "text-align:center;}"
+                    "header h1{font-size:1.8rem;}"
+                    "header p{margin-top:8px;opacity:0.8;}"
+                    ".container{max-width:640px;margin:0 auto;"
+                    "padding:32px 20px;}"
+                    ".search-card{background:var(--card-bg);"
+                    "border:1px solid var(--border);border-radius:12px;"
+                    "padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}"
+                    ".search-card .field{margin-bottom:12px;text-align:left;}"
+                    ".search-card label{display:block;font-size:0.85rem;"
+                    "color:var(--muted);margin-bottom:4px;}"
+                    ".search-card input[type=text]{padding:10px 16px;"
+                    "font-size:1rem;width:100%%;border:1px solid #ccc;"
+                    "border-radius:6px;outline:none;box-sizing:border-box;}"
+                    ".search-card input[type=text]:focus{"
+                    "border-color:var(--accent);}"
+                    ".search-card .btn-row{text-align:center;margin-top:20px;}"
+                    ".search-card button{padding:10px 32px;font-size:1rem;"
+                    "background:var(--accent);color:#fff;border:none;"
+                    "border-radius:6px;cursor:pointer;}"
+                    ".search-card button:hover{opacity:0.9;}"
+                    ".warning{color:#dc2626;margin-top:16px;text-align:center;"
+                    "font-size:0.9rem;}"
+                    ".hint{color:var(--muted);font-size:0.8rem;"
+                    "text-align:center;margin-top:8px;}"
+                    "footer{text-align:center;padding:24px 20px;"
+                    "color:var(--muted);font-size:0.82rem;}"
+                    "</style></head><body>\n"
+                    "<header>\n"
+                    "  <h1>&#128269; User Search</h1>\n"
+                    "  <p>100K Chinese Users &middot; RBT Index &middot; AND Search</p>\n"
+                    "</header>\n"
+                    "<div class=\"container\">\n"
+                    "<div class=\"search-card\">\n"
+                    "<form method=\"post\" action=\"/search\""
+                    " enctype=\"application/x-www-form-urlencoded\">\n"
+                    "<div class=\"field\">"
+                    "<label>Name</label>"
+                    "<input type=\"text\" name=\"name\""
+                    " placeholder=\"e.g. 赵安\" autofocus>"
+                    "</div>\n"
+                    "<div class=\"field\">"
+                    "<label>Phone</label>"
+                    "<input type=\"text\" name=\"phone\""
+                    " placeholder=\"e.g. 138\">"
+                    "</div>\n"
+                    "<div class=\"field\">"
+                    "<label>Email</label>"
+                    "<input type=\"text\" name=\"email\""
+                    " placeholder=\"e.g. @example.com\">"
+                    "</div>\n"
+                    "<div class=\"btn-row\">"
+                    "<button type=\"submit\">Search</button>"
+                    "</div>\n"
+                    "</form>\n"
+                    "<p class=\"hint\">All fields are combined with AND &middot; "
+                    "Case-insensitive &middot; Partial match &middot; UTF-8</p>\n"
+                    "<p class=\"warning\">"
+                    "Please enter at least one search criterion.</p>\n"
+                    "</div>\n</div>\n"
+                    "<footer>MiniWeb Server v1.4</footer>\n"
+                    "</body></html>\n");
+                return http_build_response(200, "OK",
+                                           "text/html; charset=utf-8",
+                                           body, (int)strlen(body),
+                                           req->keep_alive > 0 ? req->keep_alive : 1,
+                                           output, size);
+            }
+
+            /* 6. Multi-criteria AND search via RBT */
+            match_count = user_store_search(&criteria, body, body_size);
+            if (match_count < 0) {
+                return http_build_response(500, "INTERNAL SERVER ERROR",
+                                           "text/plain; charset=utf-8",
+                                           "500 Internal Server Error\n", 25,
+                                           0, output, size);
+            }
+
+            return http_build_response(200, "OK",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       req->keep_alive > 0 ? req->keep_alive : 1,
+                                       output, size);
+        }
     }
 
     /* ---- fallback: 404 ---- */
@@ -936,6 +1264,7 @@ int request_handler_handle_connection(int conn_fd) {
 
             /* fill request_t — normalize method to uppercase */
             memset(&req, 0, sizeof(req));
+            req.content_length_hdr = -1;  /* v1.4: -1 = absent */
             {
                 int i;
                 for (i = 0; method[i] != '\0' && i < (int)sizeof(req.method) - 1; i++) {
@@ -953,6 +1282,70 @@ int request_handler_handle_connection(int conn_fd) {
                 snprintf(msg, sizeof(msg),
                          "%sbody: %s", worker_prefix(), body);
                 log_info(msg);
+            }
+
+            /* ---- v1.4: extract Content-Type and Content-Length headers ---- */
+            {
+                const char *ct_start = NULL;
+                const char *cl_start = NULL;
+                {
+                    char *p = recv_buf;
+                    int limit = (int)n;
+                    while (p < recv_buf + limit - 14) {
+                        if ((p[0] == '\n' || p[0] == '\r') &&
+                            (p[1] == 'C' || p[1] == 'c') &&
+                            (p[2] == 'o' || p[2] == 'O') &&
+                            (p[3] == 'n' || p[3] == 'N')) {
+                            if ((p[4] == 't' || p[4] == 'T') &&
+                                (p[5] == 'e' || p[5] == 'E') &&
+                                (p[6] == 'n' || p[6] == 'N') &&
+                                (p[7] == 't' || p[7] == 'T') &&
+                                (p[8] == '-')) {
+                                if ((p[9] == 'T' || p[9] == 't') &&
+                                    (p[10] == 'y' || p[10] == 'Y') &&
+                                    (p[11] == 'p' || p[11] == 'P') &&
+                                    (p[12] == 'e' || p[12] == 'E') &&
+                                    p[13] == ':') {
+                                    ct_start = p + 14;
+                                } else if ((p[9] == 'L' || p[9] == 'l') &&
+                                           (p[10] == 'e' || p[10] == 'E') &&
+                                           (p[11] == 'n' || p[11] == 'N') &&
+                                           (p[12] == 'g' || p[12] == 'G') &&
+                                           (p[13] == 't' || p[13] == 'T') &&
+                                           p[14] == 'h' && p[15] == ':') {
+                                    cl_start = p + 16;
+                                }
+                            }
+                        }
+                        p++;
+                    }
+                }
+
+                if (ct_start) {
+                    int k = 0;
+                    while (*ct_start == ' ' || *ct_start == '\t') ct_start++;
+                    while (ct_start[k] != '\0' &&
+                           ct_start[k] != '\r' && ct_start[k] != '\n' &&
+                           k < (int)sizeof(req.content_type) - 1) {
+                        req.content_type[k] = ct_start[k];
+                        k++;
+                    }
+                    req.content_type[k] = '\0';
+                    /* strip trailing whitespace */
+                    {
+                        char *e = req.content_type + strlen(req.content_type) - 1;
+                        while (e >= req.content_type &&
+                               (*e == ' ' || *e == '\t')) {
+                            *e = '\0'; e--;
+                        }
+                    }
+                }
+
+                if (cl_start) {
+                    while (*cl_start == ' ' || *cl_start == '\t') cl_start++;
+                    req.content_length_hdr = atoi(cl_start);
+                    if (req.content_length_hdr < 0) req.content_length_hdr = 0;
+                }
             }
 
             /* ---- v1.2.1: extract Host header for virtual host routing ---- */

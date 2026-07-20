@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Search — MiniWeb Server</title>
+  <link rel="icon" href="/icon/favicon.ico">
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card-bg: #fff;
+      --text: #333;
+      --muted: #666;
+      --border: #e0e0e0;
+      --accent: #2563eb;
+      --green: #16a34a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ---- header ---- */
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      color: #fff;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p  { margin-top: 8px; opacity: 0.8; font-size: 1rem; }
+    .pid-badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* ---- layout ---- */
+    .container { max-width: 720px; margin: 0 auto; padding: 32px 20px; }
+
+    /* ---- search form ---- */
+    .search-card {
+      background: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 36px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .search-card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+    .search-card .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    .search-card form {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .search-card input[type="text"] {
+      flex: 1;
+      min-width: 260px;
+      padding: 12px 16px;
+      font-size: 1.05rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-card input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .search-card button {
+      padding: 12px 28px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .search-card button:hover { opacity: 0.9; }
+
+    /* ---- info cards ---- */
+    .info-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .info-card .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-card .value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--accent);
+    }
+    .info-card .value.green { color: var(--green); }
+
+    /* ---- nav ---- */
+    .nav-links {
+      text-align: center;
+      margin-top: 24px;
+    }
+    .nav-links a {
+      display: inline-block;
+      padding: 8px 20px;
+      margin: 0 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: box-shadow 0.15s;
+    }
+    .nav-links a:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    /* ---- footer ---- */
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#128269; User Search</h1>
+  <p>搜索已加载的中文用户数据库 &middot; 基于红黑树索引</p>
+  <div class="pid-badge">Powered by RBT Index &middot; v1.4</div>
+</header>
+
+<div class="container">
+
+  <!-- ======== 搜索表单 ======== -->
+  <div class="search-card">
+    <h2>查找用户</h2>
+    <p class="hint">多字段 AND 搜索 &middot; 支持中文 &middot; 大小写不敏感 &middot; 部分匹配 &middot; 10 万用户</p>
+    <form method="post" action="/search" enctype="application/x-www-form-urlencoded">
+      <div style="margin-bottom:14px;text-align:left;">
+        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Name</label>
+        <input type="text" name="name" placeholder="输入姓名，如：赵安" autofocus autocomplete="off"
+          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;text-align:left;">
+        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Phone</label>
+        <input type="text" name="phone" placeholder="输入电话，如：138" autocomplete="off"
+          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;text-align:left;">
+        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Email</label>
+        <input type="text" name="email" placeholder="输入邮箱，如：@example.com" autocomplete="off"
+          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
+      </div>
+      <button type="submit" style="padding:12px 32px;font-size:1rem;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">搜索</button>
+    </form>
+  </div>
+
+  <!-- ======== 搜索说明 ======== -->
+  <div class="info-row">
+    <div class="info-card">
+      <div class="label">数据库</div>
+      <div class="value">100,000</div>
+    </div>
+    <div class="info-card">
+      <div class="label">搜索算法</div>
+      <div class="value">RBT Index</div>
+    </div>
+    <div class="info-card">
+      <div class="label">连接方式</div>
+      <div class="value">AND</div>
+    </div>
+    <div class="info-card">
+      <div class="label">结果排序</div>
+      <div class="value green">按名称&#8593;</div>
+    </div>
+  </div>
+
+  <!-- ======== 导航 ======== -->
+  <div class="nav-links">
+    <a href="http://localhost:8080/">&#127968; 主站点</a>
+    <a href="http://blog.localhost:8080/">&#128214; Blog</a>
+    <a href="http://lab.localhost:8080/">&#128300; Lab</a>
+  </div>
+
+</div>
+
+<footer>
+  MiniWeb Server v1.4 &middot; Built with C + epoll + RBT + love
+</footer>
+
+</body>
+</html>

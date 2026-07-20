@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MiniWeb Server v1.2</title>
+  <title>MiniWeb Server v1.4</title>
   <style>
     :root {
       --bg: #f5f5f5;
@@ -141,7 +141,7 @@
 <header>
   <h1>&#9881; MiniWeb Server</h1>
   <p>一个用 C 语言编写的轻量 HTTP/1.1 服务器 &middot; Nginx 风格 master-worker 架构</p>
-  <div class="pid-badge">Powered by epoll &middot; v1.2</div>
+  <div class="pid-badge">Powered by epoll &middot; v1.4</div>
 </header>
 
 <div class="container">
@@ -184,6 +184,11 @@
         <h3>查找用户</h3>
         <p>在 10 万用户中查找 "baianai"</p>
         <a href="/users/baianai" target="_blank">GET /users/baianai</a>
+      </div>
+      <div class="try-card">
+        <h3>&#128269; 用户搜索</h3>
+        <p>RBT 索引搜索 10 万中文用户</p>
+        <a href="http://search.localhost:8080/" target="_blank">打开搜索</a>
       </div>
       <div class="try-card" style="border-color: var(--orange); border-width: 2px;">
         <h3>&#128214; 实验博客</h3>
@@ -321,7 +326,7 @@
 </div>
 
 <footer>
-  MiniWeb Server v1.2 &middot; Built with C + epoll + love
+  MiniWeb Server v1.4 &middot; Built with C + epoll + love
 </footer>
 
 </body>

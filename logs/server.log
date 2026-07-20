@@ -359,3 +359,487 @@
 [2026-07-19 17:01:52.967047] [INFO ] [PID 1065460] [TID 136743228962624] [EpollServer] shutting down...
 [2026-07-19 17:01:52.967160] [INFO ] [PID 1065460] [TID 136743228962624] [EpollServer] server shutdown — served 24 client(s) (SIGINT)
 [2026-07-19 17:01:52.967406] [INFO ] [PID 1065460] [TID 136743228962624] Logging system shutting down
+[2026-07-20 10:30:26.637126] [INFO ] [PID 1184545] [TID 139049736222528] Logging system initialized (v1.2.1)
+[2026-07-20 10:30:26.637312] [INFO ] [PID 1184545] [TID 139049736222528] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 10:30:26.637354] [INFO ] [PID 1184545] [TID 139049736222528] user store: loading data...
+[2026-07-20 10:30:26.752462] [INFO ] [PID 1184545] [TID 139049736222528] user store: loaded 100000 users
+[2026-07-20 10:30:26.752802] [INFO ] [PID 1184545] [TID 139049736222528] ========================================
+[2026-07-20 10:30:26.752967] [INFO ] [PID 1184545] [TID 139049736222528]   Master PID: 1184545  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 10:30:26.753077] [INFO ] [PID 1184545] [TID 139049736222528] ========================================
+[2026-07-20 10:30:26.753185] [INFO ] [PID 1184545] [TID 139049736222528] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 10:30:26.754018] [INFO ] [PID 1184545] [TID 139049736222528] [Master] forked worker 1, PID 1184547
+[2026-07-20 10:30:26.754128] [INFO ] [PID 1184545] [TID 139049736222528] [Master] entering wait loop (1 workers)
+[2026-07-20 10:30:26.754693] [INFO ] [PID 1184547] [TID 139049736222528] [Worker] PID 1184547 started, listen_fd=4
+[2026-07-20 10:30:26.762379] [INFO ] [PID 1184547] [TID 139049736222528] ========================================
+[2026-07-20 10:30:26.762446] [INFO ] [PID 1184547] [TID 139049736222528]   Worker-1 PID: 1184547  (epoll I/O multiplexing)
+[2026-07-20 10:30:26.762463] [INFO ] [PID 1184547] [TID 139049736222528] ========================================
+[2026-07-20 10:30:26.762478] [INFO ] [PID 1184547] [TID 139049736222528] [Worker] using inherited listen_fd=4
+[2026-07-20 10:30:28.658565] [INFO ] [PID 1184547] [TID 139049736222528] [#1] accepted connection from 127.0.0.1:52438 (fd=6) type=ephemeral
+[2026-07-20 10:30:28.669163] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:28 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:28.669473] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:28.682457] [INFO ] [PID 1184547] [TID 139049736222528] [#2] accepted connection from 127.0.0.1:52444 (fd=6) type=ephemeral
+[2026-07-20 10:30:28.682907] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:28 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:28.682986] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:30.697476] [INFO ] [PID 1184547] [TID 139049736222528] [#3] accepted connection from 127.0.0.1:52456 (fd=6) type=ephemeral
+[2026-07-20 10:30:30.698227] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:30 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:30.698328] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:32.712032] [INFO ] [PID 1184547] [TID 139049736222528] [#4] accepted connection from 127.0.0.1:52470 (fd=6) type=ephemeral
+[2026-07-20 10:30:32.712841] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:30:32 +0800] 127.0.0.1 GET / 200 10915
+[2026-07-20 10:30:32.712930] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:32.723919] [INFO ] [PID 1184547] [TID 139049736222528] [#5] accepted connection from 127.0.0.1:52476 (fd=6) type=ephemeral
+[2026-07-20 10:30:32.725472] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:30:32 +0800] 127.0.0.1 GET / 200 10915
+[2026-07-20 10:30:32.725860] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:34.739084] [INFO ] [PID 1184547] [TID 139049736222528] [#6] accepted connection from 127.0.0.1:52484 (fd=6) type=ephemeral
+[2026-07-20 10:30:34.739935] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:34 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:34.740079] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:34.752696] [INFO ] [PID 1184547] [TID 139049736222528] [#7] accepted connection from 127.0.0.1:52498 (fd=6) type=ephemeral
+[2026-07-20 10:30:34.753289] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:34 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:34.753399] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:36.764534] [INFO ] [PID 1184547] [TID 139049736222528] [#8] accepted connection from 127.0.0.1:57816 (fd=6) type=ephemeral
+[2026-07-20 10:30:36.765216] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:36 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:36.765537] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:36.774168] [INFO ] [PID 1184547] [TID 139049736222528] [#9] accepted connection from 127.0.0.1:57820 (fd=6) type=ephemeral
+[2026-07-20 10:30:36.775035] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:36 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:36.775277] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.796444] [INFO ] [PID 1184547] [TID 139049736222528] [#10] accepted connection from 127.0.0.1:57834 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.796569] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] raw message from 127.0.0.1:57834: GET\r\nHost: search.localhost\r\n\r\n
+[2026-07-20 10:30:38.810139] [INFO ] [PID 1184547] [TID 139049736222528] [#11] accepted connection from 127.0.0.1:57838 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.812333] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:38 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:38.812427] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.824493] [INFO ] [PID 1184547] [TID 139049736222528] [#12] accepted connection from 127.0.0.1:57850 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.825086] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:38 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:38.825455] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.838290] [INFO ] [PID 1184547] [TID 139049736222528] [#13] accepted connection from 127.0.0.1:57860 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.838775] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:38 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:38.838853] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.935620] [INFO ] [PID 1184547] [TID 139049736222528] [#14] accepted connection from 127.0.0.1:57876 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.935790] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] fd=6 request too large (4236 > 4096 bytes) -> 413
+[2026-07-20 10:30:38.948548] [INFO ] [PID 1184547] [TID 139049736222528] [#15] accepted connection from 127.0.0.1:57892 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.949220] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:30:38 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:30:38.949311] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.964683] [INFO ] [PID 1184547] [TID 139049736222528] [#16] accepted connection from 127.0.0.1:57906 (fd=6) type=ephemeral
+[2026-07-20 10:30:38.965504] [INFO ] [PID 1184547] [TID 139049736222528] [Worker-1] fd=6 GET /nonexistent/path -> 404
+[20/Jul/2026:10:30:38 +0800] 127.0.0.1 GET /nonexistent/path 404 133
+[2026-07-20 10:30:38.966639] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:30:38.973426] [INFO ] [PID 1184545] [TID 139049736222528] [Master] shutting down...
+[2026-07-20 10:30:38.973464] [INFO ] [PID 1184545] [TID 139049736222528] [Master] listen socket closed
+[2026-07-20 10:30:38.973480] [INFO ] [PID 1184545] [TID 139049736222528] [Master] sending SIGTERM to worker PID 1184547
+[2026-07-20 10:30:38.973522] [INFO ] [PID 1184545] [TID 139049736222528] [Master] waiting up to 2000 ms for workers to exit
+[2026-07-20 10:30:38.974778] [INFO ] [PID 1184547] [TID 139049736222528] [EpollServer] shutting down...
+[2026-07-20 10:30:38.974847] [INFO ] [PID 1184547] [TID 139049736222528] [Worker] shutdown — served 16 client(s) (SIGTERM)
+[2026-07-20 10:30:38.975077] [INFO ] [PID 1184547] [TID 139049736222528] [Worker] PID 1184547 shutting down
+[2026-07-20 10:30:38.975103] [INFO ] [PID 1184547] [TID 139049736222528] Logging system shutting down
+[2026-07-20 10:32:12.913761] [INFO ] [PID 1185172] [TID 123683150550848] Logging system initialized (v1.2.1)
+[2026-07-20 10:32:12.913877] [INFO ] [PID 1185172] [TID 123683150550848] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 10:32:12.913900] [INFO ] [PID 1185172] [TID 123683150550848] user store: loading data...
+[2026-07-20 10:32:13.008153] [INFO ] [PID 1185172] [TID 123683150550848] user store: loaded 100000 users
+[2026-07-20 10:32:13.008233] [INFO ] [PID 1185172] [TID 123683150550848] ========================================
+[2026-07-20 10:32:13.008254] [INFO ] [PID 1185172] [TID 123683150550848]   Master PID: 1185172  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 10:32:13.008268] [INFO ] [PID 1185172] [TID 123683150550848] ========================================
+[2026-07-20 10:32:13.008327] [INFO ] [PID 1185172] [TID 123683150550848] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 10:32:13.009188] [INFO ] [PID 1185172] [TID 123683150550848] [Master] forked worker 1, PID 1185178
+[2026-07-20 10:32:13.009281] [INFO ] [PID 1185172] [TID 123683150550848] [Master] entering wait loop (1 workers)
+[2026-07-20 10:32:13.010995] [INFO ] [PID 1185178] [TID 123683150550848] [Worker] PID 1185178 started, listen_fd=4
+[2026-07-20 10:32:13.022044] [INFO ] [PID 1185178] [TID 123683150550848] ========================================
+[2026-07-20 10:32:13.022098] [INFO ] [PID 1185178] [TID 123683150550848]   Worker-1 PID: 1185178  (epoll I/O multiplexing)
+[2026-07-20 10:32:13.022114] [INFO ] [PID 1185178] [TID 123683150550848] ========================================
+[2026-07-20 10:32:13.022129] [INFO ] [PID 1185178] [TID 123683150550848] [Worker] using inherited listen_fd=4
+[2026-07-20 10:32:14.922201] [INFO ] [PID 1185178] [TID 123683150550848] [#1] accepted connection from 127.0.0.1:52950 (fd=6) type=ephemeral
+[2026-07-20 10:32:14.942762] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:14 +0800] 127.0.0.1 POST /search 200 6484
+[2026-07-20 10:32:14.942893] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:14.954368] [INFO ] [PID 1185178] [TID 123683150550848] [#2] accepted connection from 127.0.0.1:52960 (fd=6) type=ephemeral
+[2026-07-20 10:32:14.964484] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:14 +0800] 127.0.0.1 POST /search 200 6484
+[2026-07-20 10:32:14.964640] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:16.979332] [INFO ] [PID 1185178] [TID 123683150550848] [#3] accepted connection from 127.0.0.1:34850 (fd=6) type=ephemeral
+[2026-07-20 10:32:16.989040] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:16 +0800] 127.0.0.1 POST /search 200 6484
+[2026-07-20 10:32:16.990007] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:19.001049] [INFO ] [PID 1185178] [TID 123683150550848] [#4] accepted connection from 127.0.0.1:34864 (fd=6) type=ephemeral
+[2026-07-20 10:32:19.002795] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:32:19 +0800] 127.0.0.1 GET / 200 5795
+[2026-07-20 10:32:19.003121] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:19.014432] [INFO ] [PID 1185178] [TID 123683150550848] [#5] accepted connection from 127.0.0.1:34872 (fd=6) type=ephemeral
+[2026-07-20 10:32:19.015213] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:32:19 +0800] 127.0.0.1 GET / 200 5795
+[2026-07-20 10:32:19.015289] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:21.029701] [INFO ] [PID 1185178] [TID 123683150550848] [#6] accepted connection from 127.0.0.1:34876 (fd=6) type=ephemeral
+[2026-07-20 10:32:21.030635] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:21 +0800] 127.0.0.1 POST /search 200 2013
+[2026-07-20 10:32:21.030817] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:21.040838] [INFO ] [PID 1185178] [TID 123683150550848] [#7] accepted connection from 127.0.0.1:34884 (fd=6) type=ephemeral
+[2026-07-20 10:32:21.041234] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:21 +0800] 127.0.0.1 POST /search 200 2013
+[2026-07-20 10:32:21.041359] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:23.064063] [INFO ] [PID 1185178] [TID 123683150550848] [#8] accepted connection from 127.0.0.1:34896 (fd=6) type=ephemeral
+[2026-07-20 10:32:23.070516] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:23 +0800] 127.0.0.1 POST /search 200 2225
+[2026-07-20 10:32:23.071559] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:23.087793] [INFO ] [PID 1185178] [TID 123683150550848] [#9] accepted connection from 127.0.0.1:34904 (fd=6) type=ephemeral
+[2026-07-20 10:32:23.092801] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:32:23 +0800] 127.0.0.1 POST /search 200 2225
+[2026-07-20 10:32:23.093006] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.105802] [INFO ] [PID 1185178] [TID 123683150550848] [#10] accepted connection from 127.0.0.1:34906 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.106788] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] response: (malformed) -> 400 BAD REQUEST
+[2026-07-20 10:32:25.121163] [INFO ] [PID 1185178] [TID 123683150550848] [#11] accepted connection from 127.0.0.1:34914 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.121943] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:32:25 +0800] 127.0.0.1 POST /search 400 521
+[2026-07-20 10:32:25.122029] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.134773] [INFO ] [PID 1185178] [TID 123683150550848] [#12] accepted connection from 127.0.0.1:34928 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.136237] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:32:25 +0800] 127.0.0.1 POST /search 400 552
+[2026-07-20 10:32:25.136334] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.152538] [INFO ] [PID 1185178] [TID 123683150550848] [#13] accepted connection from 127.0.0.1:34934 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.155995] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:32:25 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:32:25.156116] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.206579] [INFO ] [PID 1185178] [TID 123683150550848] [#14] accepted connection from 127.0.0.1:34936 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.207176] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] fd=6 request too large (4226 > 4096 bytes) -> 413
+[2026-07-20 10:32:25.218425] [INFO ] [PID 1185178] [TID 123683150550848] [#15] accepted connection from 127.0.0.1:34942 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.218898] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:32:25 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:32:25.218975] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.232369] [INFO ] [PID 1185178] [TID 123683150550848] [#16] accepted connection from 127.0.0.1:34944 (fd=6) type=ephemeral
+[2026-07-20 10:32:25.233121] [INFO ] [PID 1185178] [TID 123683150550848] [Worker-1] fd=6 GET /nonexistent/path -> 404
+[20/Jul/2026:10:32:25 +0800] 127.0.0.1 GET /nonexistent/path 404 133
+[2026-07-20 10:32:25.234542] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:32:25.239468] [INFO ] [PID 1185172] [TID 123683150550848] [Master] shutting down...
+[2026-07-20 10:32:25.239509] [INFO ] [PID 1185172] [TID 123683150550848] [Master] listen socket closed
+[2026-07-20 10:32:25.239524] [INFO ] [PID 1185172] [TID 123683150550848] [Master] sending SIGTERM to worker PID 1185178
+[2026-07-20 10:32:25.239556] [INFO ] [PID 1185172] [TID 123683150550848] [Master] waiting up to 2000 ms for workers to exit
+[2026-07-20 10:32:25.239933] [INFO ] [PID 1185178] [TID 123683150550848] [EpollServer] shutting down...
+[2026-07-20 10:32:25.240004] [INFO ] [PID 1185178] [TID 123683150550848] [Worker] shutdown — served 16 client(s) (SIGTERM)
+[2026-07-20 10:32:25.240199] [INFO ] [PID 1185178] [TID 123683150550848] [Worker] PID 1185178 shutting down
+[2026-07-20 10:32:25.240216] [INFO ] [PID 1185178] [TID 123683150550848] Logging system shutting down
+[2026-07-20 10:43:44.525246] [INFO ] [PID 1204759] [TID 129218487809856] Logging system initialized (v1.2.1)
+[2026-07-20 10:43:44.525366] [INFO ] [PID 1204759] [TID 129218487809856] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 10:43:44.525389] [INFO ] [PID 1204759] [TID 129218487809856] user store: loading data...
+[2026-07-20 10:43:44.649669] [INFO ] [PID 1204759] [TID 129218487809856] user store: loaded 100000 users
+[2026-07-20 10:43:44.649822] [INFO ] [PID 1204759] [TID 129218487809856] ========================================
+[2026-07-20 10:43:44.649855] [INFO ] [PID 1204759] [TID 129218487809856]   Master PID: 1204759  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 10:43:44.649872] [INFO ] [PID 1204759] [TID 129218487809856] ========================================
+[2026-07-20 10:43:44.649943] [INFO ] [PID 1204759] [TID 129218487809856] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 10:43:44.650767] [INFO ] [PID 1204759] [TID 129218487809856] [Master] forked worker 1, PID 1204761
+[2026-07-20 10:43:44.650856] [INFO ] [PID 1204759] [TID 129218487809856] [Master] entering wait loop (1 workers)
+[2026-07-20 10:43:44.651116] [INFO ] [PID 1204761] [TID 129218487809856] [Worker] PID 1204761 started, listen_fd=4
+[2026-07-20 10:43:44.658351] [INFO ] [PID 1204761] [TID 129218487809856] ========================================
+[2026-07-20 10:43:44.658413] [INFO ] [PID 1204761] [TID 129218487809856]   Worker-1 PID: 1204761  (epoll I/O multiplexing)
+[2026-07-20 10:43:44.658447] [INFO ] [PID 1204761] [TID 129218487809856] ========================================
+[2026-07-20 10:43:44.658472] [INFO ] [PID 1204761] [TID 129218487809856] [Worker] using inherited listen_fd=4
+[2026-07-20 10:43:46.536961] [INFO ] [PID 1204761] [TID 129218487809856] [#1] accepted connection from 127.0.0.1:50558 (fd=6) type=ephemeral
+[2026-07-20 10:43:46.560178] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:43:46 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:43:46.560687] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:46.571702] [INFO ] [PID 1204761] [TID 129218487809856] [#2] accepted connection from 127.0.0.1:50572 (fd=6) type=ephemeral
+[2026-07-20 10:43:46.581489] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:43:46 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:43:46.581876] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:48.594816] [INFO ] [PID 1204761] [TID 129218487809856] [#3] accepted connection from 127.0.0.1:50580 (fd=6) type=ephemeral
+[2026-07-20 10:43:48.604919] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:43:48 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:43:48.605392] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:50.619677] [INFO ] [PID 1204761] [TID 129218487809856] [#4] accepted connection from 127.0.0.1:50590 (fd=6) type=ephemeral
+[2026-07-20 10:43:50.620242] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:43:50 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 10:43:50.620388] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:50.633572] [INFO ] [PID 1204761] [TID 129218487809856] [#5] accepted connection from 127.0.0.1:50604 (fd=6) type=ephemeral
+[2026-07-20 10:43:50.634190] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:43:50 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 10:43:50.634287] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:52.649776] [INFO ] [PID 1204761] [TID 129218487809856] [#6] accepted connection from 127.0.0.1:50610 (fd=6) type=ephemeral
+[2026-07-20 10:43:52.650959] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:43:52 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 10:43:52.651070] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:52.662049] [INFO ] [PID 1204761] [TID 129218487809856] [#7] accepted connection from 127.0.0.1:50622 (fd=6) type=ephemeral
+[2026-07-20 10:43:52.662706] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:43:52 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 10:43:52.662870] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:54.678653] [INFO ] [PID 1204761] [TID 129218487809856] [#8] accepted connection from 127.0.0.1:50634 (fd=6) type=ephemeral
+[2026-07-20 10:43:54.679699] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:54 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:54.680410] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:54.693165] [INFO ] [PID 1204761] [TID 129218487809856] [#9] accepted connection from 127.0.0.1:50650 (fd=6) type=ephemeral
+[2026-07-20 10:43:54.693615] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:54 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:54.693765] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.707820] [INFO ] [PID 1204761] [TID 129218487809856] [#10] accepted connection from 127.0.0.1:52418 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.708772] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] response: (malformed) -> 400 BAD REQUEST
+[2026-07-20 10:43:56.720676] [INFO ] [PID 1204761] [TID 129218487809856] [#11] accepted connection from 127.0.0.1:52428 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.721319] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 400 521
+[2026-07-20 10:43:56.721522] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.735941] [INFO ] [PID 1204761] [TID 129218487809856] [#12] accepted connection from 127.0.0.1:52434 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.736495] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:56.737204] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.752097] [INFO ] [PID 1204761] [TID 129218487809856] [#13] accepted connection from 127.0.0.1:52446 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.752525] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:56.752621] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.798496] [INFO ] [PID 1204761] [TID 129218487809856] [#14] accepted connection from 127.0.0.1:52456 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.798619] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] fd=6 request too large (4225 > 4096 bytes) -> 413
+[2026-07-20 10:43:56.808393] [INFO ] [PID 1204761] [TID 129218487809856] [#15] accepted connection from 127.0.0.1:52472 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.808894] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:43:56.809004] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.818613] [INFO ] [PID 1204761] [TID 129218487809856] [#16] accepted connection from 127.0.0.1:52486 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.819014] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:56.819114] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:56.827779] [INFO ] [PID 1204761] [TID 129218487809856] [#17] accepted connection from 127.0.0.1:52500 (fd=6) type=ephemeral
+[2026-07-20 10:43:56.828164] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:56 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:56.828280] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:58.845432] [INFO ] [PID 1204761] [TID 129218487809856] [#18] accepted connection from 127.0.0.1:52510 (fd=6) type=ephemeral
+[2026-07-20 10:43:58.848893] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:43:58 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:43:58.849010] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:58.863974] [INFO ] [PID 1204761] [TID 129218487809856] [#19] accepted connection from 127.0.0.1:52520 (fd=6) type=ephemeral
+[2026-07-20 10:43:58.864386] [INFO ] [PID 1204761] [TID 129218487809856] [Worker-1] fd=6 GET /nonexistent/path -> 404
+[20/Jul/2026:10:43:58 +0800] 127.0.0.1 GET /nonexistent/path 404 133
+[2026-07-20 10:43:58.864781] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:43:58.870240] [INFO ] [PID 1204759] [TID 129218487809856] [Master] shutting down...
+[2026-07-20 10:43:58.870305] [INFO ] [PID 1204759] [TID 129218487809856] [Master] listen socket closed
+[2026-07-20 10:43:58.870675] [INFO ] [PID 1204759] [TID 129218487809856] [Master] sending SIGTERM to worker PID 1204761
+[2026-07-20 10:43:58.870703] [INFO ] [PID 1204759] [TID 129218487809856] [Master] waiting up to 2000 ms for workers to exit
+[2026-07-20 10:43:58.870888] [INFO ] [PID 1204761] [TID 129218487809856] [EpollServer] shutting down...
+[2026-07-20 10:43:58.870949] [INFO ] [PID 1204761] [TID 129218487809856] [Worker] shutdown — served 19 client(s) (SIGTERM)
+[2026-07-20 10:43:58.871193] [INFO ] [PID 1204761] [TID 129218487809856] [Worker] PID 1204761 shutting down
+[2026-07-20 10:43:58.871209] [INFO ] [PID 1204761] [TID 129218487809856] Logging system shutting down
+[2026-07-20 10:44:36.106269] [INFO ] [PID 1205166] [TID 129114216900416] Logging system initialized (v1.2.1)
+[2026-07-20 10:44:36.106388] [INFO ] [PID 1205166] [TID 129114216900416] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 10:44:36.106412] [INFO ] [PID 1205166] [TID 129114216900416] user store: loading data...
+[2026-07-20 10:44:36.223400] [INFO ] [PID 1205166] [TID 129114216900416] user store: loaded 100000 users
+[2026-07-20 10:44:36.223639] [INFO ] [PID 1205166] [TID 129114216900416] ========================================
+[2026-07-20 10:44:36.223678] [INFO ] [PID 1205166] [TID 129114216900416]   Master PID: 1205166  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 10:44:36.223697] [INFO ] [PID 1205166] [TID 129114216900416] ========================================
+[2026-07-20 10:44:36.223825] [INFO ] [PID 1205166] [TID 129114216900416] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 10:44:36.224665] [INFO ] [PID 1205166] [TID 129114216900416] [Master] forked worker 1, PID 1205168
+[2026-07-20 10:44:36.224816] [INFO ] [PID 1205166] [TID 129114216900416] [Master] entering wait loop (1 workers)
+[2026-07-20 10:44:36.224947] [INFO ] [PID 1205168] [TID 129114216900416] [Worker] PID 1205168 started, listen_fd=4
+[2026-07-20 10:44:36.231935] [INFO ] [PID 1205168] [TID 129114216900416] ========================================
+[2026-07-20 10:44:36.231993] [INFO ] [PID 1205168] [TID 129114216900416]   Worker-1 PID: 1205168  (epoll I/O multiplexing)
+[2026-07-20 10:44:36.232009] [INFO ] [PID 1205168] [TID 129114216900416] ========================================
+[2026-07-20 10:44:36.232024] [INFO ] [PID 1205168] [TID 129114216900416] [Worker] using inherited listen_fd=4
+[2026-07-20 10:44:38.114450] [INFO ] [PID 1205168] [TID 129114216900416] [#1] accepted connection from 127.0.0.1:34676 (fd=6) type=ephemeral
+[2026-07-20 10:44:38.149942] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:38 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:44:38.151509] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:38.167437] [INFO ] [PID 1205168] [TID 129114216900416] [#2] accepted connection from 127.0.0.1:34684 (fd=6) type=ephemeral
+[2026-07-20 10:44:38.179157] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:38 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:44:38.179676] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:40.190338] [INFO ] [PID 1205168] [TID 129114216900416] [#3] accepted connection from 127.0.0.1:34692 (fd=6) type=ephemeral
+[2026-07-20 10:44:40.200635] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:40 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 10:44:40.200773] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:42.213193] [INFO ] [PID 1205168] [TID 129114216900416] [#4] accepted connection from 127.0.0.1:34706 (fd=6) type=ephemeral
+[2026-07-20 10:44:42.213688] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:44:42 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 10:44:42.213799] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:42.224123] [INFO ] [PID 1205168] [TID 129114216900416] [#5] accepted connection from 127.0.0.1:34714 (fd=6) type=ephemeral
+[2026-07-20 10:44:42.224909] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:10:44:42 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 10:44:42.224984] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:44.240049] [INFO ] [PID 1205168] [TID 129114216900416] [#6] accepted connection from 127.0.0.1:34720 (fd=6) type=ephemeral
+[2026-07-20 10:44:44.240518] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:44 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 10:44:44.240638] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:44.252755] [INFO ] [PID 1205168] [TID 129114216900416] [#7] accepted connection from 127.0.0.1:34728 (fd=6) type=ephemeral
+[2026-07-20 10:44:44.253295] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:44 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 10:44:44.253838] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:46.267138] [INFO ] [PID 1205168] [TID 129114216900416] [#8] accepted connection from 127.0.0.1:60320 (fd=6) type=ephemeral
+[2026-07-20 10:44:46.272413] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:46 +0800] 127.0.0.1 POST /search 200 2242
+[2026-07-20 10:44:46.272842] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:46.284112] [INFO ] [PID 1205168] [TID 129114216900416] [#9] accepted connection from 127.0.0.1:60336 (fd=6) type=ephemeral
+[2026-07-20 10:44:46.290677] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:46 +0800] 127.0.0.1 POST /search 200 2242
+[2026-07-20 10:44:46.291420] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.305597] [INFO ] [PID 1205168] [TID 129114216900416] [#10] accepted connection from 127.0.0.1:60352 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.305807] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] response: (malformed) -> 400 BAD REQUEST
+[2026-07-20 10:44:48.317836] [INFO ] [PID 1205168] [TID 129114216900416] [#11] accepted connection from 127.0.0.1:60358 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.318252] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 400 521
+[2026-07-20 10:44:48.318458] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.330923] [INFO ] [PID 1205168] [TID 129114216900416] [#12] accepted connection from 127.0.0.1:60370 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.331520] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:44:48.331618] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.344331] [INFO ] [PID 1205168] [TID 129114216900416] [#13] accepted connection from 127.0.0.1:60380 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.344893] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 10:44:48.344992] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.384645] [INFO ] [PID 1205168] [TID 129114216900416] [#14] accepted connection from 127.0.0.1:60386 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.384800] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] fd=6 request too large (4225 > 4096 bytes) -> 413
+[2026-07-20 10:44:48.402162] [INFO ] [PID 1205168] [TID 129114216900416] [#15] accepted connection from 127.0.0.1:60402 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.403134] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 10:44:48.403574] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.417649] [INFO ] [PID 1205168] [TID 129114216900416] [#16] accepted connection from 127.0.0.1:60404 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.426932] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 200 2247
+[2026-07-20 10:44:48.428520] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:48.440956] [INFO ] [PID 1205168] [TID 129114216900416] [#17] accepted connection from 127.0.0.1:60406 (fd=6) type=ephemeral
+[2026-07-20 10:44:48.452958] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:48 +0800] 127.0.0.1 POST /search 200 2247
+[2026-07-20 10:44:48.453191] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:50.466038] [INFO ] [PID 1205168] [TID 129114216900416] [#18] accepted connection from 127.0.0.1:60412 (fd=6) type=ephemeral
+[2026-07-20 10:44:50.481290] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:10:44:50 +0800] 127.0.0.1 POST /search 200 524288
+[2026-07-20 10:44:50.482767] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:50.482800] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] error/hangup on fd=6
+[2026-07-20 10:44:50.495694] [INFO ] [PID 1205168] [TID 129114216900416] [#19] accepted connection from 127.0.0.1:60414 (fd=6) type=ephemeral
+[2026-07-20 10:44:50.496125] [INFO ] [PID 1205168] [TID 129114216900416] [Worker-1] fd=6 GET /nonexistent/path -> 404
+[20/Jul/2026:10:44:50 +0800] 127.0.0.1 GET /nonexistent/path 404 133
+[2026-07-20 10:44:50.497836] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 10:44:50.501977] [INFO ] [PID 1205166] [TID 129114216900416] [Master] shutting down...
+[2026-07-20 10:44:50.502178] [INFO ] [PID 1205166] [TID 129114216900416] [Master] listen socket closed
+[2026-07-20 10:44:50.502301] [INFO ] [PID 1205166] [TID 129114216900416] [Master] sending SIGTERM to worker PID 1205168
+[2026-07-20 10:44:50.502343] [INFO ] [PID 1205166] [TID 129114216900416] [Master] waiting up to 2000 ms for workers to exit
+[2026-07-20 10:44:50.502530] [INFO ] [PID 1205168] [TID 129114216900416] [EpollServer] shutting down...
+[2026-07-20 10:44:50.502586] [INFO ] [PID 1205168] [TID 129114216900416] [Worker] shutdown — served 19 client(s) (SIGTERM)
+[2026-07-20 10:44:50.504867] [INFO ] [PID 1205168] [TID 129114216900416] [Worker] PID 1205168 shutting down
+[2026-07-20 10:44:50.504889] [INFO ] [PID 1205168] [TID 129114216900416] Logging system shutting down
+[2026-07-20 11:07:19.875233] [INFO ] [PID 1216427] [TID 136839816181568] Logging system initialized (v1.2.1)
+[2026-07-20 11:07:19.875371] [INFO ] [PID 1216427] [TID 136839816181568] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 11:07:19.875397] [INFO ] [PID 1216427] [TID 136839816181568] user store: loading data...
+[2026-07-20 11:07:20.009696] [INFO ] [PID 1216427] [TID 136839816181568] user store: loaded 100000 users
+[2026-07-20 11:07:20.009802] [INFO ] [PID 1216427] [TID 136839816181568] ========================================
+[2026-07-20 11:07:20.009859] [INFO ] [PID 1216427] [TID 136839816181568]   Master PID: 1216427  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 11:07:20.009875] [INFO ] [PID 1216427] [TID 136839816181568] ========================================
+[2026-07-20 11:07:20.010022] [INFO ] [PID 1216427] [TID 136839816181568] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 11:07:20.010954] [INFO ] [PID 1216427] [TID 136839816181568] [Master] forked worker 1, PID 1216429
+[2026-07-20 11:07:20.011113] [INFO ] [PID 1216427] [TID 136839816181568] [Master] entering wait loop (1 workers)
+[2026-07-20 11:07:20.011403] [INFO ] [PID 1216429] [TID 136839816181568] [Worker] PID 1216429 started, listen_fd=4
+[2026-07-20 11:07:20.020686] [INFO ] [PID 1216429] [TID 136839816181568] ========================================
+[2026-07-20 11:07:20.020762] [INFO ] [PID 1216429] [TID 136839816181568]   Worker-1 PID: 1216429  (epoll I/O multiplexing)
+[2026-07-20 11:07:20.020778] [INFO ] [PID 1216429] [TID 136839816181568] ========================================
+[2026-07-20 11:07:20.020793] [INFO ] [PID 1216429] [TID 136839816181568] [Worker] using inherited listen_fd=4
+[2026-07-20 11:07:21.882456] [INFO ] [PID 1216429] [TID 136839816181568] [#1] accepted connection from 127.0.0.1:56772 (fd=6) type=ephemeral
+[2026-07-20 11:07:21.935601] [INFO ] [PID 1216429] [TID 136839816181568] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:21 +0800] 127.0.0.1 POST /search 200 5243045
+[2026-07-20 11:07:21.959972] [INFO ] [PID 1216429] [TID 136839816181568] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:07:23.998274] [INFO ] [PID 1216429] [TID 136839816181568] [#2] accepted connection from 127.0.0.1:56782 (fd=6) type=ephemeral
+[2026-07-20 11:07:24.014943] [INFO ] [PID 1216429] [TID 136839816181568] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:24 +0800] 127.0.0.1 POST /search 200 12740
+[2026-07-20 11:07:24.015087] [INFO ] [PID 1216429] [TID 136839816181568] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:07:26.022046] [INFO ] [PID 1216429] [TID 136839816181568] [#3] accepted connection from 127.0.0.1:35436 (fd=6) type=ephemeral
+[2026-07-20 11:07:26.033613] [INFO ] [PID 1216429] [TID 136839816181568] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:26 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 11:07:26.033746] [INFO ] [PID 1216429] [TID 136839816181568] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:07:28.106082] [INFO ] [PID 1216429] [TID 136839816181568] [EpollServer] shutting down...
+[2026-07-20 11:07:28.106400] [INFO ] [PID 1216429] [TID 136839816181568] [Worker] shutdown — served 3 client(s) (SIGTERM)
+[2026-07-20 11:07:28.106744] [INFO ] [PID 1216429] [TID 136839816181568] [Worker] PID 1216429 shutting down
+[2026-07-20 11:07:28.110916] [INFO ] [PID 1216429] [TID 136839816181568] Logging system shutting down
+[2026-07-20 11:07:54.849797] [INFO ] [PID 1216642] [TID 137765665240896] Logging system initialized (v1.2.1)
+[2026-07-20 11:07:54.850001] [INFO ] [PID 1216642] [TID 137765665240896] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-20 11:07:54.850027] [INFO ] [PID 1216642] [TID 137765665240896] user store: loading data...
+[2026-07-20 11:07:54.974591] [INFO ] [PID 1216642] [TID 137765665240896] user store: loaded 100000 users
+[2026-07-20 11:07:54.974683] [INFO ] [PID 1216642] [TID 137765665240896] ========================================
+[2026-07-20 11:07:54.974704] [INFO ] [PID 1216642] [TID 137765665240896]   Master PID: 1216642  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-20 11:07:54.974720] [INFO ] [PID 1216642] [TID 137765665240896] ========================================
+[2026-07-20 11:07:54.974786] [INFO ] [PID 1216642] [TID 137765665240896] [Master] listening on 127.0.0.1:9180 (fd=4)
+[2026-07-20 11:07:54.975378] [INFO ] [PID 1216642] [TID 137765665240896] [Master] forked worker 1, PID 1216644
+[2026-07-20 11:07:54.975480] [INFO ] [PID 1216642] [TID 137765665240896] [Master] entering wait loop (1 workers)
+[2026-07-20 11:07:54.975626] [INFO ] [PID 1216644] [TID 137765665240896] [Worker] PID 1216644 started, listen_fd=4
+[2026-07-20 11:07:54.982412] [INFO ] [PID 1216644] [TID 137765665240896] ========================================
+[2026-07-20 11:07:54.982466] [INFO ] [PID 1216644] [TID 137765665240896]   Worker-1 PID: 1216644  (epoll I/O multiplexing)
+[2026-07-20 11:07:54.982483] [INFO ] [PID 1216644] [TID 137765665240896] ========================================
+[2026-07-20 11:07:54.982498] [INFO ] [PID 1216644] [TID 137765665240896] [Worker] using inherited listen_fd=4
+[2026-07-20 11:07:56.857740] [INFO ] [PID 1216644] [TID 137765665240896] [#1] accepted connection from 127.0.0.1:40510 (fd=6) type=ephemeral
+[2026-07-20 11:07:56.878682] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:56 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 11:07:56.879058] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:07:56.890871] [INFO ] [PID 1216644] [TID 137765665240896] [#2] accepted connection from 127.0.0.1:40518 (fd=6) type=ephemeral
+[2026-07-20 11:07:56.899481] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:56 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 11:07:56.899586] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:07:58.915690] [INFO ] [PID 1216644] [TID 137765665240896] [#3] accepted connection from 127.0.0.1:40530 (fd=6) type=ephemeral
+[2026-07-20 11:07:58.926452] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:07:58 +0800] 127.0.0.1 POST /search 200 12728
+[2026-07-20 11:07:58.927248] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:00.940051] [INFO ] [PID 1216644] [TID 137765665240896] [#4] accepted connection from 127.0.0.1:40540 (fd=6) type=ephemeral
+[2026-07-20 11:08:00.940527] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:11:08:00 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 11:08:00.940605] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:00.951662] [INFO ] [PID 1216644] [TID 137765665240896] [#5] accepted connection from 127.0.0.1:40542 (fd=6) type=ephemeral
+[2026-07-20 11:08:00.952295] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 GET / -> 200
+[20/Jul/2026:11:08:00 +0800] 127.0.0.1 GET / 200 7128
+[2026-07-20 11:08:00.953332] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:02.969620] [INFO ] [PID 1216644] [TID 137765665240896] [#6] accepted connection from 127.0.0.1:40548 (fd=6) type=ephemeral
+[2026-07-20 11:08:02.970317] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:02 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 11:08:02.970460] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:02.992267] [INFO ] [PID 1216644] [TID 137765665240896] [#7] accepted connection from 127.0.0.1:40560 (fd=6) type=ephemeral
+[2026-07-20 11:08:02.993213] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:02 +0800] 127.0.0.1 POST /search 200 2767
+[2026-07-20 11:08:02.993324] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:05.008066] [INFO ] [PID 1216644] [TID 137765665240896] [#8] accepted connection from 127.0.0.1:59252 (fd=6) type=ephemeral
+[2026-07-20 11:08:05.011755] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:05 +0800] 127.0.0.1 POST /search 200 2242
+[2026-07-20 11:08:05.011919] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:05.021175] [INFO ] [PID 1216644] [TID 137765665240896] [#9] accepted connection from 127.0.0.1:59264 (fd=6) type=ephemeral
+[2026-07-20 11:08:05.025166] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:05 +0800] 127.0.0.1 POST /search 200 2242
+[2026-07-20 11:08:05.025943] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.039871] [INFO ] [PID 1216644] [TID 137765665240896] [#10] accepted connection from 127.0.0.1:59270 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.040064] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] response: (malformed) -> 400 BAD REQUEST
+[2026-07-20 11:08:07.062369] [INFO ] [PID 1216644] [TID 137765665240896] [#11] accepted connection from 127.0.0.1:59276 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.062932] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 400 521
+[2026-07-20 11:08:07.063048] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.079464] [INFO ] [PID 1216644] [TID 137765665240896] [#12] accepted connection from 127.0.0.1:59280 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.079944] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 11:08:07.080049] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.096503] [INFO ] [PID 1216644] [TID 137765665240896] [#13] accepted connection from 127.0.0.1:59290 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.096998] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 400
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 400 551
+[2026-07-20 11:08:07.097690] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.138352] [INFO ] [PID 1216644] [TID 137765665240896] [#14] accepted connection from 127.0.0.1:59292 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.138498] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] fd=6 request too large (4225 > 4096 bytes) -> 413
+[2026-07-20 11:08:07.156340] [INFO ] [PID 1216644] [TID 137765665240896] [#15] accepted connection from 127.0.0.1:59294 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.157068] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 415
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 415 594
+[2026-07-20 11:08:07.157281] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.173748] [INFO ] [PID 1216644] [TID 137765665240896] [#16] accepted connection from 127.0.0.1:59302 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.183690] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 200 12740
+[2026-07-20 11:08:07.185519] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:07.196713] [INFO ] [PID 1216644] [TID 137765665240896] [#17] accepted connection from 127.0.0.1:59312 (fd=6) type=ephemeral
+[2026-07-20 11:08:07.208092] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:07 +0800] 127.0.0.1 POST /search 200 12740
+[2026-07-20 11:08:07.208708] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:09.227160] [INFO ] [PID 1216644] [TID 137765665240896] [#18] accepted connection from 127.0.0.1:59316 (fd=6) type=ephemeral
+[2026-07-20 11:08:09.244413] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 POST /search -> 200
+[20/Jul/2026:11:08:09 +0800] 127.0.0.1 POST /search 200 2062848
+[2026-07-20 11:08:09.252553] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:09.252586] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] error/hangup on fd=6
+[2026-07-20 11:08:09.264456] [INFO ] [PID 1216644] [TID 137765665240896] [#19] accepted connection from 127.0.0.1:59328 (fd=6) type=ephemeral
+[2026-07-20 11:08:09.265249] [INFO ] [PID 1216644] [TID 137765665240896] [Worker-1] fd=6 GET /nonexistent/path -> 404
+[20/Jul/2026:11:08:09 +0800] 127.0.0.1 GET /nonexistent/path 404 133
+[2026-07-20 11:08:09.266258] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] keep-alive: waiting for next request
+[2026-07-20 11:08:09.272566] [INFO ] [PID 1216642] [TID 137765665240896] [Master] shutting down...
+[2026-07-20 11:08:09.272619] [INFO ] [PID 1216642] [TID 137765665240896] [Master] listen socket closed
+[2026-07-20 11:08:09.272637] [INFO ] [PID 1216642] [TID 137765665240896] [Master] sending SIGTERM to worker PID 1216644
+[2026-07-20 11:08:09.272671] [INFO ] [PID 1216642] [TID 137765665240896] [Master] waiting up to 2000 ms for workers to exit
+[2026-07-20 11:08:09.272771] [INFO ] [PID 1216644] [TID 137765665240896] [EpollServer] shutting down...
+[2026-07-20 11:08:09.272868] [INFO ] [PID 1216644] [TID 137765665240896] [Worker] shutdown — served 19 client(s) (SIGTERM)
+[2026-07-20 11:08:09.273157] [INFO ] [PID 1216644] [TID 137765665240896] [Worker] PID 1216644 shutting down
+[2026-07-20 11:08:09.273176] [INFO ] [PID 1216644] [TID 137765665240896] Logging system shutting down
