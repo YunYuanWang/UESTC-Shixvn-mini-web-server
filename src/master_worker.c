@@ -296,6 +296,13 @@ int master_worker_run(const server_config_t *config) {
              * ============================================ */
 
             /*
+             * v1.2.1: Pass config to the epoll server for virtual host
+             * routing.  The config pointer (from master's stack) is valid
+             * in the child via CoW and is read-only.
+             */
+            epoll_server_set_config(config);
+
+            /*
              * Reopen log with a fresh independent FILE*.
              * This avoids cross-process buffer corruption from the
              * inherited FILE* state.  O_APPEND ensures atomic appends.

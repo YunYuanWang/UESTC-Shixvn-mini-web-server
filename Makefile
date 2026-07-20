@@ -3,11 +3,11 @@ all: mini_web_server request_worker EpollServer epoll_client
 mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o
 	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o -lm -lpthread
 
-request_worker: obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o request_worker obj/request_worker.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+request_worker: obj/request_worker.o obj/config.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o request_worker obj/request_worker.o obj/config.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
-EpollServer: obj/epoll_server_main.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o EpollServer obj/epoll_server_main.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+EpollServer: obj/epoll_server_main.o obj/config.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o EpollServer obj/epoll_server_main.o obj/config.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
 epoll_client: obj/epoll_client.o
 	gcc -g -o epoll_client obj/epoll_client.o
@@ -57,7 +57,7 @@ obj/select_server.o: src/select_server.c include/select_server.h include/log.h i
 obj/epoll_server.o: src/epoll_server.c include/epoll_server.h include/log.h include/request_handler.h include/http_parser.h
 	gcc -g -I./include -c src/epoll_server.c -o obj/epoll_server.o
 
-obj/epoll_server_main.o: src/epoll_server_main.c include/epoll_server.h include/log.h include/user_store.h
+obj/epoll_server_main.o: src/epoll_server_main.c include/config.h include/epoll_server.h include/log.h include/user_store.h
 	gcc -g -I./include -c src/epoll_server_main.c -o obj/epoll_server_main.o
 
 obj/master_worker.o: src/master_worker.c include/master_worker.h include/config.h include/epoll_server.h include/log.h include/user_store.h

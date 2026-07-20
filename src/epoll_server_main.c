@@ -10,11 +10,13 @@
  *   ./mini_web_server epoll <ip> <port>
  */
 
+#include "../include/config.h"
 #include "../include/epoll_server.h"
 #include "../include/log.h"
 #include "../include/user_store.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
     const char *host;
@@ -42,6 +44,23 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "error: cannot open data/users.csv\n");
         log_close();
         return 1;
+    }
+
+    /* v1.2.1: set up a minimal single-block config for virtual host
+     * routing.  All requests will match this default "www" root. */
+    {
+        server_config_t minimal_cfg;
+        memset(&minimal_cfg, 0, sizeof(minimal_cfg));
+        strncpy(minimal_cfg.host, host, sizeof(minimal_cfg.host) - 1);
+        minimal_cfg.port = port;
+        minimal_cfg.server_count = 1;
+        strncpy(minimal_cfg.servers[0].host, host,
+                sizeof(minimal_cfg.servers[0].host) - 1);
+        minimal_cfg.servers[0].port = port;
+        strncpy(minimal_cfg.servers[0].root, "www",
+                sizeof(minimal_cfg.servers[0].root) - 1);
+        minimal_cfg.servers[0].is_default = 1;
+        epoll_server_set_config(&minimal_cfg);
     }
 
     int ret = epoll_server_run(host, port);

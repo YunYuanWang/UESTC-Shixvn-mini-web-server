@@ -1,0 +1,31 @@
+[2026-07-19 16:07:47.548146] [INFO ] [PID 967275] [TID 125219930740544] Logging system initialized (v1.2)
+[2026-07-19 16:07:47.548266] [INFO ] [PID 967275] [TID 125219930740544] Master-Worker Mode (epoll I/O multiplexing) v1.2
+[2026-07-19 16:07:47.548288] [INFO ] [PID 967275] [TID 125219930740544] user store: loading data...
+[2026-07-19 16:07:47.654900] [INFO ] [PID 967275] [TID 125219930740544] user store: loaded 100003 users
+[2026-07-19 16:07:47.654991] [INFO ] [PID 967275] [TID 125219930740544] ========================================
+[2026-07-19 16:07:47.655013] [INFO ] [PID 967275] [TID 125219930740544]   Master PID: 967275  starting 1 worker(s)  shutdown_timeout: 2000 ms
+[2026-07-19 16:07:47.655029] [INFO ] [PID 967275] [TID 125219930740544] ========================================
+[2026-07-19 16:07:47.655122] [INFO ] [PID 967275] [TID 125219930740544] [Master] listening on 0.0.0.0:8888 (fd=5)
+[2026-07-19 16:07:47.657658] [INFO ] [PID 967275] [TID 125219930740544] [Master] forked worker 1, PID 967277
+[2026-07-19 16:07:47.658000] [INFO ] [PID 967275] [TID 125219930740544] [Master] entering wait loop (1 workers)
+[2026-07-19 16:07:47.658092] [INFO ] [PID 967277] [TID 125219930740544] [Worker] PID 967277 started, listen_fd=5
+[2026-07-19 16:07:47.671498] [INFO ] [PID 967277] [TID 125219930740544] ========================================
+[2026-07-19 16:07:47.671612] [INFO ] [PID 967277] [TID 125219930740544]   Worker-1 PID: 967277  (epoll I/O multiplexing)
+[2026-07-19 16:07:47.671630] [INFO ] [PID 967277] [TID 125219930740544] ========================================
+[2026-07-19 16:07:47.671645] [INFO ] [PID 967277] [TID 125219930740544] [Worker] using inherited listen_fd=5
+[2026-07-19 16:07:49.559244] [INFO ] [PID 967277] [TID 125219930740544] [#1] accepted connection from 127.0.0.1:50244 (fd=7) type=ephemeral
+[2026-07-19 16:07:49.569374] [INFO ] [PID 967277] [TID 125219930740544] [Worker-1] fd=7 GET / -> 200
+[2026-07-19 16:07:49.569506] [INFO ] [PID 967277] [TID 125219930740544] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 16:07:49.583199] [INFO ] [PID 967277] [TID 125219930740544] [#2] accepted connection from 127.0.0.1:50248 (fd=7) type=ephemeral
+[2026-07-19 16:07:49.584053] [INFO ] [PID 967277] [TID 125219930740544] [Worker-1] fd=7 GET / -> 200
+[2026-07-19 16:07:49.585450] [INFO ] [PID 967277] [TID 125219930740544] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 16:07:49.597304] [INFO ] [PID 967277] [TID 125219930740544] [#3] accepted connection from 127.0.0.1:50262 (fd=7) type=ephemeral
+[2026-07-19 16:07:49.598032] [INFO ] [PID 967277] [TID 125219930740544] [Worker-1] fd=7 GET / -> 200
+[2026-07-19 16:07:49.598124] [INFO ] [PID 967277] [TID 125219930740544] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 16:07:49.612169] [INFO ] [PID 967277] [TID 125219930740544] [#4] accepted connection from 127.0.0.1:50272 (fd=7) type=ephemeral
+[2026-07-19 16:07:49.613174] [INFO ] [PID 967277] [TID 125219930740544] [Worker-1] fd=7 GET / -> 200
+[2026-07-19 16:07:49.613252] [INFO ] [PID 967277] [TID 125219930740544] [EpollServer] keep-alive: waiting for next request
+[2026-07-19 16:07:49.615502] [INFO ] [PID 967277] [TID 125219930740544] [EpollServer] shutting down...
+[2026-07-19 16:07:49.615714] [INFO ] [PID 967277] [TID 125219930740544] [Worker] shutdown — served 4 client(s) (SIGTERM)
+[2026-07-19 16:07:49.616234] [INFO ] [PID 967277] [TID 125219930740544] [Worker] PID 967277 shutting down
+[2026-07-19 16:07:49.616255] [INFO ] [PID 967277] [TID 125219930740544] Logging system shutting down

@@ -1,3 +1,4 @@
+#include "../include/config.h"
 #include "../include/request_handler.h"
 #include "../include/http_response.h"
 #include "../include/http_parser.h"
@@ -16,6 +17,16 @@
 
 /* ---- thread-local worker label (set by thread pool) ---- */
 static __thread int g_worker_id = 0;
+
+/* ---- v1.2.1: configurable document root for virtual hosting ---- */
+static char g_current_root[128] = "www";
+
+void request_handler_set_root(const char *root) {
+    if (root && root[0] != '\0') {
+        strncpy(g_current_root, root, sizeof(g_current_root) - 1);
+        g_current_root[sizeof(g_current_root) - 1] = '\0';
+    }
+}
 
 void request_handler_set_worker_label(int worker_id) {
     g_worker_id = worker_id;
@@ -428,11 +439,11 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
 
     memset(body, 0, body_size);
 
-    /* ---- GET / (v1.1: serve www/index.html with text/html Content-Type) ---- */
+    /* ---- GET / (v1.2.1: serve from configurable root, default "www") ---- */
     if (strcmp(req->method, "GET") == 0 &&
         (strcmp(req->path, "/") == 0)) {
         const char *ct;
-        int file_len = http_serve_file("www", "/", body, body_size, &ct);
+        int file_len = http_serve_file(g_current_root, "/", body, body_size, &ct);
         if (file_len > 0) {
             /* Use enhanced response builder with dynamic Content-Type */
             return http_build_response(200, "OK", ct, body, file_len,
@@ -494,6 +505,12 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
             int file_len;
             const char *blog_path;
 
+            /*
+             * /blog URL prefix always serves from the blog/ physical
+             * directory (independent of virtual host root).  For
+             * name-based virtual hosting, configure a server block
+             * with "root blog;" and access it via the domain name.
+             */
             /* req->path starts with "/blog" — strip the "/blog" prefix
              * to get the relative path within blog/ directory.
              * "/blog/"       → ""   → index.html
@@ -531,6 +548,32 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
                                        body, (int)strlen(body),
                                        req->keep_alive > 0 ? req->keep_alive : 1,
                                        output, size);
+        }
+    }
+
+    /* ---- v1.2.1: generic static file handler (CSS, JS, images, etc.) ---- */
+    if (strcmp(req->method, "GET") == 0 ||
+        strcmp(req->method, "HEAD") == 0) {
+        if (!http_is_safe_path(req->path)) {
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html><head><title>403 Forbidden</title></head>\n"
+                "<body><h1>403 Forbidden</h1></body></html>\n");
+            return http_build_response(403, "FORBIDDEN",
+                                       "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       0, output, size);
+        }
+
+        {
+            const char *ct;
+            int file_len = http_serve_file(g_current_root, req->path,
+                                           body, body_size, &ct);
+            if (file_len > 0) {
+                return http_build_response(200, "OK", ct, body, file_len,
+                                           req->keep_alive > 0 ? req->keep_alive : 1,
+                                           output, size);
+            }
         }
     }
 
@@ -910,6 +953,76 @@ int request_handler_handle_connection(int conn_fd) {
                 snprintf(msg, sizeof(msg),
                          "%sbody: %s", worker_prefix(), body);
                 log_info(msg);
+            }
+
+            /* ---- v1.2.1: extract Host header for virtual host routing ---- */
+            {
+                const char *host_start;
+                /*
+                 * Scan recv_buf for "\nHost:" or "\nhost:" (case-insensitive).
+                 * The Host header typically appears early in the request,
+                 * so a simple strcasestr-like scan of the first 2KB is
+                 * sufficient.
+                 */
+                host_start = NULL;
+                {
+                    char *p = recv_buf;
+                    while (p < recv_buf + n - 6) {
+                        if ((p[0] == '\n' || p[0] == '\r') &&
+                            (p[1] == 'H' || p[1] == 'h') &&
+                            (p[2] == 'O' || p[2] == 'o') &&
+                            (p[3] == 'S' || p[3] == 's') &&
+                            (p[4] == 'T' || p[4] == 't') &&
+                            p[5] == ':') {
+                            host_start = p + 6;
+                            break;
+                        }
+                        p++;
+                    }
+                }
+
+                if (host_start) {
+                    char host_buf[256];
+                    char *end;
+                    int k = 0;
+
+                    /* skip leading whitespace */
+                    while (*host_start == ' ' || *host_start == '\t')
+                        host_start++;
+
+                    /* copy value until \r or \n */
+                    while (host_start[k] != '\0' &&
+                           host_start[k] != '\r' &&
+                           host_start[k] != '\n' &&
+                           k < (int)sizeof(host_buf) - 1) {
+                        host_buf[k] = host_start[k];
+                        k++;
+                    }
+                    host_buf[k] = '\0';
+
+                    /* strip trailing whitespace */
+                    end = host_buf + strlen(host_buf) - 1;
+                    while (end >= host_buf &&
+                           (*end == ' ' || *end == '\t')) {
+                        *end = '\0';
+                        end--;
+                    }
+
+                    /* strip port suffix */
+                    {
+                        char *colon = strchr(host_buf, ':');
+                        if (colon) *colon = '\0';
+                    }
+
+                    /* match against server blocks */
+                    if (host_buf[0] != '\0') {
+                        const server_block_t *sb =
+                            config_find_server(NULL, host_buf);
+                        if (sb && sb->root[0] != '\0') {
+                            request_handler_set_root(sb->root);
+                        }
+                    }
+                }
             }
 
             /* generate HTTP response */

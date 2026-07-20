@@ -22,6 +22,7 @@
             <a href="about.html">架构介绍</a>
             <a href="article.html" class="active">实验心得</a>
             <a href="resume.html">关于作者</a>
+            <a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click&vd_source=8b15c02868f2b318bee998383f0b8dae" target="_blank">视频教程</a>
         </div>
     </nav>
 
@@ -140,6 +141,39 @@ ab -c 10 -t 10 http://127.0.0.1:8080/hello
                         <tr><td>Keep-Alive requests: 0</td><td>响应 Connection 头全小写，AB 大小写敏感不认</td><td>request_handler.c, http_parser.c, epoll_server.c</td></tr>
                         <tr><td>修复后仍为 0</td><td>AB 发 HTTP/1.0 + Connection: Keep-Alive，服务器只匹配全小写</td><td>epoll_server.c (HAS_KEEPALIVE 宏)</td></tr>
                         <tr><td>Connection reset by peer</td><td>close() 时接收缓冲区有未读数据触发 RST</td><td>request_handler.h (100→10000), epoll_server.c (safe_close)</td></tr>
+                    </table>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- v1.2.1 调试 -->
+                <!-- ============================================================ -->
+                <h2>v1.2.1：虚拟主机——通用静态文件路由缺失导致 CSS/JS 404</h2>
+
+                <h3>问题 1：CSS/JS/图片全部 404</h3>
+                <p><strong>现象：</strong>浏览器访问 blog.localhost 时，主页 HTML 正常但页面无样式——所有 CSS/JS/图片请求返回 404。curl 验证：<code>/css/style.css</code> → 404 NOT FOUND。</p>
+                <p><strong>根因：</strong>服务器只有两个静态文件路由——<code>GET /</code>（提供 index.html）和 <code>GET /blog/*</code>（提供 blog 目录文件）。对于新站点 blog/ 和 lab/ 中 HTML 使用的相对路径（如 <code>css/style.css</code> → URI 为 <code>/css/style.css</code>），没有任何路由能匹配，全部落入兜底 404。</p>
+                <p><strong>修复：</strong>在 /blog 路由和 API 路由之间新增<strong>通用静态文件处理器</strong>——对任意 GET/HEAD 路径，从当前虚拟主机 root 提供文件，同时保留路径穿越安全检查（403 Forbidden）。</p>
+                <p><strong>关键代码：</strong><code>http_serve_file(g_current_root, req->path, ...)</code>——g_current_root 由 Host 头匹配出的 server block 动态确定（"blog" / "lab" / "www"）。</p>
+                <p class="lesson">教训：静态文件服务器必须支持从根目录提供任意路径的文件，不能只覆盖特定的 URL 前缀。HTML 的相对路径引用不会自动带上虚拟主机前缀。</p>
+
+                <h3>问题 2：blog.local 不解析 → 502</h3>
+                <p><strong>现象：</strong>浏览器访问 <code>http://blog.local:8080/</code> 返回 502 Bad Gateway。</p>
+                <p><strong>根因：</strong>blog.local 不是特殊域名，未被 DNS 或 /etc/hosts 解析到 127.0.0.1，请求发到了外网。</p>
+                <p><strong>修复：</strong>每个 server block 的 server_name 同时添加 <code>*.localhost</code> 变体：<code>server_name blog.local blog.localhost</code>。*.localhost 在所有系统上自动指向 127.0.0.1，无需任何配置即可测试虚拟主机。</p>
+                <p class="lesson">教训：测试虚拟主机时 *.localhost 是最佳域名选择——零配置开箱即用。</p>
+
+                <h3>问题 3：端口 80 需 root 权限</h3>
+                <p><strong>现象：</strong>启动时 <code>bind(0.0.0.0:80) failed</code>，退出码 255。</p>
+                <p><strong>根因：</strong>1024 以下端口是 Linux 特权端口，普通用户无权绑定。</p>
+                <p><strong>修复：</strong>默认配置端口从 80 改为 8080。</p>
+
+                <div class="summary-table">
+                    <h4>v1.2.1 虚拟主机调试总结</h4>
+                    <table>
+                        <tr><th>问题</th><th>根因</th><th>修复位置</th></tr>
+                        <tr><td>CSS/JS/图片 404</td><td>缺少通用静态文件路由，/ 和 /blog 之外全部 404</td><td>request_handler.c</td></tr>
+                        <tr><td>blog.local → 502</td><td>域名无 DNS 解析</td><td>server.conf</td></tr>
+                        <tr><td>端口 80 bind 失败</td><td>普通用户无权绑定特权端口</td><td>server.conf</td></tr>
                     </table>
                 </div>
 

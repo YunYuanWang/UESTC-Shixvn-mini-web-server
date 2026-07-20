@@ -452,3 +452,138 @@ v1.1 keep-alive 调试总结
    三步走，否则客户端预发送的数据会导致 RST 而非正常挥手。
 4. Benchmark 工具的 Connection reset by peer 错误几乎总是因为服务器端
    直接 close() 了一个有未读数据的 socket。
+
+================================================================
+v1.2.1 虚拟主机调试：Nginx 风格 server block 多网站托管
+================================================================
+
+目标：参考 Nginx 的 server { } 块语法，实现基于 HTTP Host 头的
+      名称虚拟主机（name-based virtual hosting），使一个服务器实例
+      可以托管多个网站，每个网站有独立的文档根目录。
+
+================================================================
+问题 1：通用静态文件路径全部 404（CSS/JS/图片加载失败）
+================================================================
+
+问题现象：
+  浏览器访问 http://blog.localhost:8080/ 时，HTML 主页正确返回 200，
+  但页面中引用的 css/style.css、js/main.js、img/logo.png 等资源全部
+  返回 404，页面只有裸 HTML 无样式。
+
+  用 curl 验证：
+    curl -H "Host: blog.localhost" http://127.0.0.1:8080/css/style.css
+    → HTTP/1.1 404 NOT FOUND
+
+定位过程：
+  1. 追踪 request_handler_process_http() 的路由分发逻辑：
+     ① GET / → 精确匹配 "/"，调用 http_serve_file(g_current_root, ...)
+     ② /blog* → 前缀匹配，调用 http_serve_file("blog", ...)
+     ③ 其他 API 路由（/hello, /users, /sleep 等）
+     ④ 兜底 → 404
+  2. css/style.css 的 path 是 "/css/style.css"：
+     - 不匹配 "/"（精确匹配失败）
+     - 不匹配 "/blog"（前缀不匹配）
+     - 不匹配任何 API 路由
+     → 落入 404
+  3. 原版只托管 www/ 和 blog/ 两个目录，所有资源都在 /blog/ 路径下，
+     HTML 中直接用 <link href="/blog/css/style.css"> 这种绝对路径。
+     但新站点 blog/ 和 lab/ 中 HTML 引用的是相对路径 css/style.css
+     （即 /css/style.css），不在 /blog 前缀下。
+
+原因分析：
+  服务器只有两个静态文件路由：
+  - GET /          → g_current_root/index.html
+  - GET /blog/*    → blog/ 目录下的文件
+  对于任意路径如 /css/style.css、/js/main.js、/img/logo.png，没有
+  对应的路由处理器。这导致新站点（blog.localhost、lab.localhost）的
+  所有非 HTML 资源全部 404。
+
+修改内容：
+  src/request_handler.c: request_handler_process_http()
+  在 /blog 路由和 API 路由之间，新增通用静态文件处理器：
+    if (strcmp(req->method, "GET") == 0 || strcmp(req->method, "HEAD") == 0) {
+        // 安全检查：拒绝路径穿越（..、~、\）
+        if (!http_is_safe_path(req->path)) → 403 Forbidden
+        // 从当前虚拟主机的 root 提供任意文件
+        int file_len = http_serve_file(g_current_root, req->path, ...);
+        if (file_len > 0) → 200 OK + 正确的 Content-Type
+    }
+  该处理器位于 /blog 路由之后、/hello 等 API 路由之前，确保：
+  - /blog/* 优先被 blog 专用路由处理（保持向后兼容）
+  - 其他任意路径从当前虚拟主机的 root 提供
+
+验证结果：
+  curl -H "Host: blog.localhost" http://127.0.0.1:8080/css/style.css
+  → HTTP/1.1 200 OK, Content-Type: text/css; charset=utf-8  ✓
+
+  curl -H "Host: blog.localhost" http://127.0.0.1:8080/js/main.js
+  → HTTP/1.1 200 OK, Content-Type: application/javascript  ✓
+
+  curl -H "Host: blog.localhost" http://127.0.0.1:8080/img/logo.png
+  → HTTP/1.1 200 OK, Content-Type: image/png  ✓
+
+================================================================
+问题 2：blog.local 域名不解析导致 502
+================================================================
+
+问题现象：
+  浏览器访问 http://blog.local:8080/ 返回 502 Bad Gateway。
+
+定位过程：
+  1. blog.local 不是特殊域名，需要 DNS 解析或 /etc/hosts 条目。
+  2. 系统中未配置 blog.local → DNS 查询可能返回一个外部 IP。
+  3. 外部 IP 上的某个反向代理返回 502。
+
+原因分析：
+  用户习惯使用 blog.localhost（*.localhost 在所有系统上自动指向
+  127.0.0.1），但配置中只写了 blog.local。blog.local 在无 DNS 配置
+  的环境下无法解析到本机。
+
+修改内容：
+  conf/server.conf: 每个 server block 的 server_name 同时添加
+  *.localhost 和 *.local 两种形式，开箱即用：
+    server_name blog.local blog.localhost
+    server_name lab.local lab.localhost
+
+================================================================
+问题 3：端口 80 需要 root 权限导致 bind 失败
+================================================================
+
+问题现象：
+  ./mini_web_server master conf/server.conf
+  → [ERROR] bind(0.0.0.0:80) failed — port may be in use
+  → 退出码 255
+
+定位过程：
+  1. ss -tlnp 确认端口 80 未被占用。
+  2. 查阅 Linux 文档：1024 以下的端口是特权端口，需要 CAP_NET_BIND_SERVICE
+     能力或 root 用户才能绑定。
+
+原因分析：
+  配置文件中 listen 端口写的是 80（HTTP 默认端口），但普通用户无权绑定
+  特权端口。之前的测试都在 8080/8888/8890 等非特权端口上运行。
+
+修改内容：
+  conf/server.conf: 所有 listen 端口从 80 改为 8080。
+
+================================================================
+v1.2.1 虚拟主机调试总结
+================================================================
+
+| 问题 | 根因 | 修复位置 |
+|------|------|---------|
+| CSS/JS/图片 404 | 服务器只有 / 和 /blog 两个静态路由，无通用文件处理器 | request_handler.c (新增通用静态文件路由) |
+| blog.local 返回 502 | 域名无 DNS 解析，请求发到了外部 IP | server.conf (添加 *.localhost 域名) |
+| 端口 80 bind 失败 | 普通用户无权绑定特权端口 | server.conf (80→8080) |
+
+经验教训：
+1. 静态文件服务器必须支持从根目录提供任意路径的文件，不能只覆盖特定的
+   URL 前缀。HTML 中的相对路径引用（css/style.css）不会带 /blog/ 前缀。
+2. *.localhost 域名在所有系统上自动指向 127.0.0.1，是测试虚拟主机的
+   最佳选择——无需编辑 /etc/hosts。
+3. 默认配置文件应使用 >1024 的非特权端口，避免用户首次启动就遇到 bind
+   权限错误。
+4. 名称虚拟主机（name-based virtual hosting）的核心链路只有两步：
+   a) 从请求中提取 Host 头
+   b) 将 Host 与配置中的 server_name 做大小写不敏感精确匹配
+   匹配后选中对应的文档根目录（root），后续处理与单网站模式完全相同。

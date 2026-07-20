@@ -571,7 +571,10 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        log_info("Master-Worker Mode (epoll I/O multiplexing) v1.2");
+        log_info("Master-Worker Mode (epoll I/O multiplexing) v1.2.1");
+
+        /* v1.2.1: store config globally for virtual host routing */
+        config_set_global(&master_config);
 
         if (user_store_load_csv(master_config.user_file) < 0) {
             printf("error: cannot open '%s'\n", master_config.user_file);
@@ -607,8 +610,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    log_info("server config loaded (v1.2)");
+    log_info("server config loaded (v1.2.1)");
     log_info("document root loaded");
+
+    /* v1.2.1: store config globally for virtual host routing */
+    config_set_global(&config);
 
     if (user_store_load_csv(config.data_path) < 0) {
         printf("error: cannot open '%s'\n", config.data_path);

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Web Server — 技术实验室</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <span class="logo-icon">🧪</span>
+            <h1>Mini Web Server 技术实验室</h1>
+            <p class="subtitle">Linux 系统编程 · 高性能网络服务 · 从零构建</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="index.html" class="active">实验室首页</a>
+            <a href="/blog/">实验博客</a>
+            <a href="https://github.com/YunYuanWang/UESTC-Shixvn-mini-web-server" target="_blank">源代码</a>
+            <a href="/blog/about.html">架构文档</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+
+            <!-- ============================================================ -->
+            <!-- Hero -->
+            <!-- ============================================================ -->
+            <section class="hero">
+                <h2>深入 Linux 网络编程的实验室</h2>
+                <p>这是一个用于学习和实验 Linux 系统编程的技术站点。从 Socket API 到 Epoll 事件驱动，从进程管理到 HTTP 协议实现——这里记录了构建一个高性能 Web 服务器的完整探索过程。</p>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 实验模块 -->
+            <!-- ============================================================ -->
+            <section class="features">
+                <h2>实验模块总览</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🧵 并发模型实验</h3>
+                        <p>对比六种并发策略：单连接阻塞 → fork-per-client → thread-per-client → 线程池 → Select 多路复用 → Epoll 事件驱动。理解每种模型在不同并发量下的性能特征。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚡ I/O 多路复用</h3>
+                        <p>从 select() 的 fd_set 位图扫描到 epoll 的 O(1) 事件交付。实验包括 LT/ET 触发模式对比、惊群效应测试、连接超时管理与 Keep-Alive 协商。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🏗️ 进程架构设计</h3>
+                        <p>参考 Nginx 的 Master-Worker 模式：fork() 共享监听 socket、SIGTERM 优雅关闭、SIGCHLD 僵尸回收、CoW 内存共享。理解多进程服务器的生命周期管理。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🌐 HTTP 协议栈</h3>
+                        <p>手写 HTTP/1.1 解析器：请求行 + 头部解析 + Keep-Alive 协商 + 动态 MIME 映射 + 301/304 缓存重定向 + 分块传输。从 TCP 字节流到完整 HTTP 语义。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📊 性能基准测试</h3>
+                        <p>使用 ApacheBench (ab)、wrk、wrk2 进行压测。QPS 吞吐量、P50/P99 延迟、连接复用率对比。Keep-Alive ON: 2,543 req/s vs OFF: 764 req/s（3.3× 提升）。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔧 系统调优</h3>
+                        <p>SO_REUSEADDR 快速重启、TCP_NODELAY 延迟优化、SO_RCVTIMEO 超时配置、文件描述符限制调优、日志滚动策略。将理论应用到实际系统。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 技术指标 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>服务器技术指标</h2>
+                <table>
+                    <thead>
+                        <tr><th>指标</th><th>数值</th><th>说明</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>语言</td><td>C (C99)</td><td>标准 C 库 + POSIX 系统调用</td></tr>
+                        <tr><td>最大并发连接</td><td>1,024 / worker</td><td>受 epoll 事件池大小限制，可按需调整</td></tr>
+                        <tr><td>请求吞吐量</td><td>2,543 req/s</td><td>Keep-Alive ON, ab -c 50 -n 10000</td></tr>
+                        <tr><td>平均延迟</td><td>19.7 ms</td><td>Keep-Alive 连接复用下的平均响应时间</td></tr>
+                        <tr><td>最大请求体</td><td>4,096 bytes</td><td>可配置 (max_request_bytes)</td></tr>
+                        <tr><td>静态文件上限</td><td>5 MB</td><td>.bss 段缓冲区，支持图片等二进制文件</td></tr>
+                        <tr><td>Worker 进程数</td><td>2 (默认)</td><td>可配置 1~128，建议匹配 CPU 核心数</td></tr>
+                        <tr><td>日志滚动</td><td>10,000 行/文件</td><td>保留 5 个历史滚动文件</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- API 端点 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>HTTP API 端点</h2>
+                <table>
+                    <thead>
+                        <tr><th>方法</th><th>路径</th><th>说明</th><th>状态码</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>GET</td><td><code>/</code></td><td>静态首页</td><td>200</td></tr>
+                        <tr><td>GET</td><td><code>/hello</code></td><td>Hello 端点</td><td>200</td></tr>
+                        <tr><td>GET</td><td><code>/help</code></td><td>API 帮助</td><td>200</td></tr>
+                        <tr><td>GET</td><td><code>/sleep/&lt;ms&gt;</code></td><td>延迟响应（测试并发隔离）</td><td>200</td></tr>
+                        <tr><td>GET</td><td><code>/users</code></td><td>列出全部用户（BST 中序遍历）</td><td>200</td></tr>
+                        <tr><td>GET</td><td><code>/users/&lt;name&gt;</code></td><td>按名称查找用户</td><td>200 / 404</td></tr>
+                        <tr><td>POST</td><td><code>/users</code></td><td>添加用户（body = CSV）</td><td>200</td></tr>
+                        <tr><td>DELETE</td><td><code>/users/&lt;name&gt;</code></td><td>删除用户</td><td>200 / 404</td></tr>
+                        <tr><td>GET</td><td><code>/blog/</code></td><td>博客首页（静态文件服务）</td><td>200</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 快速开始 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>快速开始</h2>
+                <pre><code># 构建项目
+make clean && make
+
+# 启动 Master-Worker 模式（推荐）
+./mini_web_server master conf/server.conf
+
+# 测试 API
+curl http://127.0.0.1:80/hello
+curl http://127.0.0.1:80/users
+
+# 浏览器访问静态站点
+# http://127.0.0.1:80/        → www/ 主页
+# http://127.0.0.1:80/blog/   → blog/ 博客
+# http://127.0.0.1:80/lab/    → lab/ 实验室（本页）
+
+# 压力测试
+ab -k -c 50 -n 10000 http://127.0.0.1:80/hello</code></pre>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 学习路径 -->
+            <!-- ============================================================ -->
+            <section>
+                <h2>推荐学习路径</h2>
+                <table>
+                    <thead>
+                        <tr><th>阶段</th><th>主题</th><th>关键系统调用</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>基础 Socket 编程</td><td><code>socket()</code> <code>bind()</code> <code>listen()</code> <code>accept()</code> <code>connect()</code></td></tr>
+                        <tr><td>2</td><td>并发模型</td><td><code>fork()</code> <code>pthread_create()</code> <code>waitpid()</code> <code>sem_wait()</code></td></tr>
+                        <tr><td>3</td><td>I/O 多路复用</td><td><code>select()</code> <code>epoll_create1()</code> <code>epoll_ctl()</code> <code>epoll_wait()</code></td></tr>
+                        <tr><td>4</td><td>HTTP 协议实现</td><td>请求解析、头部协商、MIME 映射、状态码处理</td></tr>
+                        <tr><td>5</td><td>进程架构</td><td><code>fork()</code> + epoll、信号管理 (<code>SIGTERM</code>/<code>SIGCHLD</code>)、优雅关闭</td></tr>
+                        <tr><td>6</td><td>日志与监控</td><td>文件 I/O、线程安全写入、日志滚动、访问日志</td></tr>
+                        <tr><td>7</td><td>虚拟主机</td><td>Host 头解析、server_name 匹配、多站点托管</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ============================================================ -->
+            <!-- 快速链接 -->
+            <!-- ============================================================ -->
+            <section class="links">
+                <h2>相关资源</h2>
+                <ul>
+                    <li><a href="/blog/">实验博客</a> — 版本演进历程与开发心得</li>
+                    <li><a href="/blog/about.html">架构文档</a> — Epoll + Master-Worker 详解</li>
+                    <li><a href="/blog/article.html">调试心得</a> — Keep-Alive 三轮排错记录</li>
+                    <li><a href="https://github.com/YunYuanWang/UESTC-Shixvn-mini-web-server" target="_blank">GitHub 仓库</a> — 完整源代码与构建说明</li>
+                    <li><a href="https://www.bilibili.com/video/BV1GJ411x7h7/" target="_blank">B 站教程</a> — Linux 网络编程视频教程</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Mini Web Server v1.2.1 &copy; 2026 | Linux 系统编程实验室 | Powered by Epoll + Master-Worker</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

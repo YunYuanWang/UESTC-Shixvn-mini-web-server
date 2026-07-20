@@ -1,0 +1,424 @@
+/* ================================================================
+ * Mini Web Server Lab — Tech Lab Style
+ * 主题配色：深青 + 翠绿 (teal + emerald)
+ * ================================================================ */
+
+/* ---- CSS Variables ---- */
+:root {
+    --lab-teal:       #0D4F4F;
+    --lab-dark:       #0A2E2E;
+    --lab-emerald:    #1A8C6E;
+    --lab-light:      #B7E4CF;
+    --lab-accent:     #F0A830;
+    --text-primary:   #2c3e50;
+    --text-secondary: #5a6c7d;
+    --text-muted:     #8e99a4;
+    --bg-light:       #f6faf9;
+    --bg-white:       #ffffff;
+    --border:         #d8e5e0;
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md:      0 4px 16px rgba(0,0,0,0.10);
+    --shadow-lg:      0 8px 32px rgba(0,0,0,0.12);
+    --radius:         8px;
+    --transition:     0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Reset & Base ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+                 "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.8;
+    color: var(--text-primary);
+    background: var(--bg-light);
+}
+
+/* ---- Selection ---- */
+::selection { background: var(--lab-teal); color: #fff; }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: #a8c8bc;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--lab-teal); }
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+/* ================================================================
+ *  Header — 青色渐变
+ * ================================================================ */
+header {
+    background: linear-gradient(135deg, var(--lab-dark) 0%, var(--lab-teal) 40%, #0F6B5C 100%);
+    color: #fff;
+    padding: 60px 0 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(240,168,48,.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+header .container { position: relative; z-index: 1; }
+
+header .logo-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+header h1 {
+    font-size: 2.4em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+header .subtitle {
+    font-size: 1.1em;
+    opacity: 0.85;
+    color: var(--lab-light);
+    letter-spacing: 1px;
+}
+
+/* ================================================================
+ *  Navigation — 毛玻璃效果
+ * ================================================================ */
+nav {
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav .container { display: flex; gap: 0; }
+
+nav a {
+    display: inline-block;
+    padding: 16px 28px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.98em;
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition);
+    position: relative;
+}
+
+nav a:hover {
+    color: var(--lab-teal);
+    background: rgba(13,79,79,.04);
+    border-bottom-color: var(--lab-emerald);
+}
+
+nav a.active {
+    color: var(--lab-teal);
+    border-bottom-color: var(--lab-emerald);
+    font-weight: 600;
+}
+
+/* ================================================================
+ *  Main Content
+ * ================================================================ */
+main { padding: 48px 0; }
+
+main h2 {
+    font-size: 1.6em;
+    color: var(--lab-dark);
+    margin: 36px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+}
+main h2::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--lab-emerald);
+}
+
+main h3 {
+    font-size: 1.2em;
+    color: var(--lab-teal);
+    margin: 24px 0 12px;
+}
+
+main h4 {
+    font-size: 1.05em;
+    color: var(--text-primary);
+    margin: 16px 0 8px;
+}
+
+main p { margin-bottom: 16px; color: var(--text-secondary); line-height: 1.9; }
+
+main ul, main ol { margin: 0 0 16px 24px; color: var(--text-secondary); }
+main li { margin-bottom: 8px; line-height: 1.8; }
+
+/* ================================================================
+ *  Hero Section
+ * ================================================================ */
+.hero {
+    text-align: center;
+    padding: 32px 0 48px;
+}
+
+.hero h2 {
+    border-bottom: none;
+    text-align: center;
+    font-size: 2em;
+    color: var(--lab-dark);
+    margin-bottom: 16px;
+}
+.hero h2::after { display: none; }
+.hero p { font-size: 1.1em; max-width: 680px; margin: 0 auto; }
+
+/* ================================================================
+ *  Feature Cards
+ * ================================================================ */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 24px;
+    margin: 24px 0 36px;
+}
+
+.feature-card {
+    background: var(--bg-white);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: var(--shadow-sm);
+    border-top: 4px solid var(--lab-teal);
+    transition: transform var(--transition), box-shadow var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 0;
+    background: linear-gradient(180deg, rgba(13,79,79,.03) 0%, transparent 100%);
+    transition: height var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+.feature-card:hover::before { height: 100%; }
+
+.feature-card h3 {
+    margin-top: 0;
+    color: var(--lab-teal);
+    font-size: 1.15em;
+    margin-bottom: 10px;
+}
+
+.feature-card p { font-size: 0.95em; margin-bottom: 0; }
+
+/* ================================================================
+ *  Tables
+ * ================================================================ */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 24px 0;
+    background: var(--bg-white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+thead { background: var(--lab-teal); color: #fff; }
+
+th, td {
+    padding: 12px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    font-weight: 600;
+    font-size: 0.95em;
+    letter-spacing: 0.5px;
+}
+
+td { font-size: 0.95em; color: var(--text-secondary); }
+
+tbody tr { transition: background var(--transition); }
+tbody tr:hover { background: rgba(13,79,79,.03); }
+tbody tr:last-child td { border-bottom: none; }
+
+tr td:first-child, tr th:first-child { border-right: 1px solid var(--border); }
+
+/* ================================================================
+ *  Code Blocks
+ * ================================================================ */
+pre {
+    background: #1a2525;
+    color: #c8d6d0;
+    padding: 22px 24px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: "Source Code Pro", "Cascadia Code", "JetBrains Mono",
+                 Consolas, Menlo, monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 20px 0;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+pre::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+    box-shadow: 18px 0 0 #febc2e, 36px 0 0 #28c840;
+}
+
+pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: inherit;
+    display: block;
+    margin-top: 8px;
+}
+
+:not(pre) > code {
+    background: #eaf5f1;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: "Source Code Pro", "Cascadia Code", Consolas, monospace;
+    font-size: 0.88em;
+    color: var(--lab-teal);
+}
+
+/* ================================================================
+ *  Links
+ * ================================================================ */
+a {
+    color: var(--lab-teal);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a:hover {
+    color: var(--lab-emerald);
+    text-decoration: underline;
+}
+
+/* ================================================================
+ *  Links Section
+ * ================================================================ */
+.links ul {
+    list-style: none;
+    margin-left: 0;
+}
+
+.links li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.links li:last-child { border-bottom: none; }
+
+.links a { font-weight: 500; font-size: 1.05em; }
+
+/* ================================================================
+ *  Footer
+ * ================================================================ */
+footer {
+    background: var(--lab-dark);
+    color: #8a9a95;
+    text-align: center;
+    padding: 28px 0;
+}
+
+footer p { font-size: 0.9em; color: #8a9a95; margin: 0; }
+
+/* ================================================================
+ *  Progress Bar
+ * ================================================================ */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--lab-teal), var(--lab-emerald));
+    z-index: 1000;
+    transition: width 0.1s linear;
+}
+
+/* ================================================================
+ *  Lesson / Callout Box
+ * ================================================================ */
+.lesson {
+    background: linear-gradient(135deg, #e8f8f0, #d0f0e0);
+    border-left: 4px solid var(--lab-emerald);
+    padding: 12px 18px;
+    margin: 16px 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 0.95em;
+    color: #0a5a3a;
+    line-height: 1.7;
+}
+
+.lesson::before { content: "\01F4A1  "; }
+
+/* ================================================================
+ *  Responsive
+ * ================================================================ */
+@media (max-width: 768px) {
+    header { padding: 40px 0 32px; }
+    header h1 { font-size: 1.6em; }
+
+    nav .container { flex-wrap: wrap; }
+    nav a { padding: 12px 18px; font-size: 0.9em; }
+
+    .feature-grid { grid-template-columns: 1fr; }
+
+    main { padding: 24px 0; }
+
+    pre { padding: 16px; font-size: 0.82em; }
+
+    table { font-size: 0.85em; }
+    th, td { padding: 8px 12px; }
+
+    .hero h2 { font-size: 1.5em; }
+
+    .container { padding: 0 16px; }
+}

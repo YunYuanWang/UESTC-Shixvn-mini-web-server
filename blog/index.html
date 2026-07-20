@@ -22,6 +22,7 @@
             <a href="about.html">架构介绍</a>
             <a href="article.html">实验心得</a>
             <a href="resume.html">关于作者</a>
+            <a href="https://www.bilibili.com/video/BV1GJ411x7h7/?spm_id_from=333.337.search-card.all.click&vd_source=8b15c02868f2b318bee998383f0b8dae" target="_blank">视频教程</a>
             <a href="https://github.com/YunYuanWang/UESTC-Shixvn-mini-web-server" target="_blank">GitHub</a>
         </div>
     </nav>
@@ -57,6 +58,7 @@
                         <tr><td>v1.0</td><td>2026-07-18</td><td>Master-Worker 架构，优雅关闭流程</td></tr>
                         <tr><td>v1.1</td><td>2026-07-18</td><td>HTTP/1.1 协议增强，动态 MIME，Keep-Alive 调试</td></tr>
                         <tr><td><strong>v1.2</strong></td><td>2026-07-19</td><td><strong>Blog 网站、分离日志、日志滚动、状态码处理</strong></td></tr>
+                        <tr><td><strong>v1.2.1</strong></td><td>2026-07-19</td><td><strong>Nginx 风格 server block、名称虚拟主机、多站点托管（www/blog/lab）</strong></td></tr>
                     </tbody>
                 </table>
             </section>
@@ -86,6 +88,10 @@
                     <div class="feature-card">
                         <h3>分离式日志系统</h3>
                         <p>系统日志与访问日志独立文件，四级日志（DEBUG/INFO/WARNING/ERROR），行数阈值自动滚动，printf 风格格式化 API。</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>多站点虚拟主机</h3>
+                        <p>参考 Nginx 的 server { } 块语法，基于 HTTP Host 头实现名称虚拟主机。一个 IP:端口托管多个独立网站，每个站点有独立的文档根目录和访问日志。</p>
                     </div>
                     <div class="feature-card">
                         <h3>用户管理系统</h3>

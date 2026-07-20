@@ -23,6 +23,8 @@ make
 | v0.10 | epoll I/O 多路复用、select 模式、线程池动态扩缩、HTTP keep-alive                              |
 | v1.0  | Nginx 风格 master-worker 多进程架构、优雅关闭（SIGTERM → SIGKILL）、日志合并（fd + path + status） |
 | v1.1  | HTTP/1.1 协议增强：请求头解析、动态 Content-Type、静态文件服务、Keep-Alive 协商、`ab` 基准测试            |
+| v1.2  | Blog 网站部署、分离式日志系统（system+access）、日志滚动、完整 HTTP 状态码处理（301/403/404/405）         |
+| v1.2.1 | **Nginx 风格 server { } 块、名称虚拟主机（Host 头路由）、多站点托管（www/blog/lab 三个独立站点）**        |
 
 ## 使用方法
 
@@ -569,7 +571,61 @@ wait
 
 ## 配置文件格式 (conf/server.conf)
 
-`key=value` 格式，每行一对。`#` 开头的行为注释。等号两侧空格会被裁剪。
+支持两种格式，自动检测：
+
+### Nginx 风格格式（v1.2.1，推荐）
+
+参考 Nginx 的 `server { }` 块语法，支持一个配置文件定义多个虚拟主机：
+
+```nginx
+# 全局设置
+worker_processes 2
+worker_shutdown_timeout_ms 3000
+max_connections 256
+max_request_bytes 4096
+user_file data/users.csv
+system_log logs/system.log
+access_log logs/access.log
+log_max_lines 10000
+log_max_roll_files 5
+
+# 默认站点
+server {
+    listen 0.0.0.0:8080 default_server
+    server_name localhost
+    root www
+    access_log logs/www_access.log
+}
+
+# 博客站点
+server {
+    listen 0.0.0.0:8080
+    server_name blog.local blog.localhost
+    root blog
+    access_log logs/blog_access.log
+}
+
+# 实验室站点
+server {
+    listen 0.0.0.0:8080
+    server_name lab.local lab.localhost
+    root lab
+    access_log logs/lab_access.log
+}
+```
+
+每行可用 `;` 结尾（可选）。`=` 和空格两种分隔符均支持。
+
+| server 块指令 | 说明 |
+|-------------|------|
+| `listen` | 绑定地址:端口，第一个块决定实际 socket 绑定；`default_server` 标记兜底站点 |
+| `server_name` | 匹配的域名列表（空格分隔），大小写不敏感精确匹配 |
+| `root` | 该站点的文档根目录 |
+| `access_log` | 该站点的访问日志（可选，不设则用全局） |
+
+### 传统格式（向后兼容）
+
+旧的 `key=value` 格式仍然支持，自动检测并转化为单个默认 server block：
 
 ```
 host=127.0.0.1
@@ -577,24 +633,25 @@ port=8080
 www_root=www
 user_file=data/users.csv
 log=logs/server.log
-max_connections=256
-max_request_bytes=4096
-worker_processes=2               # v1.0: worker 进程数
-worker_shutdown_timeout_ms=3000  # v1.0: worker 关闭超时
+...
 ```
 
-| 字段                           | 类型     | 默认值  | 说明                      |
-| ---------------------------- | ------ | ---- | ----------------------- |
-| `host`                       | string | 必填   | 监听地址                    |
-| `port`                       | int    | 必填   | 监听端口                    |
-| `www_root`                   | string | 必填   | Web 文档根目录               |
-| `user_file`                  | string | 必填   | CSV 用户数据库路径             |
-| `log`                        | string | 必填   | 日志文件路径                  |
-| `server_name`                | string | ""   | 服务器名称                   |
-| `max_connections`            | int    | 256  | 最大并发连接数                 |
-| `max_request_bytes`          | int    | 4096 | 最大请求体字节数                |
-| `worker_processes`           | int    | 2    | **v1.0**: worker 进程数    |
-| `worker_shutdown_timeout_ms` | int    | 3000 | **v1.0**: worker 优雅关闭超时 |
+### 多站点测试
+
+`*.localhost` 在所有系统上自动指向 `127.0.0.1`，无需编辑 `/etc/hosts`：
+
+```bash
+# 默认站点
+curl http://localhost:8080/
+
+# 博客站点（蓝金主题）
+curl -H "Host: blog.localhost" http://127.0.0.1:8080/
+
+# 实验室站点（青绿主题）
+curl -H "Host: lab.localhost" http://127.0.0.1:8080/
+```
+
+浏览器直接访问 `http://blog.localhost:8080/` 和 `http://lab.localhost:8080/`。
 
 `requests/` 目录下的 `.req` 文件，文件名与输出文件对应（`<name>.req` → `outputs/<name>.out`）。
 
@@ -720,7 +777,9 @@ miniwebserver/
 ├── requests/       # 请求文件
 ├── src/            # 源代码 (含 master_worker.c)
 ├── tests/          # 测试脚本
-├── www/            # Web 根目录
+├── www/            # 默认站点根目录
+├── blog/           # 博客站点（蓝金主题）
+├── lab/            # 实验室站点（青绿主题，v1.2.1 新增）
 └── Makefile
 ```
 

@@ -126,7 +126,7 @@ int log_init(const char *system_log_path, const char *access_log_path,
 
     /* ---- initial log entry (use log_write_system directly to avoid
      *      infinite recursion since log_infof would call back into us) ---- */
-    log_write_system(LOG_INFO, "Logging system initialized (v1.2)");
+    log_write_system(LOG_INFO, "Logging system initialized (v1.2.1)");
 
     return 0;
 }

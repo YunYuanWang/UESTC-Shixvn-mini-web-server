@@ -22,6 +22,7 @@
  *   - SIGPIPE: ignored (SIG_IGN).
  */
 
+#include "../include/config.h"
 #include "../include/log.h"
 #include "../include/request_handler.h"
 #include "../include/http_parser.h"
@@ -72,6 +73,18 @@ static int                   g_active_conns = 0;   /* current active connections
 static int                   g_worker_mode = 0;    /* v1.0: non-zero when running as worker */
 static int                   g_worker_id   = 0;    /* v1.1: worker number (1-based) */
 static int                   g_master_listen_fd = -1; /* v1.0: listen_fd inherited from master */
+
+/* ---- v1.2.1: virtual host config (set by epoll_server_set_config) ---- */
+static const server_config_t *g_epoll_config = NULL;
+
+void epoll_server_set_config(const server_config_t *cfg) {
+    g_epoll_config = cfg;
+    config_set_global(cfg);  /* also store for request_handler access */
+    /* Set the default root from the first server block for safety */
+    if (cfg && cfg->server_count > 0 && cfg->servers[0].root[0] != '\0') {
+        request_handler_set_root(cfg->servers[0].root);
+    }
+}
 
 static void sigint_handler(int sig) {
     (void)sig;
@@ -669,6 +682,69 @@ int epoll_server_run(const char *host, int port) {
                         req.keep_alive = close_after ? 0 : 1;
                         #undef HAS_KEEPALIVE
                         #undef HAS_CLOSE
+                    }
+
+                    /* ---- v1.2.1: extract Host header for virtual host routing ---- */
+                    {
+                        const char *hp;
+                        hp = NULL;
+                        {
+                            char *p = conn->recv_buf;
+                            int limit = conn->recv_len;
+                            while (p < conn->recv_buf + limit - 6) {
+                                if ((p[0] == '\n' || p[0] == '\r') &&
+                                    (p[1] == 'H' || p[1] == 'h') &&
+                                    (p[2] == 'O' || p[2] == 'o') &&
+                                    (p[3] == 'S' || p[3] == 's') &&
+                                    (p[4] == 'T' || p[4] == 't') &&
+                                    p[5] == ':') {
+                                    hp = p + 6;
+                                    break;
+                                }
+                                p++;
+                            }
+                        }
+
+                        if (hp) {
+                            char host_buf[256];
+                            int k = 0;
+
+                            while (*hp == ' ' || *hp == '\t') hp++;
+
+                            while (hp[k] != '\0' &&
+                                   hp[k] != '\r' && hp[k] != '\n' &&
+                                   k < (int)sizeof(host_buf) - 1) {
+                                host_buf[k] = hp[k];
+                                k++;
+                            }
+                            host_buf[k] = '\0';
+
+                            /* strip trailing whitespace */
+                            {
+                                char *e = host_buf + strlen(host_buf) - 1;
+                                while (e >= host_buf &&
+                                       (*e == ' ' || *e == '\t')) {
+                                    *e = '\0'; e--;
+                                }
+                            }
+
+                            /* strip port suffix */
+                            {
+                                char *colon = strchr(host_buf, ':');
+                                if (colon) *colon = '\0';
+                            }
+
+                            if (host_buf[0] != '\0') {
+                                const server_block_t *sb =
+                                    g_epoll_config
+                                        ? config_find_server(g_epoll_config,
+                                                              host_buf)
+                                        : NULL;
+                                if (sb && sb->root[0] != '\0') {
+                                    request_handler_set_root(sb->root);
+                                }
+                            }
+                        }
                     }
 
                     /* ---- generate HTTP/1.1 response ---- */
