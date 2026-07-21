@@ -138,11 +138,14 @@ void route_table_init(route_table_t *rt) {
 
 int route_table_add(route_table_t *rt, const char *method,
                      const char *path, match_type_t match_type,
-                     handler_type_t handler) {
+                     handler_type_t handler,
+                     const char *auth_realm, const char *required_role) {
     route_entry_t *e;
     int i, count;
 
     if (rt == NULL || method == NULL || path == NULL) return -1;
+    if (auth_realm == NULL) auth_realm = "";
+    if (required_role == NULL) required_role = "";
 
     if (match_type == MATCH_EXACT) {
         if (rt->exact_count >= MAX_ROUTES) return -1;
@@ -182,6 +185,10 @@ int route_table_add(route_table_t *rt, const char *method,
     e->method[sizeof(e->method) - 1] = '\0';
     e->match_type = match_type;
     e->handler    = handler;
+    strncpy(e->auth_realm, auth_realm, sizeof(e->auth_realm) - 1);
+    e->auth_realm[sizeof(e->auth_realm) - 1] = '\0';
+    strncpy(e->required_role, required_role, sizeof(e->required_role) - 1);
+    e->required_role[sizeof(e->required_role) - 1] = '\0';
 
     /* Rebuild entire hash table after each add (config time, not hot path) */
     if (match_type == MATCH_EXACT) {

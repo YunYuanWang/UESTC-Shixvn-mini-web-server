@@ -4929,3 +4929,273 @@
 [2026-07-21 15:25:01.431437] [INFO ] [PID 305728] [TID 134699861485376]   Master PID: 305728  shutdown complete
 [2026-07-21 15:25:01.431440] [INFO ] [PID 305728] [TID 134699861485376] ========================================
 [2026-07-21 15:25:01.431463] [INFO ] [PID 305728] [TID 134699861485376] Logging system shutting down
+[2026-07-21 15:54:59.786156] [INFO ] [PID 379453] [TID 129894183270208] Logging system initialized (v1.2.1)
+[2026-07-21 15:54:59.786201] [INFO ] [PID 379453] [TID 129894183270208] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-21 15:55:03.857497] [INFO ] [PID 379455] [TID 129894183270208] Logging system shutting down
+[2026-07-21 15:55:03.857800] [INFO ] [PID 379453] [TID 129894183270208] Logging system shutting down
+[2026-07-21 15:56:03.325180] [INFO ] [PID 380204] [TID 127164049442624] Logging system initialized (v1.2.1)
+[2026-07-21 15:56:03.325220] [INFO ] [PID 380204] [TID 127164049442624] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-21 15:56:07.421066] [INFO ] [PID 380206] [TID 127164049442624] Logging system shutting down
+[2026-07-21 15:56:07.421382] [INFO ] [PID 380204] [TID 127164049442624] Logging system shutting down
+[2026-07-21 16:06:42.346608] [INFO ] [PID 387068] [TID 128377464977216] Logging system initialized (v1.2.1)
+[2026-07-21 16:06:42.346658] [INFO ] [PID 387068] [TID 128377464977216] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-21 16:06:46.448401] [INFO ] [PID 387070] [TID 128377464977216] Logging system shutting down
+[2026-07-21 16:06:46.449629] [INFO ] [PID 387068] [TID 128377464977216] Logging system shutting down
+[2026-07-21 16:08:12.346735] [INFO ] [PID 388329] [TID 136529696008000] Logging system initialized (v1.2.1)
+[2026-07-21 16:08:12.346795] [INFO ] [PID 388329] [TID 136529696008000] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-21 16:08:16.446903] [INFO ] [PID 388331] [TID 136529696008000] Logging system shutting down
+[2026-07-21 16:08:16.448851] [INFO ] [PID 388329] [TID 136529696008000] Logging system shutting down
+[2026-07-21 16:10:15.331933] [INFO ] [PID 390708] [TID 129701678815040] Logging system initialized (v1.2.1)
+[2026-07-21 16:10:15.331976] [INFO ] [PID 390708] [TID 129701678815040] Master-Worker Mode (epoll I/O multiplexing) v1.2.1
+[2026-07-21 16:10:15.331980] [INFO ] [PID 390708] [TID 129701678815040] log_level set to: 1
+[2026-07-21 16:10:15.331995] [INFO ] [PID 390708] [TID 129701678815040] Auth: loaded 2 user(s) from conf/.htpasswd
+[2026-07-21 16:10:15.332014] [INFO ] [PID 390708] [TID 129701678815040] user store: shared memory initialized
+[2026-07-21 16:10:15.332021] [INFO ] [PID 390708] [TID 129701678815040] user store: shm base=0x75f6828f5000, total=59.0 MB, max=201000 nodes
+[2026-07-21 16:10:15.332027] [INFO ] [PID 390708] [TID 129701678815040] user store: loading data into shared memory...
+[2026-07-21 16:10:15.389927] [INFO ] [PID 390708] [TID 129701678815040] user store: loaded 100000 users into shared memory
+[2026-07-21 16:10:15.390595] [INFO ] [PID 390708] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.390608] [INFO ] [PID 390708] [TID 129701678815040]   Master PID: 390708  starting 2 worker(s)  shutdown_timeout: 3000 ms
+[2026-07-21 16:10:15.390611] [INFO ] [PID 390708] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.390635] [INFO ] [PID 390708] [TID 129701678815040] [Master] listening on 0.0.0.0:8080 (fd=21)
+[2026-07-21 16:10:15.390769] [INFO ] [PID 390708] [TID 129701678815040] user store: shared memory initialized
+[2026-07-21 16:10:15.390823] [INFO ] [PID 390708] [TID 129701678815040] user store: shm base=0x75f67edea000, total=59.0 MB, max=201000 nodes
+[2026-07-21 16:10:15.390834] [INFO ] [PID 390708] [TID 129701678815040] user store: loading data into shared memory...
+[2026-07-21 16:10:15.448390] [INFO ] [PID 390708] [TID 129701678815040] user store: loaded 100000 users into shared memory
+[2026-07-21 16:10:15.448422] [INFO ] [PID 390708] [TID 129701678815040] [Master] shared memory user store ready
+[2026-07-21 16:10:15.448566] [INFO ] [PID 390708] [TID 129701678815040] [Master] forked worker 1, PID 390709
+[2026-07-21 16:10:15.448676] [INFO ] [PID 390708] [TID 129701678815040] [Master] forked worker 2, PID 390710
+[2026-07-21 16:10:15.448717] [INFO ] [PID 390708] [TID 129701678815040] [Master] entering wait loop (2 workers)
+[2026-07-21 16:10:15.448831] [INFO ] [PID 390710] [TID 129701678815040] [Worker] PID 390710 started, listen_fd=21
+[2026-07-21 16:10:15.450381] [INFO ] [PID 390710] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.450396] [INFO ] [PID 390710] [TID 129701678815040]   Worker-2 PID: 390710  (epoll I/O multiplexing)
+[2026-07-21 16:10:15.450399] [INFO ] [PID 390710] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.450401] [INFO ] [PID 390710] [TID 129701678815040] [Worker] using inherited listen_fd=21
+[2026-07-21 16:10:15.450529] [INFO ] [PID 390709] [TID 129701678815040] [Worker] PID 390709 started, listen_fd=21
+[2026-07-21 16:10:15.454514] [INFO ] [PID 390709] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.454582] [INFO ] [PID 390709] [TID 129701678815040]   Worker-1 PID: 390709  (epoll I/O multiplexing)
+[2026-07-21 16:10:15.454606] [INFO ] [PID 390709] [TID 129701678815040] ========================================
+[2026-07-21 16:10:15.454628] [INFO ] [PID 390709] [TID 129701678815040] [Worker] using inherited listen_fd=21
+[2026-07-21 16:10:27.193769] [INFO ] [PID 390709] [TID 129701678815040] [#1] accepted connection from 127.0.0.1:45524 (fd=23) type=ephemeral
+[2026-07-21 16:10:31.458238] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:10:31.458910] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:36.462665] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:10:37.175570] [INFO ] [PID 390709] [TID 129701678815040] [#2] accepted connection from 127.0.0.1:49486 (fd=23) type=ephemeral
+[2026-07-21 16:10:37.569371] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:10:37.569695] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:46.204178] [INFO ] [PID 390709] [TID 129701678815040] [#3] accepted connection from 127.0.0.1:55164 (fd=23) type=ephemeral
+[2026-07-21 16:10:46.218544] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 200
+[2026-07-21 16:10:46.276361] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:46.383684] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /favicon.ico -> 404
+[2026-07-21 16:10:46.383867] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:51.388673] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:10:54.453896] [INFO ] [PID 390709] [TID 129701678815040] [#4] accepted connection from 127.0.0.1:43398 (fd=23) type=ephemeral
+[2026-07-21 16:10:54.734833] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 200
+[2026-07-21 16:10:54.777347] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:57.203921] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:10:57.203997] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:57.239974] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:10:57.240050] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:10:58.867214] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 200
+[2026-07-21 16:10:58.883510] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:03.887773] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 4 request(s)
+[2026-07-21 16:11:47.139290] [INFO ] [PID 390709] [TID 129701678815040] [#5] accepted connection from 127.0.0.1:56958 (fd=23) type=ephemeral
+[2026-07-21 16:11:47.208457] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /blog/index.html -> 200
+[2026-07-21 16:11:47.208675] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:47.255487] [INFO ] [PID 390710] [TID 129701678815040] [#1] accepted connection from 127.0.0.1:56960 (fd=23) type=ephemeral
+[2026-07-21 16:11:47.257477] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /blog/css/style.css -> 200
+[2026-07-21 16:11:47.257550] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:47.260234] [INFO ] [PID 390709] [TID 129701678815040] [#6] accepted connection from 127.0.0.1:56962 (fd=24) type=ephemeral
+[2026-07-21 16:11:47.260318] [INFO ] [PID 390709] [TID 129701678815040] [#7] accepted connection from 127.0.0.1:56970 (fd=25) type=ephemeral
+[2026-07-21 16:11:47.262503] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /blog/js/main.js -> 200
+[2026-07-21 16:11:47.262774] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:47.262800] [INFO ] [PID 390710] [TID 129701678815040] [#2] accepted connection from 127.0.0.1:56976 (fd=24) type=ephemeral
+[2026-07-21 16:11:47.263660] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=24 GET /blog/img/banner.jpg -> 200
+[2026-07-21 16:11:47.264000] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:47.272764] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=25 GET /blog/img/logo.png -> 200
+[2026-07-21 16:11:47.274012] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:47.283827] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/img/avatar.gif -> 200
+[2026-07-21 16:11:47.290735] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:49.234158] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/about.html -> 200
+[2026-07-21 16:11:49.234618] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:49.269140] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/css/style.css -> 200
+[2026-07-21 16:11:49.269268] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:49.273820] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/js/main.js -> 200
+[2026-07-21 16:11:49.273925] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:49.274570] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=24 GET /blog/img/logo.png -> 200
+[2026-07-21 16:11:49.274684] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:49.276227] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=25 GET /blog/img/avatar.gif -> 200
+[2026-07-21 16:11:49.287170] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:52.275658] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:11:52.288672] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:11:53.386987] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/index.html -> 200
+[2026-07-21 16:11:53.387069] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:53.425240] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=25 GET /blog/css/style.css -> 200
+[2026-07-21 16:11:53.425759] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/js/main.js -> 200
+[2026-07-21 16:11:53.425902] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:53.425988] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:53.431196] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /blog/img/logo.png -> 200
+[2026-07-21 16:11:53.431349] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:53.431376] [INFO ] [PID 390710] [TID 129701678815040] [#3] accepted connection from 127.0.0.1:39808 (fd=23) type=ephemeral
+[2026-07-21 16:11:53.431728] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=24 GET /blog/img/banner.jpg -> 200
+[2026-07-21 16:11:53.431927] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:53.433578] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=25 GET /blog/img/avatar.gif -> 200
+[2026-07-21 16:11:53.438602] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:11:58.435673] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 0 request(s)
+[2026-07-21 16:11:58.435772] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=24 (slot 1), closing after 7 request(s)
+[2026-07-21 16:12:02.755330] [INFO ] [PID 390710] [TID 129701678815040] [#4] accepted connection from 127.0.0.1:42538 (fd=23) type=ephemeral
+[2026-07-21 16:12:02.857861] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET / -> 200
+[2026-07-21 16:12:02.857925] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:12:04.792429] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /users -> 200
+[2026-07-21 16:12:04.824821] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:12:09.829968] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:13:45.311259] [INFO ] [PID 390710] [TID 129701678815040] [#5] accepted connection from 127.0.0.1:40696 (fd=23) type=ephemeral
+[2026-07-21 16:13:45.320362] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET / -> 200
+[2026-07-21 16:13:45.321119] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:13:45.425915] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /favicon.ico -> 404
+[2026-07-21 16:13:45.426027] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:13:47.696015] [INFO ] [PID 390709] [TID 129701678815040] [#8] accepted connection from 127.0.0.1:40712 (fd=23) type=ephemeral
+[2026-07-21 16:13:47.960240] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:13:47.960360] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:13:48.107955] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:13:48.108046] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:13:49.946290] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:13:49.946345] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:13:56.074226] [INFO ] [PID 390709] [TID 129701678815040] [#9] accepted connection from 127.0.0.1:58960 (fd=23) type=ephemeral
+[2026-07-21 16:13:56.078723] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:13:56.079363] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:01.083676] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:14:06.158412] [INFO ] [PID 390710] [TID 129701678815040] [#6] accepted connection from 127.0.0.1:36814 (fd=24) type=ephemeral
+[2026-07-21 16:14:06.175858] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /users -> 200
+[2026-07-21 16:14:06.197071] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:06.559313] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /favicon.ico -> 404
+[2026-07-21 16:14:06.559398] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:07.559660] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:14:10.151227] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /users -> 200
+[2026-07-21 16:14:10.162851] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:12.864092] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET / -> 200
+[2026-07-21 16:14:12.864342] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:12.880967] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /icon/favicon.ico -> 200
+[2026-07-21 16:14:12.881140] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:15.773319] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=24 GET /users -> 200
+[2026-07-21 16:14:15.797380] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:25.744608] [INFO ] [PID 390709] [TID 129701678815040] [#10] accepted connection from 127.0.0.1:55184 (fd=23) type=ephemeral
+[2026-07-21 16:14:25.747926] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:14:25.748911] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:25.864500] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:14:25.864590] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:14:27.996663] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:14:27.996725] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:15:12.551370] [INFO ] [PID 390710] [TID 129701678815040] [#7] accepted connection from 127.0.0.1:38030 (fd=23) type=ephemeral
+[2026-07-21 16:15:12.559315] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /users -> 403
+[2026-07-21 16:15:12.559453] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:15:12.587377] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /favicon.ico -> 404
+[2026-07-21 16:15:12.593666] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:15:17.598222] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:15:23.241745] [INFO ] [PID 390709] [TID 129701678815040] [#11] accepted connection from 127.0.0.1:42890 (fd=23) type=ephemeral
+[2026-07-21 16:15:28.245663] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 0 request(s)
+[2026-07-21 16:15:47.271326] [INFO ] [PID 390709] [TID 129701678815040] [#12] accepted connection from 127.0.0.1:60858 (fd=23) type=ephemeral
+[2026-07-21 16:15:47.275864] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /users -> 403
+[2026-07-21 16:15:47.276896] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:15:52.280732] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:16:11.156915] [INFO ] [PID 390709] [TID 129701678815040] [#13] accepted connection from 127.0.0.1:42934 (fd=23) type=ephemeral
+[2026-07-21 16:16:11.173158] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /search -> 200
+[2026-07-21 16:16:11.173312] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:16:11.202270] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:16:11.202326] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:16:12.652315] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:16:12.652516] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:16:14.223754] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 403
+[2026-07-21 16:16:14.223890] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:16:19.228358] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 4 request(s)
+[2026-07-21 16:17:29.430072] [INFO ] [PID 390709] [TID 129701678815040] [#14] accepted connection from 127.0.0.1:38894 (fd=23) type=ephemeral
+[2026-07-21 16:17:34.434690] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 0 request(s)
+[2026-07-21 16:17:34.825028] [INFO ] [PID 390709] [TID 129701678815040] [#15] accepted connection from 127.0.0.1:54034 (fd=23) type=ephemeral
+[2026-07-21 16:17:35.051196] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 403
+[2026-07-21 16:17:35.051576] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:17:48.278559] [INFO ] [PID 390709] [TID 129701678815040] [#16] accepted connection from 127.0.0.1:42362 (fd=23) type=ephemeral
+[2026-07-21 16:17:48.283084] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:17:48.283273] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:17:48.407775] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:17:48.407844] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:17:50.604450] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:17:50.604541] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:18:01.035305] [INFO ] [PID 390709] [TID 129701678815040] [#17] accepted connection from 127.0.0.1:35190 (fd=23) type=ephemeral
+[2026-07-21 16:18:01.038442] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:18:01.038542] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:18:06.042679] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:18:12.154037] [INFO ] [PID 390709] [TID 129701678815040] [#18] accepted connection from 127.0.0.1:55504 (fd=23) type=ephemeral
+[2026-07-21 16:18:12.160774] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:18:12.160945] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:18:17.168434] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:25:22.600673] [INFO ] [PID 390709] [TID 129701678815040] [#19] accepted connection from 127.0.0.1:52876 (fd=23) type=ephemeral
+[2026-07-21 16:25:22.605339] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:25:22.605520] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:22.759065] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:25:22.759297] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:27.763249] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:25:29.867040] [INFO ] [PID 390709] [TID 129701678815040] [#20] accepted connection from 127.0.0.1:47058 (fd=23) type=ephemeral
+[2026-07-21 16:25:33.671544] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:25:33.671616] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:43.716588] [INFO ] [PID 390709] [TID 129701678815040] [#21] accepted connection from 127.0.0.1:57948 (fd=23) type=ephemeral
+[2026-07-21 16:25:43.729252] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 200
+[2026-07-21 16:25:43.758612] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:43.899592] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /favicon.ico -> 404
+[2026-07-21 16:25:43.900316] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:48.906662] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:25:56.668702] [INFO ] [PID 390709] [TID 129701678815040] [#22] accepted connection from 127.0.0.1:47626 (fd=23) type=ephemeral
+[2026-07-21 16:25:56.681307] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /search -> 200
+[2026-07-21 16:25:56.682654] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:25:56.721632] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:25:56.722070] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:01.726715] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:26:09.134054] [INFO ] [PID 390709] [TID 129701678815040] [#23] accepted connection from 127.0.0.1:34310 (fd=23) type=ephemeral
+[2026-07-21 16:26:09.136345] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /users -> 200
+[2026-07-21 16:26:09.137746] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:14.141674] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:26:16.367000] [INFO ] [PID 390709] [TID 129701678815040] [#24] accepted connection from 127.0.0.1:39522 (fd=23) type=ephemeral
+[2026-07-21 16:26:16.367556] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /delete -> 200
+[2026-07-21 16:26:16.367748] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:21.371728] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:26:27.761854] [INFO ] [PID 390709] [TID 129701678815040] [#25] accepted connection from 127.0.0.1:39290 (fd=23) type=ephemeral
+[2026-07-21 16:26:27.765121] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET / -> 200
+[2026-07-21 16:26:27.765269] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:27.877985] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:26:27.878042] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:29.795697] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /users -> 401
+[2026-07-21 16:26:29.795775] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:49.628109] [INFO ] [PID 390710] [TID 129701678815040] [#8] accepted connection from 127.0.0.1:56894 (fd=23) type=ephemeral
+[2026-07-21 16:26:49.631419] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /users -> 403
+[2026-07-21 16:26:49.633863] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:49.653182] [INFO ] [PID 390710] [TID 129701678815040] [Worker-2] fd=23 GET /favicon.ico -> 404
+[2026-07-21 16:26:49.655618] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:26:54.661679] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:27:00.406325] [INFO ] [PID 390709] [TID 129701678815040] [#26] accepted connection from 127.0.0.1:41160 (fd=23) type=ephemeral
+[2026-07-21 16:27:00.419384] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /search -> 200
+[2026-07-21 16:27:00.419819] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:27:00.463897] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 GET /icon/favicon.ico -> 200
+[2026-07-21 16:27:00.464074] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:27:05.468812] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 2 request(s)
+[2026-07-21 16:27:08.336866] [INFO ] [PID 390709] [TID 129701678815040] [#27] accepted connection from 127.0.0.1:41166 (fd=23) type=ephemeral
+[2026-07-21 16:27:08.340528] [INFO ] [PID 390709] [TID 129701678815040] [Worker-1] fd=23 POST /users -> 403
+[2026-07-21 16:27:08.340740] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] keep-alive: waiting for next request
+[2026-07-21 16:27:13.345664] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] idle timeout on fd=23 (slot 0), closing after 1 request(s)
+[2026-07-21 16:28:46.078509] [INFO ] [PID 390710] [TID 129701678815040] [EpollServer] shutting down...
+[2026-07-21 16:28:46.078572] [INFO ] [PID 390708] [TID 129701678815040] [Master] shutting down...
+[2026-07-21 16:28:46.078588] [INFO ] [PID 390710] [TID 129701678815040] [Worker] shutdown — served 8 client(s)
+[2026-07-21 16:28:46.078596] [INFO ] [PID 390708] [TID 129701678815040] [Master] listen socket closed
+[2026-07-21 16:28:46.078600] [INFO ] [PID 390708] [TID 129701678815040] [Master] sending SIGTERM to worker PID 390709
+[2026-07-21 16:28:46.078607] [INFO ] [PID 390708] [TID 129701678815040] [Master] sending SIGTERM to worker PID 390710
+[2026-07-21 16:28:46.078620] [INFO ] [PID 390708] [TID 129701678815040] [Master] waiting up to 3000 ms for workers to exit
+[2026-07-21 16:28:46.078894] [INFO ] [PID 390710] [TID 129701678815040] [Worker] PID 390710 shutting down
+[2026-07-21 16:28:46.078901] [INFO ] [PID 390710] [TID 129701678815040] Logging system shutting down
+[2026-07-21 16:28:46.080064] [INFO ] [PID 390709] [TID 129701678815040] [EpollServer] shutting down...
+[2026-07-21 16:28:46.080122] [INFO ] [PID 390709] [TID 129701678815040] [Worker] shutdown — served 27 client(s) (SIGTERM)
+[2026-07-21 16:28:46.080386] [INFO ] [PID 390709] [TID 129701678815040] [Worker] PID 390709 shutting down
+[2026-07-21 16:28:46.080409] [INFO ] [PID 390709] [TID 129701678815040] Logging system shutting down
+[2026-07-21 16:28:46.081687] [INFO ] [PID 390708] [TID 129701678815040] [Master] worker PID 390709 exited (status 0)
+[2026-07-21 16:28:46.081758] [INFO ] [PID 390708] [TID 129701678815040] [Master] worker PID 390710 exited (status 0)
+[2026-07-21 16:28:46.081775] [INFO ] [PID 390708] [TID 129701678815040] [Master] all workers stopped
+[2026-07-21 16:28:46.081778] [INFO ] [PID 390708] [TID 129701678815040] ========================================
+[2026-07-21 16:28:46.081781] [INFO ] [PID 390708] [TID 129701678815040]   Master PID: 390708  shutdown complete
+[2026-07-21 16:28:46.081783] [INFO ] [PID 390708] [TID 129701678815040] ========================================
+[2026-07-21 16:28:46.081801] [INFO ] [PID 390708] [TID 129701678815040] Logging system shutting down

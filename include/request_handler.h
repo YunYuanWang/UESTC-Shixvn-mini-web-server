@@ -14,6 +14,9 @@ typedef struct {
     /* v1.4: parsed request headers for POST error handling */
     char content_type[64];       /* Content-Type header value */
     int  content_length_hdr;     /* Content-Length header value, -1 = absent */
+
+    /* v1.6: Authorization header for HTTP Basic Auth */
+    char authorization[256];     /* "Basic <base64>" or empty */
 } request_t;
 
 /* ---- v1.5: handler function signature ---- */

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -1081,31 +1082,118 @@ static void route_table_populate_defaults(route_table_t *rt) {
     /* v1.5: one entry per (method, path).  Exact routes first, then prefix. */
 
     /* ---- Exact routes ---- */
-    route_table_add(rt, "GET",    "/hello",   MATCH_EXACT, HANDLER_HELLO);
-    route_table_add(rt, "GET",    "/help",    MATCH_EXACT, HANDLER_HELP);
-    route_table_add(rt, "GET",    "/users",   MATCH_EXACT, HANDLER_USER_LIST);
-    route_table_add(rt, "POST",   "/users",   MATCH_EXACT, HANDLER_USER_ADD);
-    route_table_add(rt, "POST",   "/search",  MATCH_EXACT, HANDLER_SEARCH);
-    route_table_add(rt, "POST",   "/delete",  MATCH_EXACT, HANDLER_DELETE_FORM);
-    route_table_add(rt, "GET",    "/blog",    MATCH_EXACT, HANDLER_BLOG);
-    route_table_add(rt, "HEAD",   "/blog",    MATCH_EXACT, HANDLER_BLOG);
-    route_table_add(rt, "GET",    "/",        MATCH_EXACT, HANDLER_INDEX);
-    route_table_add(rt, "HEAD",   "/",        MATCH_EXACT, HANDLER_INDEX);
+    route_table_add(rt, "GET",    "/hello",   MATCH_EXACT, HANDLER_HELLO, "", "");
+    route_table_add(rt, "GET",    "/help",    MATCH_EXACT, HANDLER_HELP, "", "");
+    route_table_add(rt, "GET",    "/users",   MATCH_EXACT, HANDLER_USER_LIST, "", "");
+    route_table_add(rt, "POST",   "/users",   MATCH_EXACT, HANDLER_USER_ADD, "", "");
+    route_table_add(rt, "POST",   "/search",  MATCH_EXACT, HANDLER_SEARCH, "", "");
+    route_table_add(rt, "POST",   "/delete",  MATCH_EXACT, HANDLER_DELETE_FORM, "", "");
+    route_table_add(rt, "GET",    "/blog",    MATCH_EXACT, HANDLER_BLOG, "", "");
+    route_table_add(rt, "HEAD",   "/blog",    MATCH_EXACT, HANDLER_BLOG, "", "");
+    route_table_add(rt, "GET",    "/",        MATCH_EXACT, HANDLER_INDEX, "", "");
+    route_table_add(rt, "HEAD",   "/",        MATCH_EXACT, HANDLER_INDEX, "", "");
 
     /* ---- Prefix routes (longer prefixes first) ---- */
-    route_table_add(rt, "GET",    "/users/find-index/",      MATCH_PREFIX, HANDLER_USER_FIND_INDEX);
-    route_table_add(rt, "GET",    "/users/compare-verbose/", MATCH_PREFIX, HANDLER_USER_COMPARE_VERBOSE);
-    route_table_add(rt, "GET",    "/users/compare/",         MATCH_PREFIX, HANDLER_USER_COMPARE);
-    route_table_add(rt, "GET",    "/users/",                 MATCH_PREFIX, HANDLER_USER_BY_NAME);
-    route_table_add(rt, "DELETE", "/users/",                 MATCH_PREFIX, HANDLER_USER_DELETE);
-    route_table_add(rt, "GET",    "/user/",                  MATCH_PREFIX, HANDLER_USER_SIMPLE_FIND);
-    route_table_add(rt, "GET",    "/sleep/",                 MATCH_PREFIX, HANDLER_SLEEP);
-    route_table_add(rt, "GET",    "/blog/",                  MATCH_PREFIX, HANDLER_BLOG);
-    route_table_add(rt, "HEAD",   "/blog/",                  MATCH_PREFIX, HANDLER_BLOG);
+    route_table_add(rt, "GET",    "/users/find-index/",      MATCH_PREFIX, HANDLER_USER_FIND_INDEX, "", "");
+    route_table_add(rt, "GET",    "/users/compare-verbose/", MATCH_PREFIX, HANDLER_USER_COMPARE_VERBOSE, "", "");
+    route_table_add(rt, "GET",    "/users/compare/",         MATCH_PREFIX, HANDLER_USER_COMPARE, "", "");
+    route_table_add(rt, "GET",    "/users/",                 MATCH_PREFIX, HANDLER_USER_BY_NAME, "", "");
+    route_table_add(rt, "DELETE", "/users/",                 MATCH_PREFIX, HANDLER_USER_DELETE, "", "");
+    route_table_add(rt, "GET",    "/user/",                  MATCH_PREFIX, HANDLER_USER_SIMPLE_FIND, "", "");
+    route_table_add(rt, "GET",    "/sleep/",                 MATCH_PREFIX, HANDLER_SLEEP, "", "");
+    route_table_add(rt, "GET",    "/blog/",                  MATCH_PREFIX, HANDLER_BLOG, "", "");
+    route_table_add(rt, "HEAD",   "/blog/",                  MATCH_PREFIX, HANDLER_BLOG, "", "");
 
     /* ---- Static file fallback (lowest priority) ---- */
-    route_table_add(rt, "GET",    "/", MATCH_PREFIX, HANDLER_STATIC);
-    route_table_add(rt, "HEAD",   "/", MATCH_PREFIX, HANDLER_STATIC);
+    route_table_add(rt, "GET",    "/", MATCH_PREFIX, HANDLER_STATIC, "", "");
+    route_table_add(rt, "HEAD",   "/", MATCH_PREFIX, HANDLER_STATIC, "", "");
+}
+
+/* ================================================================
+ *  v1.6: HTTP Basic Auth credential store
+ * ================================================================ */
+
+/* External: base64 decoder */
+extern int base64_decode(const char *src, char *dst, int dst_size);
+
+#define MAX_AUTH_USERS 64
+
+typedef struct {
+    char username[64];
+    char password[64];
+    char role[32];
+} auth_user_t;
+
+static auth_user_t g_auth_users[MAX_AUTH_USERS];
+static int g_auth_user_count = 0;
+
+int auth_load_file(const char *path) {
+    FILE *fp = fopen(path, "r");
+    char line[256];
+    if (!fp) return -1;
+
+    g_auth_user_count = 0;
+    while (fgets(line, sizeof(line), fp) && g_auth_user_count < MAX_AUTH_USERS) {
+        char *nl = strchr(line, '\r'); if (nl) *nl = '\0';
+        nl = strchr(line, '\n'); if (nl) *nl = '\0';
+        if (line[0] == '#' || line[0] == '\0') continue;
+
+        /* Format: username:password:role */
+        char *first_colon  = strchr(line, ':');
+        char *second_colon = first_colon ? strchr(first_colon + 1, ':') : NULL;
+        if (!first_colon || !second_colon) continue;
+
+        *first_colon  = '\0';
+        *second_colon = '\0';
+
+        auth_user_t *u = &g_auth_users[g_auth_user_count];
+        strncpy(u->username, line, sizeof(u->username) - 1);
+        u->username[sizeof(u->username) - 1] = '\0';
+        strncpy(u->password, first_colon + 1, sizeof(u->password) - 1);
+        u->password[sizeof(u->password) - 1] = '\0';
+        strncpy(u->role, second_colon + 1, sizeof(u->role) - 1);
+        u->role[sizeof(u->role) - 1] = '\0';
+
+        g_auth_user_count++;
+    }
+    fclose(fp);
+    log_infof("Auth: loaded %d user(s) from %s", g_auth_user_count, path);
+    return 0;
+}
+
+/*
+ * Look up a user, return their role string (or NULL if not found).
+ * First checks .htpasswd, then falls back to CSV user store.
+ * CSV users use mobile as username and have role "user".
+ */
+static const char *auth_lookup(const char *username, const char *password) {
+    int i;
+    /* 1. Check .htpasswd file */
+    for (i = 0; i < g_auth_user_count; i++) {
+        if (strcmp(g_auth_users[i].username, username) == 0 &&
+            strcmp(g_auth_users[i].password, password) == 0) {
+            return g_auth_users[i].role;
+        }
+    }
+    /* 2. Fallback: check CSV user store (mobile + password → role "user") */
+    {
+        extern int user_store_auth(const char *mobile, const char *pwd);
+        if (user_store_auth(username, password)) {
+            return "user";
+        }
+    }
+    return NULL;
+}
+
+/*
+ * Check if a user's role satisfies the required role.
+ * Admin role ("admin") is a super-role that passes any check.
+ */
+static int auth_role_matches(const char *user_role, const char *required_role) {
+    if (!user_role || !required_role) return 0;
+    if (required_role[0] == '\0') return 1;  /* no role required */
+    if (strcmp(user_role, "admin") == 0) return 1;  /* admin can access anything */
+    return (strcmp(user_role, required_role) == 0);
 }
 
 /* ================================================================
@@ -1164,6 +1252,71 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
     }
 
     if (result.entry != NULL) {
+        /* v1.6: check authentication if this route requires a role */
+        if (result.entry->required_role[0] != '\0') {
+            const char *auth_header = req->authorization;
+            const char *realm = result.entry->auth_realm;
+            if (realm[0] == '\0') realm = "Restricted";
+
+            /* Check for Authorization: Basic ... header */
+            if (auth_header[0] == '\0' ||
+                strncasecmp(auth_header, "Basic ", 6) != 0) {
+                /* No credentials → 401 */
+                return snprintf(output, size,
+                    "HTTP/1.1 401 Unauthorized\r\n"
+                    "Server: MiniWeb/1.6\r\n"
+                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
+                    "Content-Type: text/plain; charset=utf-8\r\n"
+                    "Content-Length: 0\r\n"
+                    "Connection: close\r\n"
+                    "\r\n", realm);
+            }
+
+            /* Decode Base64 credentials */
+            char decoded[256];
+            int dlen = base64_decode(auth_header + 6, decoded, sizeof(decoded));
+            if (dlen < 0) {
+                /* Malformed Base64 → 400 */
+                return build_http_response(output, size, 400, "BAD REQUEST",
+                                           "400 Bad Request: invalid Base64\n");
+            }
+
+            /* Split into username:password */
+            char *colon = strchr(decoded, ':');
+            if (!colon) {
+                return snprintf(output, size,
+                    "HTTP/1.1 401 Unauthorized\r\n"
+                    "Server: MiniWeb/1.6\r\n"
+                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
+                    "Content-Length: 0\r\n"
+                    "Connection: close\r\n"
+                    "\r\n", realm);
+            }
+            *colon = '\0';
+            const char *username = decoded;
+            const char *password = colon + 1;
+
+            /* Look up credentials */
+            const char *user_role = auth_lookup(username, password);
+            if (!user_role) {
+                /* Invalid credentials → 401 */
+                return snprintf(output, size,
+                    "HTTP/1.1 401 Unauthorized\r\n"
+                    "Server: MiniWeb/1.6\r\n"
+                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
+                    "Content-Length: 0\r\n"
+                    "Connection: close\r\n"
+                    "\r\n", realm);
+            }
+
+            /* Check role */
+            if (!auth_role_matches(user_role, result.entry->required_role)) {
+                /* Wrong role → 403 */
+                return build_http_response(output, size, 403, "FORBIDDEN",
+                    "403 Forbidden: insufficient permissions\n");
+            }
+        }
+
         /* Route matched — call the handler function */
         handler_fn fn = route_table_get_handler_fn(result.entry->handler);
         if (fn != NULL) {
@@ -1424,6 +1577,28 @@ int request_handler_handle_connection(int conn_fd) {
                     while (*cl_start == ' ' || *cl_start == '\t') cl_start++;
                     req.content_length_hdr = atoi(cl_start);
                     if (req.content_length_hdr < 0) req.content_length_hdr = 0;
+                }
+            }
+
+            /* ---- v1.6: extract Authorization header ---- */
+            {
+                fwrite(recv_buf, 1, n < 300 ? n : 300, stderr);
+                fprintf(stderr, "]\n");
+                const char *auth_start = strstr(recv_buf, "Authorization:");
+                if (!auth_start) auth_start = strstr(recv_buf, "authorization:");
+                if (auth_start) {
+                    auth_start += 14;  /* skip "Authorization:" */
+                    int k = 0;
+                    while (*auth_start == ' ' || *auth_start == '\t') auth_start++;
+                    while (auth_start[k] && auth_start[k] != '\r' && auth_start[k] != '\n'
+                           && k < (int)sizeof(req.authorization) - 1) {
+                        req.authorization[k] = auth_start[k];
+                        k++;
+                    }
+                    req.authorization[k] = '\0';
+                    { char *e = req.authorization + strlen(req.authorization) - 1;
+                      while (e >= req.authorization && (*e == ' ' || *e == '\t'))
+                          *e-- = '\0'; }
                 }
             }
 

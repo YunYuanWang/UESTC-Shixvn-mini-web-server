@@ -92,4 +92,7 @@ typedef struct {
 
 int user_store_search(const search_criteria_t *criteria, char *buf, int buf_size);
 
+/* v1.6: authenticate a CSV user by mobile + password */
+int user_store_auth(const char *mobile, const char *password);
+
 #endif

@@ -63,12 +63,14 @@ typedef enum {
     HANDLER_COUNT
 } handler_type_t;
 
-/* ---- single route entry: (method, path, match_type, handler) ---- */
+/* ---- single route entry: (method, path, match_type, handler, auth) ---- */
 typedef struct route_entry_s {
     char          path[256];       /* path pattern, e.g. "/users/", "/hello" */
     match_type_t  match_type;      /* MATCH_EXACT or MATCH_PREFIX */
     char          method[16];      /* single HTTP method: GET, POST, DELETE... */
     handler_type_t handler;        /* which C function to call */
+    char          auth_realm[64];   /* v1.6: realm for WWW-Authenticate, ""=public */
+    char          required_role[32];/* v1.6: required role, ""=any authenticated user */
 } route_entry_t;
 
 /* ---- route table (exact + prefix separated for fast lookup) ---- */
@@ -98,7 +100,8 @@ void route_table_init(route_table_t *rt);
  */
 int  route_table_add(route_table_t *rt, const char *method,
                      const char *path, match_type_t match_type,
-                     handler_type_t handler);
+                     handler_type_t handler,
+                     const char *auth_realm, const char *required_role);
 
 /*
  * Find a matching route.  Populates `result`.

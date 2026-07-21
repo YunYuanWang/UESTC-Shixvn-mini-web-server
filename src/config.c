@@ -196,6 +196,8 @@ static int parse_flat_line(const char *key, const char *value,
         config->log_max_lines = atoi(value);
     } else if (strcmp(key, "log_max_roll_files") == 0) {
         config->log_max_roll_files = atoi(value);
+    } else if (strcmp(key, "auth_user_file") == 0) {
+        copy_text(config->auth_user_file, sizeof(config->auth_user_file), value);
     } else if (strcmp(key, "max_connections") == 0) {
         config->max_connections = atoi(value);
     } else if (strcmp(key, "max_request_bytes") == 0) {
@@ -414,6 +416,8 @@ static int parse_location_directive(const char *location_line,
         int method_count = 0;
         char methods_storage[8][16];
 
+        char auth_realm[64] = "";
+        char auth_role[32] = "";
         handler_name[0] = '\0';
 
         while (fgets(line, sizeof(line), fp) != NULL) {
@@ -446,11 +450,11 @@ static int parse_location_directive(const char *location_line,
                 }
                 {
                     int k;
-                    /* v1.5: one entry per (method, path) */
                     for (k = 0; k < method_count; k++) {
                         if (route_table_add(config->route_table,
                                             methods_storage[k],
-                                            path, match_type, htype) != 0) {
+                                            path, match_type, htype,
+                                            auth_realm, auth_role) != 0) {
                             return -1;
                         }
                     }
@@ -470,6 +474,18 @@ static int parse_location_directive(const char *location_line,
                     if (strcmp(key, "handler") == 0) {
                         copy_text(handler_name, sizeof(handler_name), value);
                         has_handler = 1;
+                    } else if (strcmp(key, "auth_basic") == 0) {
+                        /* Remove optional surrounding quotes */
+                        char *v = value;
+                        if (v[0] == '"' || v[0] == '\'') {
+                            size_t vl = strlen(v);
+                            if (vl > 1 && (v[vl-1] == '"' || v[vl-1] == '\''))
+                                v[vl-1] = '\0';
+                            v++;
+                        }
+                        copy_text(auth_realm, sizeof(auth_realm), v);
+                    } else if (strcmp(key, "auth_role") == 0) {
+                        copy_text(auth_role, sizeof(auth_role), value);
                     } else if (strcmp(key, "methods") == 0) {
                         char *saveptr, *token;
                         copy_text(methods_buf, sizeof(methods_buf), value);
@@ -859,7 +875,14 @@ static int json_parse_route(const char *p, route_table_t *rt) {
         return -1;
     }
 
-    return route_table_add(rt, method, path, match_type, htype);
+    /* v1.6: optional auth fields */
+    {
+        char auth_realm[64] = "", auth_role[32] = "";
+        const char *av;
+        av = json_find_key(p, "auth"); if (av) json_get_str(av, auth_realm, sizeof(auth_realm));
+        av = json_find_key(p, "role");  if (av) json_get_str(av, auth_role, sizeof(auth_role));
+        return route_table_add(rt, method, path, match_type, htype, auth_realm, auth_role);
+    }
 }
 
 /* Parse the "routes" array from JSON */
@@ -1099,20 +1122,19 @@ static int yaml_parse_route_map(char **lines, int *idx, int total,
     char method[16] = "";
     char path[256] = "";
     char handler_name[MAX_HANDLER_NAME_LEN] = "";
+    char auth_realm[64] = "";
+    char auth_role[32] = "";
 
     while (*idx < total) {
         char *l = lines[*idx];
         if (l[0] == '\0' || l[0] == '#') { (*idx)++; continue; }
         int indent = yaml_indent(l);
-        /* Stop when we go back to list level or above */
         if (indent <= list_indent && !(l[indent] == '-' && l[indent+1] == ' ')) break;
 
         const char *content_start = l;
-        /* Strip "- " prefix if this line is a list item */
         if (l[indent] == '-' && l[indent+1] == ' ') {
             content_start = l + indent + 2;
         }
-        /* Skip leading whitespace */
         while (*content_start == ' ') content_start++;
 
         if (strchr(content_start, ':')) {
@@ -1133,6 +1155,10 @@ static int yaml_parse_route_map(char **lines, int *idx, int total,
                 strncpy(path, val_buf, sizeof(path)-1);
             } else if (strcmp(key, "handler") == 0) {
                 strncpy(handler_name, val_buf, sizeof(handler_name)-1);
+            } else if (strcmp(key, "auth") == 0) {
+                strncpy(auth_realm, val_buf, sizeof(auth_realm)-1);
+            } else if (strcmp(key, "role") == 0) {
+                strncpy(auth_role, val_buf, sizeof(auth_role)-1);
             }
         }
         (*idx)++;
@@ -1153,7 +1179,7 @@ static int yaml_parse_route_map(char **lines, int *idx, int total,
             fprintf(stderr, "ERROR: unknown handler '%s' for '%s'\n", handler_name, path);
             return -1;
         }
-        return route_table_add(rt, method, path, match_type, htype);
+        return route_table_add(rt, method, path, match_type, htype, auth_realm, auth_role);
     }
     return 0;
 }

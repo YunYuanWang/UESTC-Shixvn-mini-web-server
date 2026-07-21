@@ -577,6 +577,15 @@ int main(int argc, char *argv[]) {
         log_set_level(master_config.log_level);
         log_infof("log_level set to: %d", (int)master_config.log_level);
 
+        /* v1.6: load auth credentials */
+        if (master_config.auth_user_file[0]) {
+            extern int auth_load_file(const char *path);
+            if (auth_load_file(master_config.auth_user_file) != 0) {
+                fprintf(stderr, "WARNING: failed to load auth file: %s\n",
+                        master_config.auth_user_file);
+            }
+        }
+
         /* v1.2.1: store config globally for virtual host routing */
         config_set_global(&master_config);
 

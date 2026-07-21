@@ -803,6 +803,27 @@ int epoll_server_run(const char *host, int port) {
                         #undef HAS_CLOSE
                     }
 
+                    /* ---- v1.6: extract Authorization header ---- */
+                    {
+                        const char *auth_start = strstr(conn->recv_buf, "Authorization:");
+                        if (!auth_start) auth_start = strstr(conn->recv_buf, "authorization:");
+                        if (auth_start) {
+                            auth_start += 14;
+                            int k = 0;
+                            while (*auth_start == ' ' || *auth_start == '\t') auth_start++;
+                            while (auth_start[k] && auth_start[k] != '\r'
+                                   && auth_start[k] != '\n'
+                                   && k < (int)sizeof(req.authorization) - 1) {
+                                req.authorization[k] = auth_start[k];
+                                k++;
+                            }
+                            req.authorization[k] = '\0';
+                            { char *e = req.authorization + strlen(req.authorization) - 1;
+                              while (e >= req.authorization && (*e == ' ' || *e == '\t'))
+                                  *e-- = '\0'; }
+                        }
+                    }
+
                     /* ---- v1.2.1: extract Host header for virtual host routing ---- */
                     {
                         const char *hp;

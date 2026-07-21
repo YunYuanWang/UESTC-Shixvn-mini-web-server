@@ -248,6 +248,22 @@ void user_store_shm_load_csv(void *base, const char *path) {
     }
 }
 
+/* ---- v1.6: auth check against CSV user data ---- */
+int user_store_auth(const char *mobile, const char *password) {
+    if (mobile == NULL || password == NULL || g_shm_base == NULL) return 0;
+    ListNode *cur = LIST(g_header->head_off);
+    cur = LIST(cur->next_off);
+    while (cur != NULL) {
+        if (cur->used &&
+            strcmp(cur->data.mobile, mobile) == 0 &&
+            strcmp(cur->data.password, password) == 0) {
+            return 1;
+        }
+        cur = LIST(cur->next_off);
+    }
+    return 0;
+}
+
 /* ---- find (linked list traversal, offset-based) ---- */
 
 ListNode *user_store_find(const char *name) {

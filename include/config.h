@@ -45,6 +45,7 @@ typedef struct {
     char log_path[128];         /* global fallback log path */
     char system_log[128];       /* system log path (v1.2) */
     char access_log[128];       /* global access log path (v1.2) */
+    char auth_user_file[128];    /* .htpasswd file path (v1.6) */
     log_level_t log_level;       /* minimum log level (v1.5) */
     char error_log[128];         /* error log path (v1.5) */
     log_level_t error_log_level; /* error log filter level (v1.5) */
