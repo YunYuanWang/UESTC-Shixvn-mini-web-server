@@ -248,6 +248,24 @@ void user_store_shm_load_csv(void *base, const char *path) {
     }
 }
 
+/* ---- v1.7: look up user name by mobile/login ---- */
+const char *user_store_lookup_name(const char *login_id) {
+    if (login_id == NULL || g_shm_base == NULL) return NULL;
+    ListNode *cur = LIST(g_header->head_off);
+    cur = LIST(cur->next_off);
+    while (cur != NULL) {
+        if (cur->used) {
+            /* Match by mobile or name */
+            if (strcmp(cur->data.mobile, login_id) == 0 ||
+                strcmp(cur->data.name, login_id) == 0) {
+                return cur->data.name;
+            }
+        }
+        cur = LIST(cur->next_off);
+    }
+    return NULL;
+}
+
 /* ---- v1.6: auth check against CSV user data ---- */
 int user_store_auth(const char *mobile, const char *password) {
     if (mobile == NULL || password == NULL || g_shm_base == NULL) return 0;

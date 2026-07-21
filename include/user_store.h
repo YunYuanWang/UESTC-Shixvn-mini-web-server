@@ -95,4 +95,7 @@ int user_store_search(const search_criteria_t *criteria, char *buf, int buf_size
 /* v1.6: authenticate a CSV user by mobile + password */
 int user_store_auth(const char *mobile, const char *password);
 
+/* v1.7: look up a user's display name by login ID (mobile or name) */
+const char *user_store_lookup_name(const char *login_id);
+
 #endif

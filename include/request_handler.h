@@ -17,6 +17,9 @@ typedef struct {
 
     /* v1.6: Authorization header for HTTP Basic Auth */
     char authorization[256];     /* "Basic <base64>" or empty */
+
+    /* v1.7: Cookie header for Session auth */
+    char cookie[512];            /* raw Cookie header value */
 } request_t;
 
 /* ---- v1.5: handler function signature ---- */

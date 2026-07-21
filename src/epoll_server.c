@@ -803,6 +803,20 @@ int epoll_server_run(const char *host, int port) {
                         #undef HAS_CLOSE
                     }
 
+                    /* ---- v1.7: extract Cookie header ---- */
+                    {
+                        const char *ck = strstr(conn->recv_buf, "Cookie:");
+                        if (!ck) ck = strstr(conn->recv_buf, "cookie:");
+                        if (ck) {
+                            ck += 7; int k = 0;
+                            while (*ck == ' ' || *ck == '\t') ck++;
+                            while (ck[k] && ck[k] != '\r' && ck[k] != '\n'
+                                   && k < (int)sizeof(req.cookie) - 1)
+                                { req.cookie[k] = ck[k]; k++; }
+                            req.cookie[k] = '\0';
+                        }
+                    }
+
                     /* ---- v1.6: extract Authorization header ---- */
                     {
                         const char *auth_start = strstr(conn->recv_buf, "Authorization:");

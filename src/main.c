@@ -586,6 +586,10 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        /* v1.7: initialize session storage */
+        extern void session_init(void);
+        session_init();
+
         /* v1.2.1: store config globally for virtual host routing */
         config_set_global(&master_config);
 

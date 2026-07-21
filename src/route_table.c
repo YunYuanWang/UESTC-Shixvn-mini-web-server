@@ -43,6 +43,8 @@ static const handler_registry_t g_handler_registry[] = {
     { "index",                 HANDLER_INDEX                 },
     { "blog",                  HANDLER_BLOG                  },
     { "static",                HANDLER_STATIC                },
+    { "login",                 HANDLER_LOGIN                 },
+    { "logout",                HANDLER_LOGOUT                },
     { NULL,                    HANDLER_NONE                  }
 };
 

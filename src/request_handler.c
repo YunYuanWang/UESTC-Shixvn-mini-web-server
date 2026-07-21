@@ -1,6 +1,7 @@
 #include "../include/config.h"
 #include "../include/request_handler.h"
 #include "../include/route_table.h"
+#include "../include/session.h"
 #include "../include/http_response.h"
 #include "../include/http_parser.h"
 #include "../include/log.h"
@@ -19,6 +20,10 @@
 
 /* v1.4: forward declaration for URL path decoding */
 static char *url_decode_path(char *src);
+
+/* v1.6/v1.7: forward declarations for auth */
+static const char *auth_lookup(const char *username, const char *password);
+static int auth_role_matches(const char *user_role, const char *required_role);
 
 /* ---- thread-local worker label (set by thread pool) ---- */
 static __thread int g_worker_id = 0;
@@ -596,15 +601,163 @@ static int handle_sleep(const request_t *req, char *body, int body_size,
 static int handle_index(const request_t *req, char *body, int body_size,
                          const char *captured, char *output, int output_size) {
     (void)captured;
+
+    /* v1.7: Get username from session */
+    const char *username = NULL;
+    if (req->cookie[0] != '\0') {
+        const char *sid_start = strstr(req->cookie, "session_id=");
+        if (sid_start) {
+            sid_start += 11; char sid[SESSION_ID_LEN]; int si = 0;
+            while (sid_start[si] && sid_start[si] != ';' && sid_start[si] != ' '
+                   && si < (int)sizeof(sid) - 1) sid[si++] = sid_start[si];
+            sid[si] = '\0';
+            session_t *s = session_lookup(sid);
+            if (s) username = s->username;
+        }
+    }
+
+    /* Try to serve index.html */
     const char *ct;
     int file_len = http_serve_file(g_current_root, "/", body, body_size, &ct);
-    if (file_len > 0) {
-        return http_build_response(200, "OK", ct, body, file_len,
-                                   req->keep_alive > 0 ? req->keep_alive : 1,
-                                   output, output_size);
+    if (file_len <= 0) {
+        /* No index.html — show welcome page */
+        if (username) {
+            char initial = (username[0]>='a'?(char)(username[0]-32):username[0]);
+            char page[2048];
+            snprintf(page, sizeof(page),
+                "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>MiniWeb</title><style>"
+                "body{font-family:system-ui,sans-serif;background:#f1f5f9;margin:0;}"
+                "nav{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;"
+                "align-items:center;justify-content:space-between;height:52px;box-shadow:0 1px 3px #0001;}"
+                ".brand{font-weight:700;font-size:1.1rem;color:#6366f1;text-decoration:none;}"
+                ".ui{display:flex;align-items:center;gap:10px;font-size:.85rem;}"
+                ".av{width:28px;height:28px;border-radius:50%%;background:linear-gradient(135deg,#6366f1,#4f46e5);"
+                "color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;}"
+                ".lo{padding:5px 14px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;"
+                "border-radius:7px;text-decoration:none;font-weight:500;}"
+                ".hero{text-align:center;padding:80px 20px;}"
+                ".hero h1{font-size:1.8rem;color:#1e293b;margin-bottom:8px;}"
+                ".hero p{color:#64748b;margin-bottom:24px;}"
+                ".hero a{display:inline-block;margin:4px;padding:10px 22px;background:#fff;color:#1e293b;"
+                "text-decoration:none;border-radius:10px;font-weight:500;border:1px solid #e2e8f0;}"
+                ".hero a:hover{background:#f1f5f9;}"
+                "</style></head><body>\n"
+                "<nav><a href=\"/\" class=\"brand\">⚡ MiniWeb</a>"
+                "<div class=\"ui\"><div class=\"av\">%c</div><span>%s</span>"
+                "<a href=\"/logout\" class=\"lo\">Logout</a></div></nav>\n"
+                "<div class=\"hero\"><h1>Welcome, %s!</h1>"
+                "<p><a href=\"/users\">📋 User List</a><a href=\"/search\">🔍 Search</a>"
+                "<a href=\"/hello\">👋 Hello</a></p></div></body></html>\n",
+                initial, username, username);
+            return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                       page, (int)strlen(page),
+                                       req->keep_alive>0?req->keep_alive:1, output, output_size);
+        }
+        const char *welcome =
+            "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>MiniWeb</title><style>"
+            "body{font-family:system-ui,sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b,#334155);"
+            "min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;}"
+            ".hero{color:#fff;}.hero h1{font-size:2.5rem;margin-bottom:12px;}"
+            ".hero p{color:#94a3b8;margin-bottom:32px;}"
+            ".hero a{padding:14px 36px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;"
+            "text-decoration:none;border-radius:12px;font-weight:600;}"
+            "</style></head><body><div class=\"hero\"><h1>⚡ MiniWeb Server v1.7</h1>"
+            "<p>Lightweight HTTP Server · Session/Cookie Auth</p>"
+            "<a href=\"/login\">Sign In</a></div></body></html>\n";
+        return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                   welcome, (int)strlen(welcome),
+                                   req->keep_alive>0?req->keep_alive:1, output, output_size);
     }
-    return build_http_response(output, output_size, 404, "NOT FOUND",
-                               "404 Not Found\n");
+
+    /* Resolve display name: for CSV users (mobile login), look up real name */
+    const char *display_name = username;
+    if (username) {
+        extern const char *user_store_lookup_name(const char *mobile);
+        const char *real = user_store_lookup_name(username);
+        if (real) display_name = real;
+    }
+
+    /* Has index.html — inject nav bar if logged in, otherwise serve as-is */
+    if (!username) {
+        /* Add Cache-Control to prevent browser caching old version */
+        char *nocache = output;
+        int hdr_len = snprintf(nocache, output_size,
+            "HTTP/1.1 200 OK\r\n"
+            "Server: MiniWeb/1.7\r\n"
+            "Content-Type: %s\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: %s\r\n"
+            "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+            "Pragma: no-cache\r\n"
+            "Expires: 0\r\n"
+            "\r\n",
+            ct, file_len, req->keep_alive>0?"Keep-Alive":"close");
+        if (hdr_len > 0 && hdr_len < output_size) {
+            int remaining = output_size - hdr_len;
+            if (file_len < remaining) {
+                memcpy(output + hdr_len, body, file_len);
+                return hdr_len + file_len;
+            }
+        }
+        return http_build_response(200, "OK", ct, body, file_len,
+                                   req->keep_alive>0?req->keep_alive:1, output, output_size);
+    }
+
+    /* Logged in: inject nav bar after <body...> tag */
+    const char *body_tag = body;
+    while (*body_tag && strncasecmp(body_tag, "<body", 5) != 0) body_tag++;
+    if (!*body_tag) body_tag = strstr(body, "<BODY");
+    if (body_tag) {
+        const char *tag_end = strchr(body_tag, '>');
+        if (tag_end) {
+            int head_len = (int)(tag_end + 1 - body);       /* up to and including > */
+            int tail_len = file_len - head_len;              /* rest of page content */
+            char initial = (username[0]>='a'?(char)(username[0]-32):username[0]);
+            /* Build nav HTML */
+            char nav[2048]; int nav_len = 0;
+            #define NADD(s) do { int l=(int)strlen(s); if(nav_len+l<2048){memcpy(nav+nav_len,s,l);nav_len+=l;} } while(0)
+            /* Simple compact nav: brand | Users Search | avatar name Logout */
+            NADD("<style>.mwnav{background:#1e293b;padding:0 24px;display:flex;"
+                "align-items:center;justify-content:space-between;height:48px;"
+                "font-family:system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.2);}"
+                ".mwnav a{text-decoration:none;transition:opacity .2s;}"
+                ".mwnav .brand{font-weight:800;font-size:17px;color:#f8fafc;}"
+                ".mwnav .link{padding:6px 12px;color:#94a3b8;font-size:13px;font-weight:500;border-radius:6px;}"
+                ".mwnav .link:hover{color:#f8fafc;background:rgba(255,255,255,0.08);}"
+                ".mwnav .av{width:30px;height:30px;border-radius:50%;"
+                "background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;"
+                "display:inline-flex;align-items:center;justify-content:center;"
+                "font-weight:700;font-size:13px;box-shadow:0 2px 6px rgba(99,102,241,0.4);}"
+                ".mwnav .uname{color:#e2e8f0;font-size:13px;font-weight:500;}"
+                ".mwnav .lo{padding:6px 16px;background:rgba(255,255,255,0.1);color:#f1f5f9;"
+                "border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;}"
+                ".mwnav .lo:hover{background:#dc2626;border-color:#dc2626;}"
+                "</style>\n<div class=\"mwnav\">\n"
+                "<div style=\"display:flex;align-items:center;gap:18px;\">\n"
+                "<a href=\"/\" class=\"brand\">⚡ MiniWeb</a>\n"
+                "<a href=\"/users\" class=\"link\">Users</a>\n"
+                "<a href=\"/search\" class=\"link\">Search</a>\n"
+                "</div>\n"
+                "<div style=\"display:flex;align-items:center;gap:10px;\">\n"
+                "<span class=\"av\">");
+            nav[nav_len++] = initial;
+            NADD("</span>\n<span class=\"uname\">");
+            { const char *dn = display_name ? display_name : username;
+              int ul=(int)strlen(dn); if(nav_len+ul<2048){memcpy(nav+nav_len,dn,ul);nav_len+=ul;} }
+            NADD("</span>\n<a href=\"/logout\" class=\"lo\">Logout</a>\n"
+                "</div>\n</div>\n");
+            #undef NADD
+            /* Make room in body buffer: shift tail content to make space for nav */
+            if (head_len + nav_len + tail_len < body_size) {
+                memmove(body + head_len + nav_len, body + head_len, tail_len);
+                memcpy(body + head_len, nav, nav_len);
+                file_len = head_len + nav_len + tail_len;
+                body[file_len] = '\0';
+            }
+        }
+    }
+    return http_build_response(200, "OK", ct, body, file_len,
+                               req->keep_alive>0?req->keep_alive:1, output, output_size);
 }
 
 /* ---- User CRUD handlers ---- */
@@ -777,7 +930,49 @@ static int handle_search(const request_t *req, char *body, int body_size,
                           const char *captured, char *output, int output_size) {
     (void)captured;
 
-    /* Check Content-Type */
+    /* GET /search → return search form page */
+    if (strcmp(req->method, "GET") == 0) {
+        const char *form =
+            "<!DOCTYPE html>\n<html lang=\"en\"><head>\n<meta charset=\"utf-8\">\n"
+            "<title>Search — MiniWeb</title>\n<style>\n"
+            "*{margin:0;padding:0;box-sizing:border-box;}\n"
+            "body{font-family:system-ui,sans-serif;background:#f1f5f9;min-height:100vh;}\n"
+            "nav{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;"
+            "align-items:center;justify-content:space-between;height:56px;box-shadow:0 1px 3px #0001;}\n"
+            ".brand{font-weight:700;font-size:1.1rem;color:#6366f1;text-decoration:none;}\n"
+            ".nav-right a{padding:6px 16px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;"
+            "border-radius:8px;font-size:.82rem;text-decoration:none;font-weight:500;}\n"
+            ".nav-right a:hover{background:#fecaca;}\n"
+            "main{max-width:640px;margin:40px auto;padding:0 20px;}\n"
+            ".card{background:#fff;border-radius:16px;padding:32px;box-shadow:0 1px 3px #0001;}\n"
+            "h1{font-size:1.3rem;margin-bottom:20px;color:#1e293b;}\n"
+            ".field{margin-bottom:14px;}\n"
+            ".field label{display:block;font-size:.85rem;color:#64748b;margin-bottom:4px;}\n"
+            ".field input{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:.95rem;"
+            "outline:none;transition:border-color .2s;}\n"
+            ".field input:focus{border-color:#6366f1;}\n"
+            "button{width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;"
+            "border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;}\n"
+            "button:hover{opacity:.92;}\n"
+            ".back{margin-top:16px;text-align:center;}\n"
+            ".back a{color:#6366f1;text-decoration:none;font-size:.85rem;}\n"
+            "</style></head><body>\n<nav>\n<a href=\"/\" class=\"brand\">⚡ MiniWeb</a>\n"
+            "<div class=\"nav-right\"><a href=\"/logout\">Logout</a></div>\n</nav>\n"
+            "<main>\n<div class=\"card\">\n<h1>🔍 User Search</h1>\n"
+            "<form method=\"post\" action=\"/search\" enctype=\"application/x-www-form-urlencoded\">\n"
+            "<div class=\"field\"><label>Name</label><input type=\"text\" name=\"name\" placeholder=\"e.g. 赵安\" autofocus></div>\n"
+            "<div class=\"field\"><label>Phone</label><input type=\"text\" name=\"phone\" placeholder=\"e.g. 138\"></div>\n"
+            "<div class=\"field\"><label>Email</label><input type=\"text\" name=\"email\" placeholder=\"e.g. @example.com\"></div>\n"
+            "<button type=\"submit\">Search</button>\n</form>\n"
+            "<div class=\"back\"><a href=\"/\">← Back to Dashboard</a></div>\n"
+            "</div>\n</main>\n</body></html>\n";
+        return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                   form, (int)strlen(form),
+                                   req->keep_alive > 0 ? req->keep_alive : 1,
+                                   output, output_size);
+    }
+
+    /* POST /search → process search (existing logic) */
     if (req->content_type[0] == '\0' ||
         strcasecmp(req->content_type,
                    "application/x-www-form-urlencoded") != 0) {
@@ -947,13 +1142,21 @@ static int handle_search(const request_t *req, char *body, int body_size,
                                        output, output_size);
         }
 
-        match_count = user_store_search(&criteria, body, body_size);
+        { int capped = body_size; if (capped > 2*1024*1024) capped = 2*1024*1024;
+          match_count = user_store_search(&criteria, body, capped); }
         if (match_count < 0) {
             return http_build_response(500, "INTERNAL SERVER ERROR",
                                        "text/plain; charset=utf-8",
                                        "500 Internal Server Error\n", 25,
                                        0, output, output_size);
         }
+	if (match_count >= 500) {
+	    int blen = (int)strlen(body);
+	    snprintf(body + blen, body_size - blen,
+	             "\n<p style=\"color:#dc2626;text-align:center;\">"
+	             "⚠ Showing first 500 of %d+ matches. Narrow your search.</p>\n",
+	             match_count);
+	}
 
         return http_build_response(200, "OK", "text/html; charset=utf-8",
                                    body, (int)strlen(body),
@@ -1037,6 +1240,161 @@ static int handle_static(const request_t *req, char *body, int body_size,
     return -1;  /* signal: file not found, caller handles 404 */
 }
 
+/* ---- v1.7: Login / Logout handlers ---- */
+
+static int handle_login(const request_t *req, char *body, int body_size,
+                         const char *captured, char *output, int output_size) {
+    (void)captured;
+
+    /* GET /login → return styled HTML login form */
+    if (strcmp(req->method, "GET") == 0) {
+        const char *form =
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\"><head>\n"
+            "<meta charset=\"utf-8\">\n"
+            "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
+            "<title>Login — MiniWeb Server v1.7</title>\n"
+            "<style>\n"
+            "*{margin:0;padding:0;box-sizing:border-box;}\n"
+            "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+            "background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#334155 100%);"
+            "min-height:100vh;display:flex;align-items:center;justify-content:center;}\n"
+            ".container{width:100%;max-width:400px;padding:20px;}\n"
+            ".logo{text-align:center;margin-bottom:32px;}\n"
+            ".logo h1{font-size:1.8rem;color:#f8fafc;font-weight:700;letter-spacing:-0.5px;}\n"
+            ".logo p{color:#94a3b8;font-size:0.9rem;margin-top:6px;}\n"
+            ".card{background:#fff;border-radius:16px;padding:40px;box-shadow:0 25px 50px rgba(0,0,0,0.3);}\n"
+            ".card h2{font-size:1.25rem;color:#0f172a;margin-bottom:24px;font-weight:600;}\n"
+            ".field{margin-bottom:16px;}\n"
+            ".field label{display:block;font-size:0.82rem;color:#64748b;margin-bottom:6px;font-weight:500;}\n"
+            ".field input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;"
+            "font-size:0.95rem;color:#0f172a;transition:border-color .2s;outline:none;}\n"
+            ".field input:focus{border-color:#6366f1;}\n"
+            ".field input::placeholder{color:#cbd5e1;}\n"
+            "button{width:100%;padding:14px;background:linear-gradient(135deg,#6366f1,#4f46e5);"
+            "color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;"
+            "cursor:pointer;transition:opacity .2s,transform .1s;margin-top:8px;}\n"
+            "button:hover{opacity:0.92;}\n"
+            "button:active{transform:scale(0.98);}\n"
+            ".error{background:#fef2f2;color:#dc2626;padding:12px 16px;border-radius:10px;"
+            "font-size:0.85rem;margin-bottom:16px;border:1px solid #fecaca;display:none;}\n"
+            ".footer{text-align:center;margin-top:24px;color:#94a3b8;font-size:0.78rem;}\n"
+            "</style></head><body>\n"
+            "<div class=\"container\">\n"
+            "<div class=\"logo\">\n"
+            "<h1>⚡ MiniWeb</h1>\n"
+            "<p>Lightweight HTTP Server v1.7</p>\n"
+            "</div>\n"
+            "<div class=\"card\">\n"
+            "<h2>Sign in to continue</h2>\n"
+            "<div class=\"error\" id=\"error\">Invalid username or password</div>\n"
+            "<form method=\"post\" action=\"/login\">\n"
+            "<div class=\"field\">"
+            "<label>Username</label>"
+            "<input type=\"text\" name=\"username\" placeholder=\"Enter your username\" required autofocus>"
+            "</div>\n"
+            "<div class=\"field\">"
+            "<label>Password</label>"
+            "<input type=\"password\" name=\"password\" placeholder=\"Enter your password\" required>"
+            "</div>\n"
+            "<button type=\"submit\">Sign In</button>\n"
+            "</form>\n</div>\n"
+            "<div class=\"footer\">Session Cookie Authentication · HttpOnly</div>\n"
+            "</div>\n</body></html>\n";
+        return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                   form, (int)strlen(form), 0, output, output_size);
+    }
+
+    /* POST /login → authenticate and set session cookie */
+    if (strcmp(req->method, "POST") == 0) {
+        char username[64] = "", password[64] = "";
+        const char *u = strstr(req->body, "username=");
+        const char *p = strstr(req->body, "password=");
+        if (u) { u += 9; int i = 0; while (*u && *u != '&' && i < 63) username[i++] = *u++; username[i] = '\0'; }
+        if (p) { p += 9; int i = 0; while (*p && *p != '&' && i < 63) password[i++] = *p++; password[i] = '\0'; }
+
+        const char *user_role = auth_lookup(username, password);
+        if (user_role) {
+            const char *sid = session_create(username, user_role);
+            if (sid) {
+                return snprintf(output, output_size,
+                    "HTTP/1.1 302 Found\r\n"
+                    "Server: MiniWeb/1.7\r\n"
+                    "Set-Cookie: session_id=%s; Path=/; HttpOnly; Max-Age=%d; SameSite=Lax\r\n"
+                    "Location: /\r\n"
+                    "Content-Length: 0\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "\r\n", sid, SESSION_TTL);
+            }
+        }
+        /* Auth failed → show login page with error */
+        {
+            const char *fail =
+                "<!DOCTYPE html>\n"
+                "<html lang=\"en\"><head>\n"
+                "<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
+                "<title>Login Failed — MiniWeb</title>\n"
+                "<style>\n"
+                "*{margin:0;padding:0;box-sizing:border-box;}\n"
+                "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+                "background:linear-gradient(135deg,#0f172a 0 P0,#1e293b 50 P0,#334155 100 P0);"
+                "min-height:100vh;display:flex;align-items:center;justify-content:center;}\n"
+                ".container{width:100 P0;max-width:420px;padding:20px;text-align:center;}\n"
+                ".card{background:#fff;border-radius:16px;padding:48px 40px;box-shadow:0 25px 50px rgba(0,0,0,0.3);}\n"
+                ".icon{font-size:3rem;margin-bottom:16px;}\n"
+                "h1{color:#dc2626;font-size:1.3rem;margin-bottom:8px;}\n"
+                "p{color:#64748b;font-size:0.9rem;margin-bottom:24px;}\n"
+                "a{display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#6366f1,#4f46e5);"
+                "color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:0.9rem;}\n"
+                "a:hover{opacity:0.9;}\n"
+                "</style></head><body>\n"
+                "<div class=\"container\"><div class=\"card\">\n"
+                "<div class=\"icon\">&#x1f512;</div>\n"
+                "<h1>Login Failed</h1>\n"
+                "<p>Invalid username or password. Please try again.</p>\n"
+                "<a href=\"/login\">Try Again</a>\n"
+                "</div></div></body></html>\n";
+            return http_build_response(401, "UNAUTHORIZED", "text/html; charset=utf-8",
+                                       fail, (int)strlen(fail), 0, output, output_size);
+        }
+    }
+
+    return build_http_response(output, output_size, 405, "METHOD NOT ALLOWED",
+                               "405 Method Not Allowed\n");
+}
+
+static int handle_logout(const request_t *req, char *body, int body_size,
+                          const char *captured, char *output, int output_size) {
+    (void)body; (void)body_size; (void)captured;
+
+    /* GET or POST — both log out */
+
+    /* Extract session_id from cookie */
+    const char *cookie = req->cookie;
+    const char *sid_start = strstr(cookie, "session_id=");
+    if (sid_start) {
+        sid_start += 11;
+        char sid[SESSION_ID_LEN];
+        int i = 0;
+        while (sid_start[i] && sid_start[i] != ';' && sid_start[i] != ' '
+               && i < (int)sizeof(sid) - 1) {
+            sid[i] = sid_start[i]; i++;
+        }
+        sid[i] = '\0';
+        session_destroy(sid);
+    }
+
+    /* Clear cookie + redirect to login */
+    return snprintf(output, output_size,
+        "HTTP/1.1 302 Found\r\n"
+        "Server: MiniWeb/1.7\r\n"
+        "Set-Cookie: session_id=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax\r\n"
+        "Location: /login\r\n"
+        "Content-Length: 0\r\n"
+        "Connection: Keep-Alive\r\n"
+        "\r\n");
+}
+
 /* ---- Handler registry (maps handler_type_t → handler_fn) ---- */
 
 typedef struct {
@@ -1061,6 +1419,8 @@ static const handler_reg_t g_handler_registry[] = {
     { HANDLER_SEARCH,               handle_search               },
     { HANDLER_BLOG,                 handle_blog                 },
     { HANDLER_STATIC,               handle_static               },
+    { HANDLER_LOGIN,                handle_login                },
+    { HANDLER_LOGOUT,               handle_logout               },
     { HANDLER_NONE,                 NULL                        }  /* sentinel */
 };
 
@@ -1086,7 +1446,10 @@ static void route_table_populate_defaults(route_table_t *rt) {
     route_table_add(rt, "GET",    "/help",    MATCH_EXACT, HANDLER_HELP, "", "");
     route_table_add(rt, "GET",    "/users",   MATCH_EXACT, HANDLER_USER_LIST, "", "");
     route_table_add(rt, "POST",   "/users",   MATCH_EXACT, HANDLER_USER_ADD, "", "");
+    route_table_add(rt, "GET",    "/search",  MATCH_EXACT, HANDLER_SEARCH, "", "");
     route_table_add(rt, "POST",   "/search",  MATCH_EXACT, HANDLER_SEARCH, "", "");
+    route_table_add(rt, "GET",    "/logout",  MATCH_EXACT, HANDLER_LOGOUT, "", "");
+    route_table_add(rt, "POST",   "/logout",  MATCH_EXACT, HANDLER_LOGOUT, "", "");
     route_table_add(rt, "POST",   "/delete",  MATCH_EXACT, HANDLER_DELETE_FORM, "", "");
     route_table_add(rt, "GET",    "/blog",    MATCH_EXACT, HANDLER_BLOG, "", "");
     route_table_add(rt, "HEAD",   "/blog",    MATCH_EXACT, HANDLER_BLOG, "", "");
@@ -1252,68 +1615,103 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
     }
 
     if (result.entry != NULL) {
-        /* v1.6: check authentication if this route requires a role */
+        /* v1.6/v1.7: check authentication if this route requires a role */
         if (result.entry->required_role[0] != '\0') {
-            const char *auth_header = req->authorization;
+            const char *user_role = NULL;
             const char *realm = result.entry->auth_realm;
             if (realm[0] == '\0') realm = "Restricted";
 
-            /* Check for Authorization: Basic ... header */
-            if (auth_header[0] == '\0' ||
-                strncasecmp(auth_header, "Basic ", 6) != 0) {
-                /* No credentials → 401 */
-                return snprintf(output, size,
-                    "HTTP/1.1 401 Unauthorized\r\n"
-                    "Server: MiniWeb/1.6\r\n"
-                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
-                    "Content-Type: text/plain; charset=utf-8\r\n"
-                    "Content-Length: 0\r\n"
-                    "Connection: close\r\n"
-                    "\r\n", realm);
+            /* ---- v1.7: try Cookie session first ---- */
+            if (req->cookie[0] != '\0') {
+                const char *sid_start = strstr(req->cookie, "session_id=");
+                if (sid_start) {
+                    sid_start += 11;
+                    char sid[SESSION_ID_LEN];
+                    int si = 0;
+                    while (sid_start[si] && sid_start[si] != ';'
+                           && sid_start[si] != ' ' && si < (int)sizeof(sid) - 1)
+                        sid[si++] = sid_start[si];
+                    sid[si] = '\0';
+                    session_t *s = session_lookup(sid);
+                    if (s) user_role = s->role;
+                }
             }
 
-            /* Decode Base64 credentials */
-            char decoded[256];
-            int dlen = base64_decode(auth_header + 6, decoded, sizeof(decoded));
-            if (dlen < 0) {
-                /* Malformed Base64 → 400 */
-                return build_http_response(output, size, 400, "BAD REQUEST",
-                                           "400 Bad Request: invalid Base64\n");
-            }
-
-            /* Split into username:password */
-            char *colon = strchr(decoded, ':');
-            if (!colon) {
-                return snprintf(output, size,
-                    "HTTP/1.1 401 Unauthorized\r\n"
-                    "Server: MiniWeb/1.6\r\n"
-                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
-                    "Content-Length: 0\r\n"
-                    "Connection: close\r\n"
-                    "\r\n", realm);
-            }
-            *colon = '\0';
-            const char *username = decoded;
-            const char *password = colon + 1;
-
-            /* Look up credentials */
-            const char *user_role = auth_lookup(username, password);
+            /* ---- v1.6: fallback to Basic Auth ---- */
             if (!user_role) {
-                /* Invalid credentials → 401 */
+                const char *auth_header = req->authorization;
+                if (auth_header[0] != '\0' &&
+                    strncasecmp(auth_header, "Basic ", 6) == 0) {
+                    char decoded[256];
+                    int dlen = base64_decode(auth_header + 6, decoded, sizeof(decoded));
+                    if (dlen < 0) {
+                        return build_http_response(output, size, 400, "BAD REQUEST",
+                                                   "400 Bad Request: invalid Base64\n");
+                    }
+                    char *colon = strchr(decoded, ':');
+                    if (colon) {
+                        *colon = '\0';
+                        user_role = auth_lookup(decoded, colon + 1);
+                    }
+                }
+            }
+
+            /* No valid credentials */
+            if (!user_role) {
+                /* Only show Basic Auth popup if client explicitly sent
+                 * an Authorization header (API client trying Basic Auth). */
+                if (req->authorization[0] != '\0') {
+                    return snprintf(output, size,
+                        "HTTP/1.1 401 Unauthorized\r\n"
+                        "Server: MiniWeb/1.7\r\n"
+                        "WWW-Authenticate: Basic realm=\"%s\"\r\n"
+                        "Content-Type: text/plain; charset=utf-8\r\n"
+                        "Content-Length: 0\r\n"
+                        "Connection: close\r\n"
+                        "\r\n", realm);
+                }
+                /* Browser (no Authorization header) — redirect to login page.
+                 * This avoids triggering the native Basic Auth popup. */
                 return snprintf(output, size,
-                    "HTTP/1.1 401 Unauthorized\r\n"
-                    "Server: MiniWeb/1.6\r\n"
-                    "WWW-Authenticate: Basic realm=\"%s\"\r\n"
+                    "HTTP/1.1 302 Found\r\n"
+                    "Server: MiniWeb/1.7\r\n"
+                    "Location: /login\r\n"
                     "Content-Length: 0\r\n"
                     "Connection: close\r\n"
-                    "\r\n", realm);
+                    "\r\n");
             }
 
             /* Check role */
             if (!auth_role_matches(user_role, result.entry->required_role)) {
-                /* Wrong role → 403 */
-                return build_http_response(output, size, 403, "FORBIDDEN",
-                    "403 Forbidden: insufficient permissions\n");
+                const char *page =
+                    "<!DOCTYPE html>\n<html lang=\"en\"><head>\n"
+                    "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
+                    "<title>403 Forbidden — MiniWeb</title>\n<style>\n"
+                    "*{margin:0;padding:0;box-sizing:border-box;}\n"
+                    "body{font-family:system-ui,sans-serif;background:linear-gradient(135deg,#1e293b,#0f172a);"
+                    "min-height:100vh;display:flex;align-items:center;justify-content:center;}\n"
+                    ".card{background:#fff;border-radius:20px;padding:48px 40px;text-align:center;"
+                    "box-shadow:0 25px 50px rgba(0,0,0,0.3);max-width:440px;}\n"
+                    ".icon{font-size:4rem;margin-bottom:16px;}\n"
+                    "h1{font-size:1.6rem;color:#dc2626;margin-bottom:8px;}\n"
+                    "p{color:#64748b;font-size:0.95rem;margin-bottom:24px;line-height:1.6;}\n"
+                    ".links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}\n"
+                    ".links a{padding:10px 22px;background:#f1f5f9;color:#1e293b;text-decoration:none;"
+                    "border-radius:10px;font-size:0.9rem;font-weight:500;border:1px solid #e2e8f0;transition:all .2s;}\n"
+                    ".links a:hover{background:#e2e8f0;}\n"
+                    ".links a.logout{padding:10px 22px;background:#fee2e2;color:#dc2626;text-decoration:none;"
+                    "border-radius:10px;font-size:0.9rem;font-weight:500;border:1px solid #fecaca;}\n"
+                    ".links a.logout:hover{background:#fecaca;}\n"
+                    "</style></head><body>\n<div class=\"card\">\n"
+                    "<div class=\"icon\">🔒</div>\n<h1>403 Forbidden</h1>\n"
+                    "<p>You don't have permission to access this resource.<br>"
+                    "Please contact the administrator if you believe this is an error.</p>\n"
+                    "<div class=\"links\">\n"
+                    "<a href=\"/\">← Back to Home</a>\n"
+                    "<a href=\"/logout\" class=\"logout\">Logout</a>\n"
+                    "</div>\n</div>\n</body></html>\n";
+                return http_build_response(403, "FORBIDDEN", "text/html; charset=utf-8",
+                                           page, (int)strlen(page), 0, output, size);
             }
         }
 
@@ -1577,6 +1975,20 @@ int request_handler_handle_connection(int conn_fd) {
                     while (*cl_start == ' ' || *cl_start == '\t') cl_start++;
                     req.content_length_hdr = atoi(cl_start);
                     if (req.content_length_hdr < 0) req.content_length_hdr = 0;
+                }
+            }
+
+            /* ---- v1.7: extract Cookie header ---- */
+            {
+                const char *ck = strstr(recv_buf, "Cookie:");
+                if (!ck) ck = strstr(recv_buf, "cookie:");
+                if (ck) {
+                    ck += 7; int k = 0;
+                    while (*ck == ' ' || *ck == '\t') ck++;
+                    while (ck[k] && ck[k] != '\r' && ck[k] != '\n'
+                           && k < (int)sizeof(req.cookie) - 1)
+                        { req.cookie[k] = ck[k]; k++; }
+                    req.cookie[k] = '\0';
                 }
             }
 

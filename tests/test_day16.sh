@@ -129,16 +129,15 @@ check_status "HTTP/1.1 200" \
     "GET /hello → 200" \
     "GET /hello HTTP/1.1\r\nHost: test.local\r\n\r\n"
 
-# ---- Test 2: Admin route, no credentials → 401 ----
+# ---- Test 2: Admin route, no credentials → 302 redirect to /login ----
 echo ""
-echo "--- Test 2: Admin route, no auth → 401 ---"
-check_status "HTTP/1.1 401" \
-    "GET /users, no credentials → 401" \
+echo "--- Test 2: Admin route, no auth → 302 (redirect to login) ---"
+check_status "HTTP/1.1 302" \
+    "GET /users, no credentials → 302" \
     "GET /users HTTP/1.1\r\nHost: test.local\r\n\r\n"
 
-check_header "WWW-Authenticate:" \
-    "401 response has WWW-Authenticate header" \
-    "GET /users HTTP/1.1\r\nHost: test.local\r\n\r\n"
+# WWW-Authenticate is now only sent when client explicitly sends Authorization header
+# Tested implicitly by Test 5 (wrong password — sends Authorization header, gets 401+WWW-Authenticate)
 
 # ---- Test 3: Admin route + admin credentials → 200 ----
 # admin:secret123 = YWRtaW46c2VjcmV0MTIz

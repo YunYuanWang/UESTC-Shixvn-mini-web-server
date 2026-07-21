@@ -60,6 +60,10 @@ typedef enum {
     HANDLER_BLOG,
     HANDLER_STATIC,
 
+    /* v1.7: Session/Cookie auth handlers */
+    HANDLER_LOGIN,
+    HANDLER_LOGOUT,
+
     HANDLER_COUNT
 } handler_type_t;
 

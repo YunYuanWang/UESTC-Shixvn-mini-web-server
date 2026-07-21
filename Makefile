@@ -1,13 +1,13 @@
 all: mini_web_server request_worker EpollServer epoll_client
 
-mini_web_server: obj/config.o obj/route_table.o obj/base64.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o
-	gcc -g -o mini_web_server obj/config.o obj/route_table.o obj/base64.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o -lm -lpthread
+mini_web_server: obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o
+	gcc -g -o mini_web_server obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o -lm -lpthread
 
-request_worker: obj/request_worker.o obj/config.o obj/route_table.o obj/base64.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o request_worker obj/request_worker.o obj/config.o obj/route_table.o obj/base64.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+request_worker: obj/request_worker.o obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o request_worker obj/request_worker.o obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
-EpollServer: obj/epoll_server_main.o obj/config.o obj/route_table.o obj/base64.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o EpollServer obj/epoll_server_main.o obj/config.o obj/route_table.o obj/base64.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+EpollServer: obj/epoll_server_main.o obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o EpollServer obj/epoll_server_main.o obj/config.o obj/route_table.o obj/base64.o obj/session.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
 epoll_client: obj/epoll_client.o
 	gcc -g -o epoll_client obj/epoll_client.o
@@ -20,6 +20,9 @@ obj/route_table.o: src/route_table.c include/route_table.h include/request_handl
 
 obj/base64.o: src/base64.c
 	gcc -g -I./include -c src/base64.c -o obj/base64.o
+
+obj/session.o: src/session.c include/session.h
+	gcc -g -I./include -c src/session.c -o obj/session.o
 
 obj/http_response.o: src/http_response.c include/http_response.h
 	gcc -g -I./include -c src/http_response.c -o obj/http_response.o
