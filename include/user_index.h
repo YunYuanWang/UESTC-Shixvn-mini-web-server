@@ -3,39 +3,33 @@
 
 #include "user_store.h"
 
-/* Red-Black Tree color constants */
+/*
+ * v1.4: Red-Black Tree using offset-based pointers in shared memory.
+ * All node pointers are int32_t byte-offsets from the mmap base.
+ */
+
+/* RBT color constants */
 #define RBT_RED   0
 #define RBT_BLACK 1
 
-typedef struct TreeNode {
-    ListPtr user;
-    struct TreeNode *left;
-    struct TreeNode *right;
-    struct TreeNode *parent;
-    int color;
-} BSTnode;
-
+/* Legacy BST struct (kept for API compatibility, contents are offset-based) */
 typedef struct {
-    BSTnode *root;
-    BSTnode nil;      /* sentinel NIL node, always BLACK */
-    int size;
+    int32_t root_off;     /* offset to root BSTnode */
+    int32_t nil_off;      /* offset to NIL sentinel */
+    int32_t size;
 } BST;
 
+/* ---- API ---- */
 void bst_init(BST *tree);
-int bst_insert(BST *tree, ListPtr user);
-ListPtr bst_find(BST *tree, const char *name);
-ListPtr bst_find_with_steps(BST *tree, const char *name, int *steps, int verbose);
-int bst_delete(BST *tree, const char *name);
+int  bst_insert(BST *tree, ListNode *user);
+ListNode *bst_find(BST *tree, const char *name);
+ListNode *bst_find_with_steps(BST *tree, const char *name, int *steps, int verbose);
+int  bst_delete(BST *tree, const char *name);
 void bst_inorder(BST *tree);
 void bst_free(BST *tree);
-
-/*
- * v1.1: inorder traversal that writes to a buffer.
- * Stops when buf is full. *total is user count, *offset is bytes written.
- */
 void bst_format_users(BST *tree, char *buf, int buf_size, int *total, int *offset);
 
-/* Internal red-black tree helpers */
+/* Internal helpers (exposed for user_store.c) */
 void rbt_left_rotate(BST *tree, BSTnode *x);
 void rbt_right_rotate(BST *tree, BSTnode *x);
 void rbt_insert_fixup(BST *tree, BSTnode *z);

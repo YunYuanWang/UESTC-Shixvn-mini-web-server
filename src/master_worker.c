@@ -276,6 +276,18 @@ int master_worker_run(const server_config_t *config) {
            config->host, config->port, num_workers);
     fflush(stdout);
 
+    /* ---- Phase 2b: init shared memory user store ---- */
+    {
+        void *base = user_store_shm_init();
+        if (base == NULL) {
+            log_error("[Master] shared memory init failed");
+            close(listen_fd);
+            return -1;
+        }
+        user_store_shm_load_csv(base, config->user_file);
+        log_info("[Master] shared memory user store ready");
+    }
+
     /* ---- Phase 3: fork workers ---- */
     g_num_workers = 0;
     for (int i = 0; i < num_workers; i++) {

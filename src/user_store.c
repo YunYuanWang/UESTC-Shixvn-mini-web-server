@@ -1,3 +1,13 @@
+/*
+ * user_store.c — Shared-memory user store with offset-based pointers (v1.4)
+ *
+ * All data lives in a MAP_SHARED|MAP_ANONYMOUS mmap region.
+ * Pointers are replaced with int32_t byte-offsets from the mmap base,
+ * making the entire data structure fork-safe.
+ *
+ * Layout: [shm_header_t] [ListNode pool] [BSTnode pool]
+ */
+
 #include "../include/user_store.h"
 #include "../include/user_index.h"
 #include "../include/log.h"
@@ -8,390 +18,393 @@
 #include <string.h>
 #include <sys/time.h>
 
-static ListNode head_node;
-static BST user_bst;
-static char csv_file_path[512];
+/* ---- globals ---- */
+void *g_shm_base = NULL;       /* mmap base address */
+shm_header_t *g_header = NULL; /* points to offset 0 */
+ListNode *g_list_pool = NULL;  /* ListNode array */
+BSTnode  *g_tree_pool = NULL;  /* BSTnode array */
+BSTnode  *g_nil = NULL;        /* RBT NIL sentinel (first tree slot) */
+BST       g_user_bst;          /* legacy BST wrapper */
+
+/* ---- helpers ---- */
+
+static void *list_at(int32_t off) { return PTR(g_shm_base, off, ListNode); }
+static void *tree_at(int32_t off) { return PTR(g_shm_base, off, BSTnode); }
+#define LIST(off) ((ListNode *)list_at(off))
+#define TREE(off) ((BSTnode *)tree_at(off))
+#define OFF_L(p)   OFF(g_shm_base, p)
+#define OFF_T(p)   OFF(g_shm_base, p)
 
 static void remove_newline(char *text) {
-    /*
-    *   移除换行符
-    */
     text[strcspn(text, "\r\n")] = '\0';
-}
-
-/*
- * insert_head — O(1) head insertion for fastest table building.
- * The linked list is unordered (random order); searches use linear
- * traversal.  Fast lookups are provided by the BST index.
- */
-static void insert_head(ListPtr node) {
-    node->next = head_node.next;
-    head_node.next = node;
 }
 
 static int parse_csv_line(char *line, ElemType *elem) {
     char *token;
     int field;
-
     memset(elem, 0, sizeof(*elem));
-
     token = strtok(line, ",");
     for (field = 0; token != NULL; field++) {
         switch (field) {
-        case 0:
-            strncpy(elem->name, token, sizeof(elem->name) - 1);
-            break;
-        case 1:
-            strncpy(elem->password, token, sizeof(elem->password) - 1);
-            break;
-        case 2:
-            strncpy(elem->birthdate, token, sizeof(elem->birthdate) - 1);
-            break;
-        case 3:
-            strncpy(elem->phone, token, sizeof(elem->phone) - 1);
-            break;
-        case 4:
-            strncpy(elem->mobile, token, sizeof(elem->mobile) - 1);
-            break;
-        case 5:
-            strncpy(elem->email, token, sizeof(elem->email) - 1);
-            break;
+        case 0: strncpy(elem->name, token, sizeof(elem->name) - 1); break;
+        case 1: strncpy(elem->password, token, sizeof(elem->password) - 1); break;
+        case 2: strncpy(elem->birthdate, token, sizeof(elem->birthdate) - 1); break;
+        case 3: strncpy(elem->phone, token, sizeof(elem->phone) - 1); break;
+        case 4: strncpy(elem->mobile, token, sizeof(elem->mobile) - 1); break;
+        case 5: strncpy(elem->email, token, sizeof(elem->email) - 1); break;
         }
         token = strtok(NULL, ",");
     }
+    return (field < 3) ? -1 : 0;
+}
 
-    if (field < 3) {
-        return -1;
+/* ---- allocators from shared pools ---- */
+
+static ListNode *list_alloc(void) {
+    int32_t idx = g_header->list_next_free;
+    if (idx >= USER_STORE_POOL_NODES) return NULL;
+    g_header->list_next_free = idx + 1;
+    ListNode *n = &g_list_pool[idx];
+    memset(n, 0, sizeof(ListNode));
+    n->used = 1;
+    return n;
+}
+
+static BSTnode *tree_alloc(void) {
+    int32_t idx = g_header->tree_next_free;
+    if (idx >= USER_STORE_POOL_NODES) return NULL;
+    g_header->tree_next_free = idx + 1;
+    BSTnode *n = &g_tree_pool[idx];
+    memset(n, 0, sizeof(BSTnode));
+    n->used = 1;
+    return n;
+}
+
+/* ---- shared memory init ---- */
+
+void *user_store_shm_init(void) {
+    size_t list_bytes = USER_STORE_POOL_NODES * sizeof(ListNode);
+    size_t tree_bytes = USER_STORE_POOL_NODES * sizeof(BSTnode);
+    size_t total = sizeof(shm_header_t) + list_bytes + tree_bytes;
+
+    g_shm_base = mmap(NULL, total, PROT_READ | PROT_WRITE,
+                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (g_shm_base == MAP_FAILED) {
+        log_error("user store: mmap failed");
+        return NULL;
     }
 
+    g_header = (shm_header_t *)g_shm_base;
+    memset(g_header, 0, sizeof(*g_header));
+
+    /* init process-shared mutex */
+    {
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+        pthread_mutex_init(&g_header->lock, &attr);
+        pthread_mutexattr_destroy(&attr);
+    }
+
+    /* pool pointers */
+    g_list_pool = (ListNode *)((char *)g_shm_base + sizeof(shm_header_t));
+    g_tree_pool = (BSTnode *)((char *)g_shm_base + sizeof(shm_header_t) + list_bytes);
+
+    /* init NIL sentinel (slot 0 in tree pool) */
+    g_nil = tree_alloc(); /* uses slot 0 */
+    g_nil->color = RBT_BLACK;
+    g_nil->left_off  = OFF_T(g_nil);
+    g_nil->right_off = OFF_T(g_nil);
+    g_nil->parent_off = OFF_T(g_nil);
+    g_nil->user_off = 0;
+
+    g_header->nil_off = OFF_T(g_nil);
+
+    /* init BST wrapper */
+    g_header->root_off = OFF_T(g_nil);
+    g_user_bst.root_off = OFF_T(g_nil);
+    g_user_bst.nil_off  = OFF_T(g_nil);
+    g_user_bst.size = 0;
+
+    /* linked list head (use slot 0 in list pool, empty sentinel) */
+    ListNode *head = list_alloc(); /* uses slot 0 */
+    head->next_off = 0;
+    g_header->head_off = OFF_L(head);
+
+    /* next free starts after sentinel */
+    /* list_next_free already bumped to 1 by list_alloc */
+
+    log_info("user store: shared memory initialized");
+    {
+        char msg[128];
+        snprintf(msg, sizeof(msg),
+                 "user store: shm base=%p, total=%.1f MB, max=%d nodes",
+                 g_shm_base, (double)total / (1024*1024),
+                 USER_STORE_POOL_NODES);
+        log_info(msg);
+    }
+
+    return g_shm_base;
+}
+
+/* legacy wrapper for standalone modes */
+int user_store_load_csv(const char *path) {
+    if (g_shm_base == NULL) {
+        void *base = user_store_shm_init();
+        if (base == NULL) return -1;
+    }
+    user_store_shm_load_csv(g_shm_base, path);
     return 0;
 }
 
-int user_store_load_csv(const char *path) {
+void user_store_shm_load_csv(void *base, const char *path) {
     FILE *fp;
     char line[512];
     int count = 0;
 
-    if (path == NULL) {
-        log_error("user store: csv path is NULL");
-        return -1;
-    }
+    if (base == NULL || path == NULL) return;
 
-    /* remember the path for subsequent save operations */
-    strncpy(csv_file_path, path, sizeof(csv_file_path) - 1);
-    csv_file_path[sizeof(csv_file_path) - 1] = '\0';
-
-    /* initialize BST index */
-    bst_init(&user_bst);
+    /* set globals (workers call this after fork, base is same for all) */
+    g_shm_base = base;
+    g_header = (shm_header_t *)base;
+    size_t list_bytes = USER_STORE_POOL_NODES * sizeof(ListNode);
+    g_list_pool = (ListNode *)((char *)base + sizeof(shm_header_t));
+    g_tree_pool = (BSTnode *)((char *)base + sizeof(shm_header_t) + list_bytes);
+    g_nil = TREE(g_header->nil_off);
+    g_user_bst.root_off = g_header->root_off;
+    g_user_bst.nil_off  = g_header->nil_off;
 
     fp = fopen(path, "r");
     if (fp == NULL) {
         log_error("user store: cannot open user file");
-        return -1;
+        return;
     }
 
-    log_info("user store: loading data...");
-
-    int first_line = 1;
+    log_info("user store: loading data into shared memory...");
 
     while (fgets(line, sizeof(line), fp) != NULL) {
-        ListPtr new_node;
+        ListNode *node;
+        ElemType elem;
 
         remove_newline(line);
-
-        /* skip CSV header line (e.g. "username,password,phone") */
-        if (first_line) {
-            first_line = 0;
-            if (strncmp(line, "username", 8) == 0) {
-                continue;
+        if (line[0] == '\0' || (count == 0 &&
+            (strncmp(line, "username", 8) == 0 ||
+             strncmp(line, "name,", 5) == 0 ||
+             strncmp(line, "baianai", 7) == 0))) {
+            /* skip header lines and first-data-line checks */
+            if (count == 0) {
+                /* Try to detect if this is a header */
+                if (strchr(line, ',') != NULL &&
+                    (strstr(line, "name") || strstr(line, "username"))) {
+                    count++;
+                    continue;
+                }
             }
         }
 
-        if (line[0] == '\0') {
-            continue;
+        if (parse_csv_line(line, &elem) != 0) continue;
+
+        node = list_alloc();
+        if (node == NULL) {
+            log_error("user store: list pool exhausted");
+            break;
+        }
+        node->data = elem;
+
+        /* insert at head of linked list */
+        ListNode *head = LIST(g_header->head_off);
+        node->next_off = head->next_off;
+        head->next_off = OFF_L(node);
+
+        /* insert into RBT */
+        {
+            BSTnode *tn = tree_alloc();
+            if (tn == NULL) {
+                log_error("user store: tree pool exhausted");
+                break;
+            }
+            tn->user_off = OFF_L(node);
+            tn->left_off  = OFF_T(g_nil);
+            tn->right_off = OFF_T(g_nil);
+            tn->parent_off = OFF_T(g_nil);
+            tn->color = RBT_RED;
+            bst_insert(&g_user_bst, node); /* will use tn */
         }
 
-        new_node = (ListPtr)malloc(sizeof(ListNode));
-        if (new_node == NULL) {
-            log_error("user store: malloc failed while loading users");
-            fclose(fp);
-            return -1;
-        }
-
-        if (parse_csv_line(line, &new_node->data) != 0) {
-            free(new_node);
-            continue;
-        }
-
-        new_node->next = NULL;
-        insert_head(new_node);
-
-        /* also insert into BST index */
-        if (bst_insert(&user_bst, new_node) != 0) {
-            log_error("user store: bst_insert failed");
-        }
-
+        g_header->size++;
         count++;
     }
 
     fclose(fp);
+
+    g_header->root_off = g_user_bst.root_off;  /* sync final state */
+    g_header->size = count;
+
     {
-        char buf[64];
-        snprintf(buf, sizeof(buf),
-                 "user store: loaded %d users", count);
-        log_info(buf);
+        char msg[128];
+        snprintf(msg, sizeof(msg),
+                 "user store: loaded %d users into shared memory", count);
+        log_info(msg);
     }
-    return count;
 }
 
+/* ---- find (linked list traversal, offset-based) ---- */
+
 ListNode *user_store_find(const char *name) {
-    ListPtr current;
-
-    if (name == NULL) {
-        log_error("user store: find called with NULL name");
-        return NULL;
+    if (name == NULL || g_shm_base == NULL) return NULL;
+    ListNode *cur = LIST(g_header->head_off);
+    cur = LIST(cur->next_off); /* skip head sentinel */
+    while (cur != NULL) {
+        if (cur->used && strcmp(cur->data.name, name) == 0) return cur;
+        cur = LIST(cur->next_off);
     }
-
-    current = head_node.next;
-    while (current != NULL) {
-        if (strcmp(current->data.name, name) == 0) {
-            log_info("user store: user found");
-            return current;
-        }
-        current = current->next;
-    }
-
-    log_info("user store: user not found");
     return NULL;
 }
 
 ListNode *user_store_find_with_steps(const char *name, int *steps, int verbose) {
-    ListPtr current;
-    int count = 0;
-
-    if (name == NULL) {
-        log_error("user store: find_with_steps called with NULL name");
-        if (steps != NULL) {
-            *steps = 0;
+    if (name == NULL || g_shm_base == NULL) return NULL;
+    ListNode *cur = LIST(g_header->head_off);
+    cur = LIST(cur->next_off);
+    int s = 0;
+    while (cur != NULL) {
+        s++;
+        if (cur->used && strcmp(cur->data.name, name) == 0) {
+            if (steps) *steps = s;
+            return cur;
         }
-        return NULL;
-    }
-
-    if (verbose) {
-        printf("  [Linked list search path]\n");
-    }
-
-    current = head_node.next;
-    while (current != NULL) {
-        count++;
         if (verbose) {
-            if (strcmp(current->data.name, name) == 0) {
-                printf("    step %d: visit \"%s\" -> MATCH\n",
-                       count, current->data.name);
-            } else {
-                printf("    step %d: visit \"%s\" -> not match, next\n",
-                       count, current->data.name);
-            }
+            printf("  [%d] checking: %s\n", s, cur->data.name);
         }
-
-        if (strcmp(current->data.name, name) == 0) {
-            if (steps != NULL) {
-                *steps = count;
-            }
-            log_info("user store: user found with steps");
-            return current;
-        }
-        current = current->next;
+        cur = LIST(cur->next_off);
     }
-
-    if (verbose) {
-        printf("    (end of list, not found after %d steps)\n", count);
-    }
-
-    if (steps != NULL) {
-        *steps = count;
-    }
-    log_info("user store: user not found with steps");
+    if (steps) *steps = s;
     return NULL;
 }
 
+/* ---- add (with mutex) ---- */
+
 int user_store_add(const char *csv_line) {
-    ElemType new_elem;
-    ListPtr existing;
-    ListPtr node;
-    char buffer[512];
-    FILE *fp;
+    ElemType elem;
+    ListNode *node;
+    BSTnode *tn;
 
-    if (csv_line == NULL) {
-        log_error("user store: add called with NULL data");
-        return -1;
+    if (csv_line == NULL || g_shm_base == NULL) return -1;
+    if (parse_csv_line((char *)csv_line, &elem) != 0) return -1;
+
+    pthread_mutex_lock(&g_header->lock);
+
+    /* check duplicate */
+    if (user_store_find(elem.name) != NULL) {
+        pthread_mutex_unlock(&g_header->lock);
+        return 1; /* EXISTS */
     }
 
-    strncpy(buffer, csv_line, sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
-
-    if (parse_csv_line(buffer, &new_elem) != 0) {
-        log_error("user store: failed to parse add data");
-        return -1;
-    }
-
-    existing = user_store_find(new_elem.name);
-    if (existing != NULL) {
-        log_error("user store: user already exists");
-        return -1;
-    }
-
-    node = (ListPtr)malloc(sizeof(ListNode));
+    node = list_alloc();
     if (node == NULL) {
-        log_error("user store: malloc failed while adding user");
+        pthread_mutex_unlock(&g_header->lock);
         return -1;
     }
+    node->data = elem;
 
-    node->data = new_elem;
-    node->next = NULL;
-    insert_head(node);
+    /* insert at head */
+    ListNode *head = LIST(g_header->head_off);
+    node->next_off = head->next_off;
+    head->next_off = OFF_L(node);
 
-    /* also insert into BST index */
-    bst_insert(&user_bst, node);
-
-    fp = fopen(csv_file_path[0] != '\0' ? csv_file_path : "data/users.csv", "a");
-    if (fp != NULL) {
-        fprintf(fp, "%s\n", csv_line);
-        fclose(fp);
+    /* RBT insert */
+    tn = tree_alloc();
+    if (tn == NULL) {
+        pthread_mutex_unlock(&g_header->lock);
+        return -1;
     }
+    tn->user_off = OFF_L(node);
+    tn->left_off  = OFF_T(g_nil);
+    tn->right_off = OFF_T(g_nil);
+    tn->parent_off = OFF_T(g_nil);
+    tn->color = RBT_RED;
+    bst_insert(&g_user_bst, node);
 
-    log_info("user store: user added");
+    g_header->size++;
+    g_header->root_off = g_user_bst.root_off;  /* sync to shared memory */
+    pthread_mutex_unlock(&g_header->lock);
     return 0;
 }
 
-static int user_store_save_csv(const char *path) {
-    FILE *fp;
-    ListPtr current;
+/* ---- delete (with mutex) ---- */
 
-    if (path == NULL) {
-        log_error("user store: save csv path is NULL");
-        return -1;
-    }
-
-    fp = fopen(path, "w");
-    if (fp == NULL) {
-        log_error("user store: failed to open csv for writing");
-        return -1;
-    }
-
-    current = head_node.next;
-    while (current != NULL) {
-        fprintf(fp, "%s,%s,%s,%s,%s,%s\n",
-                current->data.name,
-                current->data.password,
-                current->data.birthdate,
-                current->data.phone,
-                current->data.mobile,
-                current->data.email);
-        current = current->next;
-    }
-
-    fclose(fp);
-    return 0;
-}
-
-/*
- * user_store_delete: deletes a user by name.
- * IMPORTANT ordering: delete from BST index FIRST (only frees the tree
- * node, not the ListNode), THEN delete from linked list and free the
- * ListNode. This order prevents the BST from holding a dangling pointer.
- */
 int user_store_delete(const char *name) {
-    ListPtr prev;
-    ListPtr current;
+    if (name == NULL || g_shm_base == NULL) return -1;
 
-    if (name == NULL) {
-        log_error("user store: delete called with NULL name");
+    pthread_mutex_lock(&g_header->lock);
+
+    /* find in linked list and unlink */
+    ListNode *prev = LIST(g_header->head_off);
+    ListNode *cur = LIST(prev->next_off);
+    int found = 0;
+    while (cur != NULL) {
+        if (cur->used && strcmp(cur->data.name, name) == 0) {
+            prev->next_off = cur->next_off;
+            cur->used = 0;
+            found = 1;
+            break;
+        }
+        prev = cur;
+        cur = LIST(cur->next_off);
+    }
+
+    if (!found) {
+        pthread_mutex_unlock(&g_header->lock);
         return -1;
     }
 
-    /* Step 1: remove from BST index (frees only the tree node) */
-    bst_delete(&user_bst, name);
+    /* remove from RBT */
+    bst_delete(&g_user_bst, name);
 
-    /* Step 2: remove from linked list and free the ListNode */
-    prev = &head_node;
-    current = head_node.next;
-    while (current != NULL) {
-        if (strcmp(current->data.name, name) == 0) {
-            prev->next = current->next;
-            free(current);
-            log_info("user store: user deleted");
-            user_store_save_csv(csv_file_path[0] != '\0' ? csv_file_path : "data/users.csv");
-            return 0;
-        }
-        prev = current;
-        current = current->next;
-    }
-
-    log_error("user store: user not found for deletion");
-    return -1;
+    g_header->size--;
+    g_header->root_off = g_user_bst.root_off;  /* sync to shared memory */
+    pthread_mutex_unlock(&g_header->lock);
+    return 0;
 }
+
+/* ---- free (unmap) ---- */
 
 void user_store_free(void) {
-    ListPtr current;
-    ListPtr next;
-
-    /* free BST index first (frees only tree nodes, not ListNodes) */
-    bst_free(&user_bst);
-
-    /* then free the linked list */
-    current = head_node.next;
-    while (current != NULL) {
-        next = current->next;
-        free(current);
-        current = next;
+    if (g_shm_base) {
+        /* master sets size to 0; workers just unmap */
+        if (g_header) g_header->size = 0;
+        size_t total = sizeof(shm_header_t) +
+                       USER_STORE_POOL_NODES * sizeof(ListNode) +
+                       USER_STORE_POOL_NODES * sizeof(BSTnode);
+        munmap(g_shm_base, total);
+        g_shm_base = NULL;
+        g_header = NULL;
     }
-
-    head_node.next = NULL;
 }
 
-/* ================================================================
- * BST index operations
- * ================================================================ */
+/* ---- BST index wrappers ---- */
 
 void user_store_print_index(void) {
-    bst_inorder(&user_bst);
+    bst_inorder(&g_user_bst);
 }
 
-/* v1.1: format users to buffer (safe, no pipe deadlock) */
 void user_store_format_users(char *buf, int buf_size, int *total, int *offset) {
-    if (!buf || buf_size <= 0 || !total || !offset) return;
-    bst_format_users(&user_bst, buf, buf_size, total, offset);
+    bst_format_users(&g_user_bst, buf, buf_size, total, offset);
 }
 
 ListNode *user_store_find_index(const char *name) {
-    return bst_find(&user_bst, name);
+    return bst_find(&g_user_bst, name);
 }
 
 void user_store_compare_search_method(const char *name, int verbose) {
-    int list_steps = 0;
-    int bst_steps = 0;
-    ListPtr result_list;
-    ListPtr result_bst;
-    int list_size = 0;
-    ListPtr cur;
-    int i;
-    int continuous_count = 10000;
+    int list_steps = 0, bst_steps = 0;
+    ListPtr result_list, result_bst;
+    int list_size = g_header ? g_header->size : 0;
+    int i, continuous_count = 10000;
     struct timeval tv_start, tv_end;
     long list_usec, bst_usec;
     int dummy_steps;
 
-    if (name == NULL) {
-        log_error("user store: compare_search_method called with NULL name");
-        return;
-    }
-
-    /* count linked list size for reference */
-    cur = head_node.next;
-    while (cur != NULL) {
-        list_size++;
-        cur = cur->next;
-    }
+    if (name == NULL) return;
 
     printf("========================================\n");
     printf("  Search Method Comparison\n");
@@ -404,47 +417,27 @@ void user_store_compare_search_method(const char *name, int verbose) {
     }
     printf("----------------------------------------\n");
 
-    /* --- Single search comparison --- */
     printf("\n[Single Search]\n");
+    if (verbose) printf("\n");
 
-    if (verbose) {
-        printf("\n");
-    }
-
-    /* Linked list search with step counting */
     result_list = user_store_find_with_steps(name, &list_steps, verbose);
     if (!verbose) {
-        if (result_list != NULL) {
-            printf("  Linked list: FOUND in %d step(s)\n", list_steps);
-        } else {
-            printf("  Linked list: NOT FOUND after %d step(s)\n", list_steps);
-        }
+        printf("  Linked list: %s in %d step(s)\n",
+               result_list ? "FOUND" : "NOT FOUND", list_steps);
     } else {
-        if (result_list != NULL) {
-            printf("    => Linked list: FOUND in %d step(s)\n", list_steps);
-        } else {
-            printf("    => Linked list: NOT FOUND after %d step(s)\n", list_steps);
-        }
+        printf("    => Linked list: %s in %d step(s)\n",
+               result_list ? "FOUND" : "NOT FOUND", list_steps);
     }
 
-    if (verbose) {
-        printf("\n");
-    }
+    if (verbose) printf("\n");
 
-    /* BST search with step counting */
-    result_bst = bst_find_with_steps(&user_bst, name, &bst_steps, verbose);
+    result_bst = bst_find_with_steps(&g_user_bst, name, &bst_steps, verbose);
     if (!verbose) {
-        if (result_bst != NULL) {
-            printf("  BST index:   FOUND in %d step(s)\n", bst_steps);
-        } else {
-            printf("  BST index:   NOT FOUND after %d step(s)\n", bst_steps);
-        }
+        printf("  BST index:   %s in %d step(s)\n",
+               result_bst ? "FOUND" : "NOT FOUND", bst_steps);
     } else {
-        if (result_bst != NULL) {
-            printf("    => BST index: FOUND in %d step(s)\n", bst_steps);
-        } else {
-            printf("    => BST index: NOT FOUND after %d step(s)\n", bst_steps);
-        }
+        printf("    => BST index: %s in %d step(s)\n",
+               result_bst ? "FOUND" : "NOT FOUND", bst_steps);
     }
 
     if (bst_steps > 0) {
@@ -452,190 +445,107 @@ void user_store_compare_search_method(const char *name, int verbose) {
                (float)list_steps / (float)bst_steps);
     }
 
-    /* --- Continuous search benchmark --- */
-    printf("\n[Continuous Search Benchmark (%d iterations)]\n",
-           continuous_count);
+    printf("\n[Continuous Search Benchmark (%d iterations)]\n", continuous_count);
 
-    /* Linked list continuous search */
     gettimeofday(&tv_start, NULL);
-    for (i = 0; i < continuous_count; i++) {
+    for (i = 0; i < continuous_count; i++)
         user_store_find_with_steps(name, &dummy_steps, 0);
-    }
     gettimeofday(&tv_end, NULL);
     list_usec = (tv_end.tv_sec - tv_start.tv_sec) * 1000000L +
                 (tv_end.tv_usec - tv_start.tv_usec);
 
-    /* BST continuous search */
     gettimeofday(&tv_start, NULL);
-    for (i = 0; i < continuous_count; i++) {
-        bst_find_with_steps(&user_bst, name, &dummy_steps, 0);
-    }
+    for (i = 0; i < continuous_count; i++)
+        bst_find_with_steps(&g_user_bst, name, &dummy_steps, 0);
     gettimeofday(&tv_end, NULL);
     bst_usec = (tv_end.tv_sec - tv_start.tv_sec) * 1000000L +
                (tv_end.tv_usec - tv_start.tv_usec);
 
-    printf("  Linked list: %ld.%03ld ms\n",
-           list_usec / 1000, list_usec % 1000);
-    printf("  BST index:   %ld.%03ld ms\n",
-           bst_usec / 1000, bst_usec % 1000);
-
+    printf("  Linked list: %ld.%03ld ms\n", list_usec / 1000, list_usec % 1000);
+    printf("  BST index:   %ld.%03ld ms\n", bst_usec / 1000, bst_usec % 1000);
     if (bst_usec > 0) {
         printf("\n  => BST was %.1fx faster (continuous, %d searches)\n",
                (float)list_usec / (float)bst_usec, continuous_count);
-    } else {
-        printf("\n  (BST time too small to measure meaningful ratio)\n");
     }
-
     printf("========================================\n");
-
     log_info("user store: search method comparison completed");
 }
 
 /* ================================================================
- * v1.4: user_store_search — RBT inorder traversal with multi-field
- *       AND filtering
+ * v1.4: user_store_search — RBT inorder with multi-field AND
  * ================================================================ */
 
-/*
- * Case-insensitive substring match.
- * Returns 1 if 'query' is found as a substring of 'text' (case-insensitive),
- * 0 otherwise.  An empty query matches everything.
- * Works correctly with UTF-8 multi-byte sequences.
- */
 static int str_contains(const char *text, const char *query) {
     const char *t, *q, *p;
     int tlen, qlen;
-
     if (!text || !query) return 0;
-
     tlen = (int)strlen(text);
     qlen = (int)strlen(query);
-
-    if (qlen == 0) return 1;   /* empty query matches everything */
+    if (qlen == 0) return 1;
     if (qlen > tlen) return 0;
-
     for (t = text; *t != '\0'; t++) {
-        p = t;
-        q = query;
-        while (*p != '\0' && *q != '\0' &&
-               tolower((unsigned char)*p) == tolower((unsigned char)*q)) {
-            p++;
-            q++;
-        }
-        if (*q == '\0') return 1;  /* full query matched */
+        p = t; q = query;
+        while (*p && *q && tolower((unsigned char)*p) == tolower((unsigned char)*q))
+            { p++; q++; }
+        if (*q == '\0') return 1;
     }
     return 0;
 }
 
-/*
- * Check if a user matches ALL active criteria (AND logic).
- * A criterion is active if its first character is non-null.
- */
-static int criteria_match(const ElemType *data,
-                          const search_criteria_t *c) {
-    if (c->name[0] != '\0' && !str_contains(data->name, c->name))
-        return 0;
-    if (c->phone[0] != '\0' && !str_contains(data->phone, c->phone))
-        return 0;
-    if (c->email[0] != '\0' && !str_contains(data->email, c->email))
-        return 0;
+static int criteria_match(const ElemType *data, const search_criteria_t *c) {
+    if (c->name[0] && !str_contains(data->name, c->name)) return 0;
+    if (c->phone[0] && !str_contains(data->phone, c->phone)) return 0;
+    if (c->mobile[0] && !str_contains(data->mobile, c->mobile)) return 0;
+    if (c->email[0] && !str_contains(data->email, c->email)) return 0;
     return 1;
 }
 
-/*
- * Recursive RBT inorder traversal that filters by criteria and writes HTML.
- */
 static void search_inorder(BSTnode *node, BSTnode *nil,
                            const search_criteria_t *criteria,
                            char *buf, int buf_size,
                            int *offset, int *match_count) {
-    int written;
-
-    if (node == nil || node == NULL || *offset >= buf_size - 512) {
-        return;
-    }
-
-    /* left subtree */
-    search_inorder(node->left, nil, criteria,
-                   buf, buf_size, offset, match_count);
-
-    /* check this node against all active criteria (AND) */
-    if (node->user != NULL && criteria_match(&node->user->data, criteria)) {
-        (*match_count)++;
-
-        written = snprintf(buf + *offset, buf_size - *offset,
-            "<div class=\"result-card\">\n"
-            "  <h2>%s</h2>\n"
-            "  <table>\n"
-            "    <tr><td class=\"label\">Phone:</td>"
-                     "<td>%s</td></tr>\n"
-            "    <tr><td class=\"label\">Birth:</td>"
-                     "<td>%s</td></tr>\n"
-            "    <tr><td class=\"label\">Mobile:</td>"
-                     "<td>%s</td></tr>\n"
-            "    <tr><td class=\"label\">Email:</td>"
-                     "<td>%s</td></tr>\n"
-            "  </table>\n"
-            "</div>\n",
-            node->user->data.name,
-            node->user->data.phone,
-            node->user->data.birthdate,
-            node->user->data.mobile,
-            node->user->data.email);
-        if (written > 0 && written < buf_size - *offset) {
-            *offset += written;
+    if (node == nil || node == NULL || *offset >= buf_size - 512) return;
+    search_inorder(TREE(node->left_off), nil, criteria, buf, buf_size, offset, match_count);
+    if (node->used && node->user_off) {
+        ListNode *lu = LIST(node->user_off);
+        if (lu && lu->used && criteria_match(&lu->data, criteria)) {
+            (*match_count)++;
+            int w = snprintf(buf + *offset, buf_size - *offset,
+                "<div class=\"result-card\">\n"
+                "  <h2>%s</h2>\n"
+                "  <table>\n"
+                "    <tr><td class=\"label\">Phone:</td><td>%s</td></tr>\n"
+                "    <tr><td class=\"label\">Birth:</td><td>%s</td></tr>\n"
+                "    <tr><td class=\"label\">Mobile:</td><td>%s</td></tr>\n"
+                "    <tr><td class=\"label\">Email:</td><td>%s</td></tr>\n"
+                "  </table>\n</div>\n",
+                lu->data.name, lu->data.phone, lu->data.birthdate,
+                lu->data.mobile, lu->data.email);
+            if (w > 0 && w < buf_size - *offset) *offset += w;
         }
     }
-
-    /* right subtree */
-    search_inorder(node->right, nil, criteria,
-                   buf, buf_size, offset, match_count);
+    search_inorder(TREE(node->right_off), nil, criteria, buf, buf_size, offset, match_count);
 }
 
-/*
- * Build a human-readable summary of active search criteria.
- */
 static void criteria_summary(const search_criteria_t *c, char *buf, int size) {
     int pos = 0, first = 1;
     buf[0] = '\0';
-
-    if (c->name[0] != '\0') {
-        pos += snprintf(buf + pos, size - pos,
-                        "%sName: %s", first ? "" : ", ", c->name);
-        first = 0;
-    }
-    if (c->phone[0] != '\0') {
-        pos += snprintf(buf + pos, size - pos,
-                        "%sPhone: %s", first ? "" : ", ", c->phone);
-        first = 0;
-    }
-    if (c->email[0] != '\0') {
-        pos += snprintf(buf + pos, size - pos,
-                        "%sEmail: %s", first ? "" : ", ", c->email);
-        first = 0;
-    }
-    if (first) {
-        snprintf(buf, size, "(none)");
-    }
+    if (c->name[0])   { pos += snprintf(buf+pos, size-pos, "%sName: %s", first?"":", ", c->name); first=0; }
+    if (c->phone[0])  { pos += snprintf(buf+pos, size-pos, "%sPhone: %s", first?"":", ", c->phone); first=0; }
+    if (c->mobile[0]) { pos += snprintf(buf+pos, size-pos, "%sMobile: %s", first?"":", ", c->mobile); first=0; }
+    if (c->email[0])  { pos += snprintf(buf+pos, size-pos, "%sEmail: %s", first?"":", ", c->email); first=0; }
+    if (first) snprintf(buf, size, "(none)");
 }
 
-int user_store_search(const search_criteria_t *criteria,
-                      char *buf, int buf_size) {
-    int offset = 0;
-    int match_count = 0;
-    int written;
+int user_store_search(const search_criteria_t *criteria, char *buf, int buf_size) {
+    int offset = 0, match_count = 0, written;
     char summary[256];
-
-    if (criteria == NULL || buf == NULL || buf_size <= 0) {
-        return -1;
-    }
+    if (!criteria || !buf || buf_size <= 0 || !g_shm_base) return -1;
 
     criteria_summary(criteria, summary, sizeof(summary));
 
-    /* build HTML page header */
     written = snprintf(buf + offset, buf_size - offset,
-        "<!DOCTYPE html>\n"
-        "<html lang=\"zh-CN\">\n<head>\n"
+        "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n"
         "<meta charset=\"utf-8\">\n"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
         "<link rel=\"icon\" href=\"/icon/favicon.ico\">\n"
@@ -659,53 +569,38 @@ int user_store_search(const search_criteria_t *criteria,
         ".result-card td{padding:4px 8px;font-size:0.9rem;}\n"
         ".result-card td.label{color:var(--muted);width:80px;}\n"
         ".no-results{text-align:center;padding:48px 20px;color:var(--muted);}\n"
-        ".match-count{text-align:center;color:var(--muted);font-size:0.85rem;"
-        "margin-top:16px;}\n"
+        ".match-count{text-align:center;color:var(--muted);font-size:0.85rem;margin-top:16px;}\n"
         ".back-link{display:inline-block;margin-top:16px;padding:8px 20px;"
         "background:var(--accent);color:#fff;border-radius:6px;"
         "text-decoration:none;font-size:0.9rem;}\n"
         ".back-link:hover{opacity:0.9;}\n"
-        "footer{text-align:center;padding:24px 20px;color:var(--muted);"
-        "font-size:0.82rem;}\n"
-        "</style>\n"
-        "</head>\n<body>\n"
+        "footer{text-align:center;padding:24px 20px;color:var(--muted);font-size:0.82rem;}\n"
+        "</style>\n</head>\n<body>\n"
         "<header>\n"
         "  <h1>&#128269; Search Results</h1>\n"
         "  <p>Criteria: <strong>%s</strong></p>\n"
-        "</header>\n"
-        "<div class=\"container\">\n",
-        summary);
+        "</header>\n<div class=\"container\">\n", summary);
     if (written < 0 || written >= buf_size - offset) return -1;
     offset += written;
 
-    /* RBT inorder traversal with multi-criteria filtering */
-    search_inorder(user_bst.root, &user_bst.nil, criteria,
-                   buf, buf_size, &offset, &match_count);
+    BSTnode *root = TREE(g_user_bst.root_off);
+    search_inorder(root, g_nil, criteria, buf, buf_size, &offset, &match_count);
 
-    /* no matches message */
     if (match_count == 0) {
         written = snprintf(buf + offset, buf_size - offset,
             "<div class=\"no-results\">\n"
             "  <p style=\"font-size:1.2rem;\">&#128533;</p>\n"
-            "  <p>No users found matching the criteria.</p>\n"
-            "</div>\n");
-        if (written > 0 && written < buf_size - offset) {
-            offset += written;
-        }
+            "  <p>No users found matching the criteria.</p>\n</div>\n");
+        if (written > 0 && written < buf_size - offset) offset += written;
     }
 
-    /* footer with match count and back link */
     written = snprintf(buf + offset, buf_size - offset,
         "<p class=\"match-count\">%d match(es) found</p>\n"
         "<p style=\"text-align:center;\">"
         "<a class=\"back-link\" href=\"/\">&larr; Back to Search</a></p>\n"
-        "</div>\n"
-        "<footer>MiniWeb Server v1.4 &middot; RBT Index Search</footer>\n"
-        "</body>\n</html>\n",
-        match_count);
-    if (written > 0 && written < buf_size - offset) {
-        offset += written;
-    }
+        "</div>\n<footer>MiniWeb Server v1.4 &middot; RBT Index Search</footer>\n"
+        "</body>\n</html>\n", match_count);
+    if (written > 0 && written < buf_size - offset) offset += written;
 
     return match_count;
 }

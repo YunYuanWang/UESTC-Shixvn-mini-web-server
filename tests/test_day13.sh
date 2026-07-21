@@ -110,7 +110,7 @@ log logs/server.log
 
 server {
     listen 127.0.0.1:9180 default_server
-    server_name search.localhost
+    server_name users.localhost
     root search
 }
 CONFEOF
@@ -131,83 +131,83 @@ echo ""
 echo "--- Test 1: 200 OK — Chinese search ---"
 check_status "HTTP/1.1 200" \
     "Chinese name search '赵安'" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
 
 check_body "赵安安" \
     "Result contains 赵安安" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
 
 check_body "result-card" \
     "Result contains result-card div" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 11\r\n\r\nname=赵安"
 
 # ---- Test 2: 200 OK — Search page GET ----
 echo ""
 echo "--- Test 2: 200 OK — Search page GET / ---"
 check_status "HTTP/1.1 200" \
     "GET / search page" \
-    "GET / HTTP/1.1\r\nHost: search.localhost\r\n\r\n"
+    "GET / HTTP/1.1\r\nHost: users.localhost\r\n\r\n"
 
-check_body "User Search" \
-    "Page contains 'User Search'" \
-    "GET / HTTP/1.1\r\nHost: search.localhost\r\n\r\n"
+check_body "User Manager" \
+    "Page contains 'User Manager'" \
+    "GET / HTTP/1.1\r\nHost: users.localhost\r\n\r\n"
 
 # ---- Test 3: 200 OK — Empty query returns form ----
 echo ""
 echo "--- Test 3: 200 OK — Empty criteria ---"
 check_status "HTTP/1.1 200" \
     "Empty criteria returns form" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 5\r\n\r\nname="
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 5\r\n\r\nname="
 
 check_body "Please enter at least one search criterion" \
     "Form shows warning for empty criteria" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 5\r\n\r\nname="
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 5\r\n\r\nname="
 
 # ---- Test 4: 200 OK — No results found ----
 echo ""
 echo "--- Test 4: 200 OK — No results ---"
 check_status "HTTP/1.1 200" \
     "Search with no matches" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nname=zzzxyznomatch"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nname=zzzxyznomatch"
 
 check_body "No users found" \
     "Shows 'No users found' message" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nname=zzzxyznomatch"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nname=zzzxyznomatch"
 
 # ---- Test 5: 400 Bad Request — Malformed request line ----
 echo ""
 echo "--- Test 5: 400 Bad Request — Malformed line ---"
 check_status "HTTP/1.1 400" \
     "Request line without path" \
-    "GET\r\nHost: search.localhost\r\n\r\n"
+    "GET\r\nHost: users.localhost\r\n\r\n"
 
 # ---- Test 6: 400 Bad Request — Missing Content-Length ----
 echo ""
 echo "--- Test 6: 400 Bad Request — Missing Content-Length ---"
 check_status "HTTP/1.1 400" \
     "POST without Content-Length header" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=test"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\nname=test"
 
 # ---- Test 7: 400 Bad Request — Content-Length mismatch ----
 echo ""
 echo "--- Test 7: 400 Bad Request — Content-Length mismatch ---"
 check_status "HTTP/1.1 400" \
     "Body(9) != Content-Length(999)" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 999\r\n\r\nname=test"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 999\r\n\r\nname=test"
 
 # ---- Test 8: 400 Bad Request — URL encoding error ----
 echo ""
 echo "--- Test 8: 400 Bad Request — URL encoding error ---"
 check_status "HTTP/1.1 400" \
     "Invalid %ZZ in name parameter" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 13\r\n\r\nname=%ZZtest"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 13\r\n\r\nname=%ZZtest"
 
 # ---- Test 9: 413 Payload Too Large ----
 echo ""
 echo "--- Test 9: 413 Payload Too Large ---"
 # Generate a large body (~4100 bytes) to exceed max_request_bytes (4096)
 LARGE_BODY=$(python3 -c "print('x'*4100)" 2>/dev/null || head -c 4100 /dev/zero | tr '\0' 'x')
-LARGE_REQ="POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 4105\r\n\r\nname=${LARGE_BODY}"
+LARGE_REQ="POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 4105\r\n\r\nname=${LARGE_BODY}"
 check_status "HTTP/1.1 413" \
     "Request body > 4096 bytes" \
     "$LARGE_REQ"
@@ -217,32 +217,32 @@ echo ""
 echo "--- Test 10: 415 Unsupported Media Type ---"
 check_status "HTTP/1.1 415" \
     "Content-Type: text/plain" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nname=test"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nname=test"
 
 # ---- Test 11: 200 OK — Multi-field AND search ----
 echo ""
 echo "--- Test 11: 200 OK — AND search (name + phone) ---"
 check_status "HTTP/1.1 200" \
     "AND search: name=赵安 + phone=138" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 21\r\n\r\nname=赵安&phone=138"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 21\r\n\r\nname=赵安&phone=138"
 
 check_body "赵安" \
     "AND result contains matching name" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 21\r\n\r\nname=赵安&phone=138"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 21\r\n\r\nname=赵安&phone=138"
 
 # ---- Test 12: 200 OK — Email search ----
 echo ""
 echo "--- Test 12: 200 OK — Email search ---"
 check_status "HTTP/1.1 200" \
     "Search by email domain" \
-    "POST /search HTTP/1.1\r\nHost: search.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nemail=@example.com"
+    "POST /search HTTP/1.1\r\nHost: users.localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 18\r\n\r\nemail=@example.com"
 
 # ---- Test 13: 404 Not Found ----
 echo ""
 echo "--- Test 11: 404 Not Found ---"
 check_status "HTTP/1.1 404" \
     "GET /nonexistent/path" \
-    "GET /nonexistent/path HTTP/1.1\r\nHost: search.localhost\r\n\r\n"
+    "GET /nonexistent/path HTTP/1.1\r\nHost: users.localhost\r\n\r\n"
 
 # ---- Cleanup ----
 echo ""

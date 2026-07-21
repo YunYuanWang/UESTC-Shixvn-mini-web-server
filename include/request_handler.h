@@ -16,6 +16,23 @@ typedef struct {
     int  content_length_hdr;     /* Content-Length header value, -1 = absent */
 } request_t;
 
+/* ---- v1.5: handler function signature ---- */
+/*
+ * Each handler receives:
+ *   req          — parsed request (method, path, body, headers)
+ *   body_buf     — pre-allocated buffer for response body (BLOG_BODY_MAX)
+ *   body_size    — size of body_buf
+ *   captured     — tail captured from prefix match (empty for exact match)
+ *   output       — final HTTP response buffer
+ *   output_size  — size of output buffer
+ *
+ * Returns: HTTP response length on success, -1 on error.
+ */
+typedef int (*handler_fn)(const request_t *req,
+                           char *body_buf, int body_size,
+                           const char *captured,
+                           char *output, int output_size);
+
 /* ---- HTTP/1.1 keep-alive configuration ---- */
 #define KEEP_ALIVE_TIMEOUT_SEC   5     /* idle timeout between requests */
 #define MAX_KEEP_ALIVE_REQUESTS  10000   /* max requests per connection (v1.1: raised for ab benchmarks) */

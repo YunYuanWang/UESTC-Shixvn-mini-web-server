@@ -1,898 +1,428 @@
+/*
+ * user_index.c — Offset-based Red-Black Tree in shared memory (v1.4)
+ *
+ * All node pointers are int32_t byte-offsets from the mmap base.
+ * Since all processes share the mmap at the same virtual address
+ * (inherited via fork), TREE(off) returns a valid C pointer.
+ */
+
 #include "../include/user_index.h"
 #include "../include/log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* ---- globals (from user_store.c) ---- */
+extern void *g_shm_base;
+extern BSTnode *g_nil;
+
+/* ---- helpers ---- */
+#define LIST(off)  ((off) ? (ListNode *)((char *)g_shm_base + (off)) : NULL)
+#define TREE(off)  ((off) ? (BSTnode *)((char *)g_shm_base + (off)) : NULL)
+
+#define OFF_L(p)   ((p) ? (int32_t)((char *)(p) - (char *)g_shm_base) : 0)
+#define OFF_T(p)   ((p) ? (int32_t)((char *)(p) - (char *)g_shm_base) : 0)
+
+#define IS_NIL(n)  ((n) == g_nil)
+
 /* ================================================================
  * bst_init
  * ================================================================ */
 void bst_init(BST *tree) {
-    if (tree == NULL) {
-        return;
-    }
-
-    /* sentinel NIL: always BLACK, self-looping pointers for safety */
-    tree->nil.color  = RBT_BLACK;
-    tree->nil.left   = &tree->nil;
-    tree->nil.right  = &tree->nil;
-    tree->nil.parent = &tree->nil;
-    tree->nil.user   = NULL;
-
-    tree->root = &tree->nil;
+    if (!tree) return;
+    tree->nil_off  = OFF_T(g_nil);
+    tree->root_off = OFF_T(g_nil);
     tree->size = 0;
 }
 
 /* ================================================================
- * Rotations (preserve BST property, adjust RBT colors later)
+ * Rotations
  * ================================================================ */
-
-/*
- * left_rotate:     x                 y
- *                 / \      =>       / \
- *                a   y             x   c
- *                   / \           / \
- *                  b   c         a   b
- */
 void rbt_left_rotate(BST *tree, BSTnode *x) {
-    BSTnode *y = x->right;
-
-    /* turn y's left subtree into x's right subtree */
-    x->right = y->left;
-    if (y->left != &tree->nil) {
-        y->left->parent = x;
-    }
-
-    /* link y to x's parent */
-    y->parent = x->parent;
-    if (x->parent == &tree->nil) {
-        tree->root = y;               /* x was root */
-    } else if (x == x->parent->left) {
-        x->parent->left = y;
-    } else {
-        x->parent->right = y;
-    }
-
-    /* put x on y's left */
-    y->left = x;
-    x->parent = y;
+    BSTnode *y = TREE(x->right_off);
+    x->right_off = y->left_off;
+    if (!IS_NIL(TREE(y->left_off)))
+        TREE(y->left_off)->parent_off = OFF_T(x);
+    y->parent_off = x->parent_off;
+    if (IS_NIL(TREE(x->parent_off)))
+        tree->root_off = OFF_T(y);
+    else if (x == TREE(TREE(x->parent_off)->left_off))
+        TREE(x->parent_off)->left_off = OFF_T(y);
+    else
+        TREE(x->parent_off)->right_off = OFF_T(y);
+    y->left_off = OFF_T(x);
+    x->parent_off = OFF_T(y);
 }
 
-/*
- * right_rotate:       x              y
- *                    / \     =>     / \
- *                   y   a          b   x
- *                  / \                / \
- *                 b   c              c   a
- */
 void rbt_right_rotate(BST *tree, BSTnode *x) {
-    BSTnode *y = x->left;
-
-    /* turn y's right subtree into x's left subtree */
-    x->left = y->right;
-    if (y->right != &tree->nil) {
-        y->right->parent = x;
-    }
-
-    /* link y to x's parent */
-    y->parent = x->parent;
-    if (x->parent == &tree->nil) {
-        tree->root = y;               /* x was root */
-    } else if (x == x->parent->right) {
-        x->parent->right = y;
-    } else {
-        x->parent->left = y;
-    }
-
-    /* put x on y's right */
-    y->right = x;
-    x->parent = y;
+    BSTnode *y = TREE(x->left_off);
+    x->left_off = y->right_off;
+    if (!IS_NIL(TREE(y->right_off)))
+        TREE(y->right_off)->parent_off = OFF_T(x);
+    y->parent_off = x->parent_off;
+    if (IS_NIL(TREE(x->parent_off)))
+        tree->root_off = OFF_T(y);
+    else if (x == TREE(TREE(x->parent_off)->right_off))
+        TREE(x->parent_off)->right_off = OFF_T(y);
+    else
+        TREE(x->parent_off)->left_off = OFF_T(y);
+    y->right_off = OFF_T(x);
+    x->parent_off = OFF_T(y);
 }
 
 /* ================================================================
- * bst_insert (Red-Black Tree insert with fixup)
+ * bst_insert
  * ================================================================ */
-int bst_insert(BST *tree, ListPtr user) {
-    BSTnode *new_node;
-    BSTnode *current;
-    BSTnode *parent;
+int bst_insert(BST *tree, ListNode *user) {
+    BSTnode *z, *y, *x;
 
-    if (tree == NULL || user == NULL) {
-        log_error("rbt: insert called with NULL tree or user");
-        return -1;
+    if (!tree || !user) return -1;
+
+    /* Find the BSTnode that contains this user's offset */
+    z = NULL;
+    {
+        /* search for a tree node whose user_off matches */
+        /* Actually, the caller already created a BSTnode and set user_off.
+         * We need to find it. Since it was just allocated and has user_off set,
+         * we can find it by scanning. But better: we assume the caller
+         * passes a ListNode, and we find the BSTnode by searching.
+         *
+         * Actually, simpler: the caller already allocates BSTnode and sets
+         * user_off. We just insert that node into the tree. We find z by
+         * looking up the BSTnode that was just allocated.
+         *
+         * Even simpler: the caller should pass the BSTnode too. But the API
+         * only takes ListNode. Let's find the BSTnode by scanning from
+         * tree_next_free-1 backwards.
+         *
+         * SIMPLEST: the BSTnode was just allocated at tree_next_free-1.
+         * We'll locate it by index.
+         */
+        extern BSTnode *g_tree_pool;
+        extern shm_header_t *g_header;
+        int32_t idx = g_header->tree_next_free - 1;
+        z = &g_tree_pool[idx];
     }
 
-    /* allocate new RED node */
-    new_node = (BSTnode *)malloc(sizeof(BSTnode));
-    if (new_node == NULL) {
-        log_error("rbt: malloc failed during insert");
-        return -1;
+    z->left_off  = OFF_T(g_nil);
+    z->right_off = OFF_T(g_nil);
+    z->color = RBT_RED;
+
+    y = g_nil;
+    x = TREE(tree->root_off);
+
+    while (!IS_NIL(x)) {
+        y = x;
+        ListNode *xu = LIST(x->user_off);
+        if (xu && strcmp(user->data.name, xu->data.name) < 0)
+            x = TREE(x->left_off);
+        else
+            x = TREE(x->right_off);
     }
 
-    new_node->user   = user;
-    new_node->left   = &tree->nil;
-    new_node->right  = &tree->nil;
-    new_node->parent = &tree->nil;
-    new_node->color  = RBT_RED;        /* new node is always RED */
-
-    /*
-     * Standard BST insertion: find the insertion point.
-     */
-    current = tree->root;
-    parent  = &tree->nil;
-
-    while (current != &tree->nil) {
-        int cmp;
-        parent = current;
-        cmp = strcmp(user->data.name, current->user->data.name);
-        if (cmp < 0) {
-            current = current->left;
-        } else if (cmp > 0) {
-            current = current->right;
-        } else {
-            /* duplicate name — should not happen */
-            free(new_node);
-            log_error("rbt: duplicate username, insert skipped");
-            return -1;
-        }
-    }
-
-    new_node->parent = parent;
-
-    /*
-     * Branch: where does the new node go?
-     *   - Root: tree was empty
-     *   - Left child: name < parent
-     *   - Right child: name > parent
-     */
-    if (parent == &tree->nil) {
-        /* [ROOT] first node in the tree */
-        tree->root = new_node;
-    } else if (strcmp(user->data.name, parent->user->data.name) < 0) {
-        parent->left = new_node;
-    } else {
-        parent->right = new_node;
+    z->parent_off = OFF_T(y);
+    if (IS_NIL(y))
+        tree->root_off = OFF_T(z);
+    else {
+        ListNode *yu = LIST(y->user_off);
+        if (yu && strcmp(user->data.name, yu->data.name) < 0)
+            y->left_off = OFF_T(z);
+        else
+            y->right_off = OFF_T(z);
     }
 
     tree->size++;
-
-    /*
-     * RBT INSERT FIXUP — restore red-black properties.
-     * Only needed when the new node is NOT the root.
-     */
-    rbt_insert_fixup(tree, new_node);
-
+    rbt_insert_fixup(tree, z);
     return 0;
 }
 
-/*
- * rbt_insert_fixup — fixes red-black tree violations after insertion.
- *
- * The new node z is RED.  The only possible violation is:
- *   "a RED node has a RED parent"  (property: no two consecutive REDs)
- *
- * Loop invariant:
- *   - z is RED
- *   - If z.parent is root, z.parent is BLACK (handled at end)
- *   - The only violation (if any) is z and z.parent both RED
- *
- * Flowchart for each iteration (z.parent is RED):
- *
- *   ┌─ Is parent the LEFT or RIGHT child of grandparent?
- *   │
- *   ├─ LEFT ─────────────────────────────────────────────┐
- *   │                                                     │
- *   │  uncle = grandparent.right                          │
- *   │                                                     │
- *   │  ┌─ Case 1: uncle is RED ───────────────────┐      │
- *   │  │  - parent → BLACK                         │      │
- *   │  │  - uncle → BLACK                          │      │
- *   │  │  - grandparent → RED                      │      │
- *   │  │  - z = grandparent (move up)              │      │
- *   │  └───────────────────────────────────────────┘      │
- *   │                                                     │
- *   │  ┌─ Case 2/3: uncle is BLACK ───────────────┐      │
- *   │  │                                            │      │
- *   │  │  Case 2: LR型 (z is right child)           │      │
- *   │  │    - z = parent                            │      │
- *   │  │    - LEFT-ROTATE(z)                        │      │
- *   │  │    - Fall through to Case 3                │      │
- *   │  │                                            │      │
- *   │  │  Case 3: LL型 (z is left child)            │      │
- *   │  │    - parent → BLACK                        │      │
- *   │  │    - grandparent → RED                     │      │
- *   │  │    - RIGHT-ROTATE(grandparent)             │      │
- *   │  └────────────────────────────────────────────┘      │
- *   │                                                     │
- *   └─ RIGHT (symmetric) ──────────────────────────────────┘
- *      (mirror: swap left↔right, LL↔RR, LR↔RL)
- */
 void rbt_insert_fixup(BST *tree, BSTnode *z) {
-    BSTnode *uncle;
-
-    /*
-     * Loop while z's parent is RED (violation).
-     * If parent is BLACK, there's nothing to fix.
-     */
-    while (z->parent->color == RBT_RED) {
-        /*
-         * Branch A: parent is LEFT child of grandparent
-         */
-        if (z->parent == z->parent->parent->left) {
-            uncle = z->parent->parent->right;    /* uncle = sibling of parent */
-
-            /*
-             * Case A-1: uncle is RED
-             *   Push blackness down from grandparent:
-             *   recolor parent→BLACK, uncle→BLACK, grandparent→RED.
-             *   Then move z up to grandparent (may need further fixup).
-             */
-            if (uncle->color == RBT_RED) {
-                z->parent->color         = RBT_BLACK;
-                uncle->color             = RBT_BLACK;
-                z->parent->parent->color = RBT_RED;
-                z = z->parent->parent;             /* move violation up */
-                continue;
+    while (TREE(z->parent_off)->color == RBT_RED) {
+        BSTnode *zp = TREE(z->parent_off);
+        BSTnode *zpp = TREE(zp->parent_off);
+        if (zp == TREE(zpp->left_off)) {
+            BSTnode *y = TREE(zpp->right_off);
+            if (y->color == RBT_RED) {
+                zp->color = RBT_BLACK;
+                y->color = RBT_BLACK;
+                zpp->color = RBT_RED;
+                z = zpp;
+            } else {
+                if (z == TREE(zp->right_off)) {
+                    z = zp;
+                    rbt_left_rotate(tree, z);
+                    zp = TREE(z->parent_off);
+                    zpp = TREE(zp->parent_off);
+                }
+                zp->color = RBT_BLACK;
+                zpp->color = RBT_RED;
+                rbt_right_rotate(tree, zpp);
             }
-
-            /*
-             * uncle is BLACK (or NIL).  Determine rotation type.
-             *
-             * Case A-2: LR型 — z is the RIGHT (inner) child of parent.
-             *   LEFT-ROTATE(parent) transforms LR → LL,
-             *   then fall through to Case A-3.
-             */
-            if (z == z->parent->right) {
-                z = z->parent;                     /* z moves up to parent */
-                rbt_left_rotate(tree, z);          /* LR → LL */
-            }
-
-            /*
-             * Case A-3: LL型 — z is the LEFT (outer) child of parent.
-             *   Recolor parent→BLACK, grandparent→RED,
-             *   RIGHT-ROTATE on grandparent to fix the structure.
-             */
-            z->parent->color         = RBT_BLACK;
-            z->parent->parent->color = RBT_RED;
-            rbt_right_rotate(tree, z->parent->parent);
-
         } else {
-            /*
-             * Branch B: parent is RIGHT child of grandparent (symmetric)
-             */
-            uncle = z->parent->parent->left;     /* uncle = sibling of parent */
-
-            /*
-             * Case B-1: uncle is RED
-             *   Same as A-1: recolor and move up.
-             */
-            if (uncle->color == RBT_RED) {
-                z->parent->color         = RBT_BLACK;
-                uncle->color             = RBT_BLACK;
-                z->parent->parent->color = RBT_RED;
-                z = z->parent->parent;
-                continue;
+            BSTnode *y = TREE(zpp->left_off);
+            if (y->color == RBT_RED) {
+                zp->color = RBT_BLACK;
+                y->color = RBT_BLACK;
+                zpp->color = RBT_RED;
+                z = zpp;
+            } else {
+                if (z == TREE(zp->left_off)) {
+                    z = zp;
+                    rbt_right_rotate(tree, z);
+                    zp = TREE(z->parent_off);
+                    zpp = TREE(zp->parent_off);
+                }
+                zp->color = RBT_BLACK;
+                zpp->color = RBT_RED;
+                rbt_left_rotate(tree, zpp);
             }
-
-            /*
-             * Case B-2: RL型 — z is the LEFT (inner) child of parent.
-             *   RIGHT-ROTATE(parent) transforms RL → RR,
-             *   then fall through to Case B-3.
-             */
-            if (z == z->parent->left) {
-                z = z->parent;                     /* z moves up to parent */
-                rbt_right_rotate(tree, z);         /* RL → RR */
-            }
-
-            /*
-             * Case B-3: RR型 — z is the RIGHT (outer) child of parent.
-             *   Recolor parent→BLACK, grandparent→RED,
-             *   LEFT-ROTATE on grandparent.
-             */
-            z->parent->color         = RBT_BLACK;
-            z->parent->parent->color = RBT_RED;
-            rbt_left_rotate(tree, z->parent->parent);
         }
     }
-
-    /*
-     * Root must always be BLACK (property 2).
-     * This also handles the case where z is now the root.
-     */
-    tree->root->color = RBT_BLACK;
+    TREE(tree->root_off)->color = RBT_BLACK;
 }
 
 /* ================================================================
- * bst_find / bst_find_with_steps (unchanged search logic,
- * only nil sentinel replaces NULL)
+ * bst_find
  * ================================================================ */
-
-ListPtr bst_find(BST *tree, const char *name) {
-    BSTnode *current;
-
-    if (tree == NULL || name == NULL) {
-        log_error("rbt: find called with NULL tree or name");
-        return NULL;
+ListNode *bst_find(BST *tree, const char *name) {
+    BSTnode *x;
+    if (!tree || !name || !g_shm_base) return NULL;
+    x = TREE(tree->root_off);
+    while (!IS_NIL(x)) {
+        ListNode *xu = LIST(x->user_off);
+        if (!xu) break;
+        int cmp = strcmp(name, xu->data.name);
+        if (cmp == 0) return xu;
+        x = TREE(cmp < 0 ? x->left_off : x->right_off);
     }
-
-    current = tree->root;
-    while (current != &tree->nil) {
-        int cmp = strcmp(name, current->user->data.name);
-        if (cmp == 0) {
-            log_info("rbt: user found");
-            return current->user;
-        } else if (cmp < 0) {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
-    }
-
-    log_info("rbt: user not found");
     return NULL;
 }
 
-ListPtr bst_find_with_steps(BST *tree, const char *name, int *steps, int verbose) {
-    BSTnode *current;
-    int count = 0;
-
-    if (tree == NULL || name == NULL) {
-        log_error("rbt: find_with_steps called with NULL tree or name");
-        if (steps != NULL) {
-            *steps = 0;
-        }
-        return NULL;
-    }
-
-    if (verbose) {
-        printf("  [RBT search path]\n");
-    }
-
-    current = tree->root;
-    while (current != &tree->nil) {
-        int cmp;
-        count++;
-        cmp = strcmp(name, current->user->data.name);
-
+ListNode *bst_find_with_steps(BST *tree, const char *name, int *steps, int verbose) {
+    BSTnode *x;
+    int s = 0;
+    if (!tree || !name || !g_shm_base) return NULL;
+    x = TREE(tree->root_off);
+    while (!IS_NIL(x)) {
+        s++;
+        ListNode *xu = LIST(x->user_off);
+        if (!xu) break;
         if (verbose) {
-            const char *dir;
-            if (count == 1) {
-                dir = "root";
-            } else if (cmp < 0) {
-                dir = "L";
-            } else {
-                dir = "R";
-            }
-
-            if (cmp == 0) {
-                printf("    step %d: visit \"%s\" (%s) -> MATCH\n",
-                       count, current->user->data.name, dir);
-            } else if (cmp < 0) {
-                printf("    step %d: visit \"%s\" (%s) -> \"%s\" < \"%s\", go LEFT\n",
-                       count, current->user->data.name, dir,
-                       name, current->user->data.name);
-            } else {
-                printf("    step %d: visit \"%s\" (%s) -> \"%s\" > \"%s\", go RIGHT\n",
-                       count, current->user->data.name, dir,
-                       name, current->user->data.name);
-            }
+            printf("  [BST step %d] checking: %s\n", s, xu->data.name);
         }
-
-        if (cmp == 0) {
-            if (steps != NULL) {
-                *steps = count;
-            }
-            log_info("rbt: user found with steps");
-            return current->user;
-        } else if (cmp < 0) {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
+        int cmp = strcmp(name, xu->data.name);
+        if (cmp == 0) { if (steps) *steps = s; return xu; }
+        x = TREE(cmp < 0 ? x->left_off : x->right_off);
     }
-
-    if (verbose) {
-        printf("    (end of path, not found after %d steps)\n", count);
-    }
-
-    if (steps != NULL) {
-        *steps = count;
-    }
-    log_info("rbt: user not found with steps");
+    if (steps) *steps = s;
     return NULL;
 }
 
 /* ================================================================
- * Auxiliary helpers for delete
+ * bst_delete
  * ================================================================ */
-
-/*
- * rbt_transplant: replace subtree rooted at u with subtree rooted at v.
- */
-void rbt_transplant(BST *tree, BSTnode *u, BSTnode *v) {
-    if (u->parent == &tree->nil) {
-        tree->root = v;
-    } else if (u == u->parent->left) {
-        u->parent->left = v;
-    } else {
-        u->parent->right = v;
-    }
-    v->parent = u->parent;
-}
-
-/*
- * rbt_minimum: find the node with the smallest key in the subtree.
- */
 BSTnode *rbt_minimum(BST *tree, BSTnode *node) {
-    while (node->left != &tree->nil) {
-        node = node->left;
-    }
+    while (!IS_NIL(TREE(node->left_off)))
+        node = TREE(node->left_off);
     return node;
 }
 
-/*
- * rbt_find_predecessor: finds the inorder predecessor of the given node
- * (the largest node in its left subtree).
- * Returns the predecessor and its parent via output parameters.
- */
-void rbt_find_predecessor(BST *tree, BSTnode *node,
-                                  BSTnode **out_pre, BSTnode **out_parent) {
-    BSTnode *predecessor;
-    BSTnode *parent;
-
-    parent = node;
-    predecessor = node->left;
-
-    while (predecessor->right != &tree->nil) {
-        parent = predecessor;
-        predecessor = predecessor->right;
-    }
-
-    *out_pre    = predecessor;
-    *out_parent = parent;
+void rbt_transplant(BST *tree, BSTnode *u, BSTnode *v) {
+    if (IS_NIL(TREE(u->parent_off)))
+        tree->root_off = OFF_T(v);
+    else if (u == TREE(TREE(u->parent_off)->left_off))
+        TREE(u->parent_off)->left_off = OFF_T(v);
+    else
+        TREE(u->parent_off)->right_off = OFF_T(v);
+    v->parent_off = u->parent_off;
 }
 
-/* ================================================================
- * bst_delete (Red-Black Tree delete with double-black fixup)
- *
- * Strategy:
- *   1. Find the node z to delete by name.
- *   2. Determine y  = the node actually removed (or moved).
- *      - If z has ≤1 child:  y = z
- *      - If z has 2 children: y = predecessor(z)  [前驱替代]
- *   3. x = the child that replaces y (may be nil).
- *   4. If y was BLACK, we have a "double-black" at x → fixup.
- *   5. Free z (or y, depending).
- *
- * "Double-Black" means: after removing a BLACK node, the path
- * through x has one fewer BLACK node than other paths.
- * We resolve this via rbt_delete_fixup.
- * ================================================================ */
 int bst_delete(BST *tree, const char *name) {
-    BSTnode *z;          /* node to delete (by key) */
-    BSTnode *y;          /* node actually removed from the tree */
-    BSTnode *x;          /* node that replaces y */
-    BSTnode *current;
-    int y_original_color;
+    BSTnode *z, *x, *y;
+    int y_orig_color;
 
-    if (tree == NULL || name == NULL) {
-        log_error("rbt: delete called with NULL tree or name");
-        return -1;
+    /* find the node to delete */
+    z = TREE(tree->root_off);
+    while (!IS_NIL(z)) {
+        ListNode *zu = LIST(z->user_off);
+        if (!zu) break;
+        int cmp = strcmp(name, zu->data.name);
+        if (cmp == 0) break;
+        z = TREE(cmp < 0 ? z->left_off : z->right_off);
     }
+    if (IS_NIL(z)) return -1;
 
-    /* Step 1: find the node z by name */
-    current = tree->root;
-    while (current != &tree->nil) {
-        int cmp = strcmp(name, current->user->data.name);
-        if (cmp == 0) {
-            break;
-        } else if (cmp < 0) {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
-    }
-
-    if (current == &tree->nil) {
-        log_error("rbt: user not found for deletion");
-        return -1;
-    }
-
-    z = current;
-
-    /*
-     * Step 2: determine y (the node to be removed/spliced out)
-     * and record its original color.
-     */
     y = z;
-    y_original_color = y->color;
+    y_orig_color = y->color;
 
-    /*
-     * Branch on z's children:
-     *
-     *   ┌─ z has NO left child ─────────────────────────┐
-     *   │  x = z.right                                   │
-     *   │  TRANSPLANT(z, z.right)                        │
-     *   │  y = z (already set), y removed as-is          │
-     *   │                                                │
-     *   ├─ z has NO right child ────────────────────────┤
-     *   │  x = z.left                                    │
-     *   │  TRANSPLANT(z, z.left)                         │
-     *   │  y = z (already set), y removed as-is          │
-     *   │                                                │
-     *   └─ z has TWO children ──────────────────────────┘
-     *      Find PREDECESSOR (前驱): largest in left subtree.
-     *      y = predecessor  (this is the node removed)
-     *      y_original_color = y.color
-     *      x = y.left  (predecessor has no right child)
-     *
-     *      ┌─ predecessor IS z.left (adjacent) ─────┐
-     *      │  x.parent = y                           │
-     *      │  TRANSPLANT(z, y)                       │
-     *      │  y.right = z.right                      │
-     *      │  y.right.parent = y                     │
-     *      │                                         │
-     *      ├─ predecessor is deeper ─────────────────┤
-     *      │  TRANSPLANT(y, y.left)  (y=x lifts up)  │
-     *      │  y.left = z.left                        │
-     *      │  y.left.parent = y                      │
-     *      │  TRANSPLANT(z, y)                       │
-     *      │  y.right = z.right                      │
-     *      │  y.right.parent = y                     │
-     *      └─────────────────────────────────────────┘
-     *      y.color = z.color  (inherit color of deleted node)
-     */
-    if (z->left == &tree->nil) {
-        /*
-         * Case: z has no left child (only right child or nil).
-         */
-        x = z->right;
+    if (IS_NIL(TREE(z->left_off))) {
+        x = TREE(z->right_off);
         rbt_transplant(tree, z, x);
-    } else if (z->right == &tree->nil) {
-        /*
-         * Case: z has no right child (only left child).
-         */
-        x = z->left;
+    } else if (IS_NIL(TREE(z->right_off))) {
+        x = TREE(z->left_off);
         rbt_transplant(tree, z, x);
     } else {
-        /*
-         * Case: z has TWO children.
-         * Use inorder PREDECESSOR (前驱) to replace z.
-         */
-        BSTnode *predecessor;
-        BSTnode *predecessor_parent;
-
-        rbt_find_predecessor(tree, z, &predecessor, &predecessor_parent);
-
-        y = predecessor;
-        y_original_color = y->color;
-        x = y->left;   /* predecessor has no right child; x may be nil */
-
-        if (predecessor_parent == z) {
-            /*
-             * Sub-case: predecessor IS z's immediate left child.
-             *   z.left = predecessor
-             *   predecessor.right = nil (predecessor is max in left subtree)
-             */
-            x->parent = y; // when x is nil, this is safe
+        y = rbt_minimum(tree, TREE(z->right_off));
+        y_orig_color = y->color;
+        x = TREE(y->right_off);
+        if (TREE(y->parent_off) == z) {
+            x->parent_off = OFF_T(y);
         } else {
-            /*
-             * Sub-case: predecessor is deeper in the left subtree.
-             * Lift x to predecessor's position first.
-             */
-            rbt_transplant(tree, y, y->left);
-            y->left = z->left;
-            y->left->parent = y;// 保护y的信息，这里做顶替z的准备工作
+            rbt_transplant(tree, y, x);
+            y->right_off = z->right_off;
+            TREE(y->right_off)->parent_off = OFF_T(y);
         }
-
-        /* transplant y into z's position */
-        rbt_transplant(tree, z, y);//y彻底顶替掉z的生态位，但保持y原有信息
-        y->right = z->right;
-        y->right->parent = y;
-        y->color = z->color;   /* inherit z's color */
+        rbt_transplant(tree, z, y);
+        y->left_off = z->left_off;
+        TREE(y->left_off)->parent_off = OFF_T(y);
+        y->color = z->color;
     }
 
-    /*
-     * Step 3: if the removed node y was BLACK, we have a
-     * "double-black" violation at x.  Call delete fixup.
-     *
-     * Double-black means: removing a BLACK node y leaves the
-     * subtree at x with one fewer black node on its paths
-     * compared to other parts of the tree.
-     */
-    if (y_original_color == RBT_BLACK) {
+    /* mark the deleted BSTnode as unused */
+    z->used = 0;
+
+    if (y_orig_color == RBT_BLACK)
         rbt_delete_fixup(tree, x);
-    }
 
-    /*
-     * Step 4: free the deleted node z.
-     * Only free the BSTnode, NOT the ListNode it points to.
-     */
-    free(z);
     tree->size--;
-
-    log_info("rbt: node deleted");
     return 0;
 }
 
-/*
- * rbt_delete_fixup — resolves the "double-black" violation.
- *
- * When a BLACK node is removed, its child x inherits an "extra"
- * blackness, becoming "double-black".  This function resolves
- * the violation by redistributing blackness through rotations
- * and recoloring.
- *
- * Loop: while x is not root AND x is BLACK (double-black):
- *
- *   x = node with "extra" blackness
- *   s = sibling of x
- *
- *   ┌─ x is LEFT child ────────────────────────────────────┐
- *   │                                                        │
- *   │  Case 1: sibling s is RED                              │
- *   │    → swap colors of s and x.parent                    │
- *   │    → LEFT-ROTATE on x.parent                          │
- *   │    → s = x.parent.right (new sibling after rotation)  │
- *   │    → Fall through to Cases 2-4                        │
- *   │                                                        │
- *   │  Case 2: s is BLACK, both of s's children are BLACK   │
- *   │    → s becomes RED (remove one black from sibling)    │
- *   │    → x = x.parent (push double-black upward)          │
- *   │                                                        │
- *   │  Case 3: s is BLACK, s's FAR child is BLACK,          │
- *   │           s's NEAR child is RED                        │
- *   │    → s.near_child becomes BLACK                       │
- *   │    → s becomes RED                                    │
- *   │    → RIGHT-ROTATE on s                                │
- *   │    → s = x.parent.right (new sibling)                 │
- *   │    → Fall through to Case 4                           │
- *   │                                                        │
- *   │  Case 4: s is BLACK, s's FAR child is RED             │
- *   │    → s.color = x.parent.color                         │
- *   │    → x.parent becomes BLACK                           │
- *   │    → s.far_child becomes BLACK                        │
- *   │    → LEFT-ROTATE on x.parent                          │
- *   │    → x = root (terminate loop)                        │
- *   │                                                        │
- *   └─ x is RIGHT child (symmetric) ─────────────────────────┘
- *
- * After loop: x.color = BLACK (remove extra blackness).
- */
 void rbt_delete_fixup(BST *tree, BSTnode *x) {
-    BSTnode *s;   /* sibling of x */
-
-    while (x != tree->root && x->color == RBT_BLACK) { // x is the double-black node
-
-        /*
-         * Branch A: x is the LEFT child
-         */
-        if (x == x->parent->left) {
-            s = x->parent->right;      /* sibling */
-
-            /*
-             * Case A-1: sibling s is RED.
-             *   Swap colors: s→BLACK, parent→RED.
-             *   LEFT-ROTATE on parent → s becomes grandparent.
-             *   Update s to new sibling (was s.left before rotation).
-             */
-            if (s->color == RBT_RED) {
-                s->color         = RBT_BLACK;
-                x->parent->color = RBT_RED;
-                rbt_left_rotate(tree, x->parent);
-                s = x->parent->right;
-                /* fall through to Cases 2-4 (now s is BLACK) */
+    while (x != TREE(tree->root_off) && x->color == RBT_BLACK) {
+        BSTnode *xp = TREE(x->parent_off);
+        if (x == TREE(xp->left_off)) {
+            BSTnode *w = TREE(xp->right_off);
+            if (w->color == RBT_RED) {
+                w->color = RBT_BLACK;
+                xp->color = RBT_RED;
+                rbt_left_rotate(tree, xp);
+                xp = TREE(x->parent_off);
+                w = TREE(xp->right_off);
             }
-
-            /*
-             * Case A-2: s is BLACK, both children of s are BLACK.
-             *   Make s RED → sibling subtree loses one black.
-             *   Push double-black up to parent.
-             */
-            if (s->left->color  == RBT_BLACK &&
-                s->right->color == RBT_BLACK) {
-                s->color = RBT_RED;
-                x = x->parent;            /* move double-black upward */
+            if (TREE(w->left_off)->color == RBT_BLACK &&
+                TREE(w->right_off)->color == RBT_BLACK) {
+                w->color = RBT_RED;
+                x = xp;
             } else {
-                /*
-                 * Case A-3: s is BLACK, s's FAR child (s.right) is BLACK,
-                 *           s's NEAR child (s.left) is RED.
-                 *   s.left→BLACK, s→RED.
-                 *   RIGHT-ROTATE on s → s.left becomes new sibling.
-                 *   Update s.  Now s.right is RED → Case 4.
-                 */
-                if (s->right->color == RBT_BLACK) {
-                    s->left->color = RBT_BLACK;
-                    s->color       = RBT_RED;
-                    rbt_right_rotate(tree, s);
-                    s = x->parent->right;
+                if (TREE(w->right_off)->color == RBT_BLACK) {
+                    TREE(w->left_off)->color = RBT_BLACK;
+                    w->color = RBT_RED;
+                    rbt_right_rotate(tree, w);
+                    xp = TREE(x->parent_off);
+                    w = TREE(xp->right_off);
                 }
-
-                /*
-                 * Case A-4: s is BLACK, s's FAR child (s.right) is RED.
-                 *   s takes parent's color, parent→BLACK, s.right→BLACK.
-                 *   LEFT-ROTATE on parent.
-                 *   x = root → exit loop.
-                 */
-                s->color         = x->parent->color;
-                x->parent->color = RBT_BLACK;
-                s->right->color  = RBT_BLACK;
-                rbt_left_rotate(tree, x->parent);
-                x = tree->root;            /* terminate */
+                w->color = xp->color;
+                xp->color = RBT_BLACK;
+                TREE(w->right_off)->color = RBT_BLACK;
+                rbt_left_rotate(tree, xp);
+                x = TREE(tree->root_off);
             }
-
         } else {
-            /*
-             * Branch B: x is the RIGHT child (symmetric)
-             */
-            s = x->parent->left;       /* sibling */
-
-            /*
-             * Case B-1: sibling s is RED.
-             */
-            if (s->color == RBT_RED) {
-                s->color         = RBT_BLACK;
-                x->parent->color = RBT_RED;
-                rbt_right_rotate(tree, x->parent);
-                s = x->parent->left;
+            BSTnode *w = TREE(xp->left_off);
+            if (w->color == RBT_RED) {
+                w->color = RBT_BLACK;
+                xp->color = RBT_RED;
+                rbt_right_rotate(tree, xp);
+                xp = TREE(x->parent_off);
+                w = TREE(xp->left_off);
             }
-
-            /*
-             * Case B-2: s is BLACK, both children of s are BLACK.
-             */
-            if (s->right->color == RBT_BLACK &&
-                s->left->color  == RBT_BLACK) {
-                s->color = RBT_RED;
-                x = x->parent;
+            if (TREE(w->right_off)->color == RBT_BLACK &&
+                TREE(w->left_off)->color == RBT_BLACK) {
+                w->color = RBT_RED;
+                x = xp;
             } else {
-                /*
-                 * Case B-3: s is BLACK, s's FAR child (s.left) is BLACK,
-                 *           s's NEAR child (s.right) is RED.
-                 */
-                if (s->left->color == RBT_BLACK) {
-                    s->right->color = RBT_BLACK;
-                    s->color        = RBT_RED;
-                    rbt_left_rotate(tree, s);
-                    s = x->parent->left;
+                if (TREE(w->left_off)->color == RBT_BLACK) {
+                    TREE(w->right_off)->color = RBT_BLACK;
+                    w->color = RBT_RED;
+                    rbt_left_rotate(tree, w);
+                    xp = TREE(x->parent_off);
+                    w = TREE(xp->left_off);
                 }
-
-                /*
-                 * Case B-4: s is BLACK, s's FAR child (s.left) is RED.
-                 */
-                s->color         = x->parent->color;
-                x->parent->color = RBT_BLACK;
-                s->left->color   = RBT_BLACK;
-                rbt_right_rotate(tree, x->parent);
-                x = tree->root;
+                w->color = xp->color;
+                xp->color = RBT_BLACK;
+                TREE(w->left_off)->color = RBT_BLACK;
+                rbt_right_rotate(tree, xp);
+                x = TREE(tree->root_off);
             }
         }
     }
-
-    /*
-     * Ensure x is BLACK (resolves double-black).
-     */
     x->color = RBT_BLACK;
 }
 
-/* ================================================================
- * bst_inorder (traversal — skip nil sentinel)
- * ================================================================ */
+void rbt_find_predecessor(BST *tree, BSTnode *node,
+                           BSTnode **out_pre, BSTnode **out_parent) {
+    BSTnode *parent = g_nil;
+    BSTnode *x = TREE(tree->root_off);
+    BSTnode *pre = g_nil;
 
-static void bst_inorder_node(BSTnode *node, BSTnode *nil) {
-    if (node == nil) {
-        return;
+    while (!IS_NIL(x)) {
+        ListNode *xu = LIST(x->user_off);
+        ListNode *nu = LIST(node->user_off);
+        if (!xu || !nu) break;
+        parent = x;
+        if (strcmp(nu->data.name, xu->data.name) <= 0) {
+            x = TREE(x->left_off);
+        } else {
+            pre = x;
+            x = TREE(x->right_off);
+        }
     }
+    if (out_pre) *out_pre = pre;
+    if (out_parent) *out_parent = parent;
+}
 
-    bst_inorder_node(node->left, nil);
-
-    printf("%s,%s,%s,%s,%s,%s\n",
-           node->user->data.name,
-           node->user->data.password,
-           node->user->data.birthdate,
-           node->user->data.phone,
-           node->user->data.mobile,
-           node->user->data.email);
-
-    bst_inorder_node(node->right, nil);
+/* ================================================================
+ * Traversal
+ * ================================================================ */
+static void bst_inorder_node(BSTnode *node, BSTnode *nil) {
+    if (IS_NIL(node)) return;
+    bst_inorder_node(TREE(node->left_off), nil);
+    if (node->used && node->user_off) {
+        ListNode *lu = LIST(node->user_off);
+        if (lu && lu->used) {
+            printf("%s %s %s %s %s %s\n",
+                   lu->data.name, lu->data.password, lu->data.birthdate,
+                   lu->data.phone, lu->data.mobile, lu->data.email);
+        }
+    }
+    bst_inorder_node(TREE(node->right_off), nil);
 }
 
 void bst_inorder(BST *tree) {
-    if (tree == NULL) {
-        log_error("rbt: inorder called with NULL tree");
-        return;
-    }
-
-    log_info("rbt: inorder traversal");
-    bst_inorder_node(tree->root, &tree->nil);
+    if (!tree || !g_shm_base) return;
+    bst_inorder_node(TREE(tree->root_off), TREE(tree->nil_off));
 }
 
-/*
- * v1.1: inorder traversal writing to a buffer (safe for large datasets).
- * The traversal is done iteratively via the existing recursive helper,
- * but writes to buf instead of stdout.
- */
-typedef struct {
-    char *buf;
-    int   buf_size;
-    int  *total;
-    int  *offset;
-} bst_format_ctx;
-
-static void bst_format_node(BSTnode *node, BSTnode *nil, bst_format_ctx *ctx) {
-    char line[256];
-    int n;
-
-    if (node == nil) return;
-    if (!ctx || !ctx->buf || ctx->buf_size <= 0) return;
-
-    bst_format_node(node->left, nil, ctx);
-
-    /* check if buffer has room */
-    if (*(ctx->offset) >= ctx->buf_size - 256) return;
-
-    (*(ctx->total))++;
-
-    n = snprintf(line, sizeof(line), "%s,%s,%s,%s,%s,%s\n",
-                 node->user->data.name,
-                 node->user->data.password,
-                 node->user->data.birthdate,
-                 node->user->data.phone,
-                 node->user->data.mobile,
-                 node->user->data.email);
-
-    if (*(ctx->offset) + n < ctx->buf_size) {
-        memcpy(ctx->buf + *(ctx->offset), line, n);
-        *(ctx->offset) += n;
+/* ---- format users to buffer ---- */
+static void bst_format_node(BSTnode *node, BSTnode *nil,
+                             char *buf, int buf_size,
+                             int *total, int *offset) {
+    if (IS_NIL(node) || *offset >= buf_size - 200) return;
+    bst_format_node(TREE(node->left_off), nil, buf, buf_size, total, offset);
+    if (node->used && node->user_off) {
+        ListNode *lu = LIST(node->user_off);
+        if (lu && lu->used) {
+            (*total)++;
+            int w = snprintf(buf + *offset, buf_size - *offset,
+                     "%s %s %s %s %s %s\n",
+                     lu->data.name, lu->data.password, lu->data.birthdate,
+                     lu->data.phone, lu->data.mobile, lu->data.email);
+            if (w > 0 && w < buf_size - *offset) *offset += w;
+        }
     }
-
-    bst_format_node(node->right, nil, ctx);
+    bst_format_node(TREE(node->right_off), nil, buf, buf_size, total, offset);
 }
 
 void bst_format_users(BST *tree, char *buf, int buf_size, int *total, int *offset) {
-    bst_format_ctx ctx;
-
-    if (!tree || !buf || buf_size <= 0) return;
-
-    *total  = 0;
-    *offset = 0;
-
-    ctx.buf      = buf;
-    ctx.buf_size = buf_size;
-    ctx.total    = total;
-    ctx.offset   = offset;
-
-    bst_format_node(tree->root, &tree->nil, &ctx);
+    if (!tree || !buf || !g_shm_base) return;
+    bst_format_node(TREE(tree->root_off), TREE(tree->nil_off),
+                    buf, buf_size, total, offset);
 }
 
-/* ================================================================
- * bst_free (post-order — free tree nodes, not the nil sentinel)
- * ================================================================ */
-
-static void bst_free_nodes(BSTnode *node, BSTnode *nil) {
-    if (node == nil) {
-        return;
-    }
-
-    bst_free_nodes(node->left, nil);
-    bst_free_nodes(node->right, nil);
-
-    /*
-     * Only free the BSTnode itself.
-     * node->user points to a ListNode owned by the linked list
-     * in user_store.c, which will be freed separately.
-     */
-    free(node);
-}
-
+/* ---- free (no-op: memory is in mmap pool) ---- */
 void bst_free(BST *tree) {
-    if (tree == NULL) {
-        return;
-    }
-
-    bst_free_nodes(tree->root, &tree->nil);
-
-    /* reset to empty state */
-    tree->root = &tree->nil;
+    if (!tree) return;
+    tree->root_off = tree->nil_off;
     tree->size = 0;
-    log_info("rbt: tree freed");
 }

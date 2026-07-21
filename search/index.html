@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>User Search — MiniWeb Server</title>
+  <title>User Manager — MiniWeb Server</title>
   <link rel="icon" href="/icon/favicon.ico">
   <style>
     :root {
@@ -14,6 +14,8 @@
       --border: #e0e0e0;
       --accent: #2563eb;
       --green: #16a34a;
+      --red: #dc2626;
+      --orange: #ea580c;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -23,188 +25,282 @@
       line-height: 1.6;
     }
 
-    /* ---- header ---- */
     header {
       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
       color: #fff;
-      padding: 48px 24px 40px;
+      padding: 40px 24px 36px;
       text-align: center;
     }
-    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
-    header p  { margin-top: 8px; opacity: 0.8; font-size: 1rem; }
+    header h1 { font-size: 2rem; font-weight: 700; }
+    header p  { margin-top: 8px; opacity: 0.85; font-size: 0.95rem; }
     .pid-badge {
       display: inline-block;
-      margin-top: 16px;
-      padding: 6px 14px;
+      margin-top: 14px;
+      padding: 5px 14px;
       background: rgba(255,255,255,0.12);
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-family: "SF Mono", "Fira Code", monospace;
     }
 
-    /* ---- layout ---- */
-    .container { max-width: 720px; margin: 0 auto; padding: 32px 20px; }
+    .container { max-width: 760px; margin: 0 auto; padding: 28px 20px; }
 
-    /* ---- search form ---- */
-    .search-card {
+    /* ---- section card ---- */
+    section {
       background: var(--card-bg);
-      border: 2px solid var(--accent);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 36px;
-      margin-bottom: 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      text-align: center;
-    }
-    .search-card h2 {
-      font-size: 1.3rem;
-      margin-bottom: 8px;
-    }
-    .search-card .hint {
-      color: var(--muted);
-      font-size: 0.9rem;
+      padding: 28px 32px;
       margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
-    .search-card form {
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
       display: flex;
+      align-items: center;
       gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
     }
-    .search-card input[type="text"] {
-      flex: 1;
-      min-width: 260px;
-      padding: 12px 16px;
-      font-size: 1.05rem;
+    section .sec-hint {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+    }
+    section.accent  { border-left: 4px solid var(--accent); }
+    section.green   { border-left: 4px solid var(--green); }
+    section.red     { border-left: 4px solid var(--red); }
+    section.orange  { border-left: 4px solid var(--orange); }
+
+    /* ---- form fields ---- */
+    .field { margin-bottom: 12px; text-align: left; }
+    .field label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 3px; font-weight: 500; }
+    .field input {
+      width: 100%;
+      padding: 9px 14px;
+      font-size: 0.95rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 6px;
       outline: none;
+      box-sizing: border-box;
       transition: border-color 0.15s;
     }
-    .search-card input[type="text"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-    }
-    .search-card button {
-      padding: 12px 28px;
-      font-size: 1.05rem;
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 26px;
+      font-size: 0.95rem;
       font-weight: 600;
-      background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       transition: opacity 0.15s;
     }
-    .search-card button:hover { opacity: 0.9; }
+    .btn:hover { opacity: 0.9; }
+    .btn.primary { background: var(--accent); }
+    .btn.green   { background: var(--green); }
+    .btn.red     { background: var(--red); }
+    .btn.orange  { background: var(--orange); }
 
-    /* ---- info cards ---- */
+    .btn-row { text-align: center; margin-top: 16px; }
+
+    /* ---- result message ---- */
+    .msg {
+      margin-top: 12px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      text-align: center;
+      display: none;
+    }
+    .msg.show { display: block; }
+    .msg.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .msg.error   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* ---- info row ---- */
     .info-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
-      margin-bottom: 32px;
+      margin-bottom: 20px;
     }
     .info-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 18px;
+      padding: 16px;
       text-align: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    .info-card .label {
-      font-size: 0.78rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .info-card .value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-top: 4px;
-      color: var(--accent);
-    }
+    .info-card .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-card .value { font-size: 1.15rem; font-weight: 700; margin-top: 3px; color: var(--accent); }
     .info-card .value.green { color: var(--green); }
+    .info-card .value.orange { color: var(--orange); }
+
+    /* ---- quick links ---- */
+    .quick-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .quick-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: box-shadow 0.15s, border-color 0.15s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .quick-links a:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.08); border-color: var(--accent); }
 
     /* ---- nav ---- */
-    .nav-links {
-      text-align: center;
-      margin-top: 24px;
-    }
+    .nav-links { text-align: center; margin-top: 8px; }
     .nav-links a {
       display: inline-block;
-      padding: 8px 20px;
-      margin: 0 6px;
+      padding: 7px 18px;
+      margin: 0 5px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 6px;
       color: var(--accent);
       text-decoration: none;
-      font-size: 0.9rem;
-      transition: box-shadow 0.15s;
+      font-size: 0.85rem;
     }
     .nav-links a:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
-    /* ---- footer ---- */
-    footer {
-      text-align: center;
-      padding: 32px 20px;
-      color: var(--muted);
-      font-size: 0.82rem;
-    }
+    footer { text-align: center; padding: 28px 20px; color: var(--muted); font-size: 0.8rem; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>&#128269; User Search</h1>
-  <p>搜索已加载的中文用户数据库 &middot; 基于红黑树索引</p>
-  <div class="pid-badge">Powered by RBT Index &middot; v1.4</div>
+  <h1>&#128269; User Manager</h1>
+  <p>搜索 &middot; 添加 &middot; 删除 &middot; 查询 &middot; 10 万中文用户 &middot; RBT 索引</p>
+  <div class="pid-badge">MiniWeb Server v1.4</div>
 </header>
 
 <div class="container">
 
-  <!-- ======== 搜索表单 ======== -->
-  <div class="search-card">
-    <h2>查找用户</h2>
-    <p class="hint">多字段 AND 搜索 &middot; 支持中文 &middot; 大小写不敏感 &middot; 部分匹配 &middot; 10 万用户</p>
-    <form method="post" action="/search" enctype="application/x-www-form-urlencoded">
-      <div style="margin-bottom:14px;text-align:left;">
-        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Name</label>
-        <input type="text" name="name" placeholder="输入姓名，如：赵安" autofocus autocomplete="off"
-          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
-      </div>
-      <div style="margin-bottom:14px;text-align:left;">
-        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Phone</label>
-        <input type="text" name="phone" placeholder="输入电话，如：138" autocomplete="off"
-          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
-      </div>
-      <div style="margin-bottom:20px;text-align:left;">
-        <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">Email</label>
-        <input type="text" name="email" placeholder="输入邮箱，如：@example.com" autocomplete="off"
-          style="width:100%;padding:10px 16px;font-size:1rem;border:1px solid #ccc;border-radius:8px;outline:none;box-sizing:border-box;">
-      </div>
-      <button type="submit" style="padding:12px 32px;font-size:1rem;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">搜索</button>
-    </form>
+  <!-- ======== 快速操作 ======== -->
+  <div class="quick-links">
+    <a href="/users" target="_blank">&#128196; 列出全部用户</a>
+    <a href="/users/find-index/" target="_blank" onclick="var n=prompt('Enter exact username:');if(n){this.href='/users/'+encodeURIComponent(n);return true;}return false;">&#128270; 精确查找</a>
+    <a href="/users/compare/" target="_blank" onclick="var n=prompt('Enter username to benchmark:');if(n){this.href='/users/compare/'+encodeURIComponent(n);return true;}return false;">&#128202; 搜索性能对比</a>
+    <a href="/help" target="_blank">&#10067; API 帮助</a>
   </div>
 
-  <!-- ======== 搜索说明 ======== -->
+  <!-- ======== 搜索 ======== -->
+  <section class="accent">
+    <h2>&#128269; 多字段 AND 搜索</h2>
+    <p class="sec-hint">所有字段以 AND 连接 &middot; 大小写不敏感 &middot; 部分匹配 &middot; 留空则跳过该条件</p>
+    <form method="post" action="/search" enctype="application/x-www-form-urlencoded">
+      <div class="field-row">
+        <div class="field">
+          <label>Name 姓名</label>
+          <input type="text" name="name" placeholder="如：赵安" autofocus autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Phone 电话</label>
+          <input type="text" name="phone" placeholder="如：010-111" autocomplete="off">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Mobile 手机</label>
+          <input type="text" name="mobile" placeholder="如：139" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Email 邮箱</label>
+          <input type="text" name="email" placeholder="如：@example.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn primary">&#128269; 搜索</button></div>
+    </form>
+  </section>
+
+  <!-- ======== 添加用户 ======== -->
+  <section class="green">
+    <h2>&#10133; 添加用户</h2>
+    <p class="sec-hint">填写用户信息，提交后以 CSV 格式 POST 到 /users</p>
+    <form id="add-form">
+      <div class="field-row">
+        <div class="field">
+          <label>Name 姓名 *</label>
+          <input type="text" id="add-name" placeholder="如：张三" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Password 密码 *</label>
+          <input type="text" id="add-pass" placeholder="如：p8e287da38a" required autocomplete="off">
+        </div>
+      </div>
+      <div class="field-row-3">
+        <div class="field">
+          <label>Birth 生日</label>
+          <input type="text" id="add-birth" placeholder="YYYYMMDD" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Phone 电话</label>
+          <input type="text" id="add-phone" placeholder="010-11111111" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Mobile 手机</label>
+          <input type="text" id="add-mobile" placeholder="13900000000" autocomplete="off">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email 邮箱</label>
+        <input type="text" id="add-email" placeholder="user@example.com" autocomplete="off">
+      </div>
+      <div class="btn-row"><button type="submit" class="btn green">&#10133; 添加用户</button></div>
+    </form>
+    <div class="msg" id="add-msg"></div>
+  </section>
+
+  <!-- ======== 删除用户 ======== -->
+  <section class="red">
+    <h2>&#10060; 删除用户</h2>
+    <p class="sec-hint">输入要删除的精确用户名，以 POST 表单提交</p>
+    <form method="post" action="/delete" enctype="application/x-www-form-urlencoded">
+      <div class="field-row">
+        <div class="field">
+          <label>Username 用户名 *</label>
+          <input type="text" name="name" placeholder="输入要删除的用户名" required autocomplete="off">
+        </div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn red">&#10060; 删除用户</button></div>
+    </form>
+  </section>
+
+  <!-- ======== 信息 ======== -->
   <div class="info-row">
     <div class="info-card">
       <div class="label">数据库</div>
       <div class="value">100,000</div>
     </div>
     <div class="info-card">
-      <div class="label">搜索算法</div>
-      <div class="value">RBT Index</div>
+      <div class="label">索引</div>
+      <div class="value">RBT</div>
     </div>
     <div class="info-card">
-      <div class="label">连接方式</div>
-      <div class="value">AND</div>
+      <div class="label">搜索</div>
+      <div class="value green">AND</div>
     </div>
     <div class="info-card">
-      <div class="label">结果排序</div>
-      <div class="value green">按名称&#8593;</div>
+      <div class="label">排序</div>
+      <div class="value orange">&#8593;Name</div>
     </div>
   </div>
 
@@ -213,13 +309,115 @@
     <a href="http://localhost:8080/">&#127968; 主站点</a>
     <a href="http://blog.localhost:8080/">&#128214; Blog</a>
     <a href="http://lab.localhost:8080/">&#128300; Lab</a>
+    <a href="http://users.localhost:8080/">&#128269; 用户管理</a>
   </div>
 
 </div>
 
 <footer>
-  MiniWeb Server v1.4 &middot; Built with C + epoll + RBT + love
+  MiniWeb Server v1.4 &middot; All user operations in one place
 </footer>
+
+<script>
+// ---- Validation Helpers ----
+function validatePhone(val) {
+  if (!val) return true;  // empty is OK
+  return /^[0-9\-]{1,20}$/.test(val) && (val.match(/[0-9]/g) || []).length >= 1;
+}
+function validateEmail(val) {
+  if (!val) return true;  // empty is OK
+  if (/\s/.test(val)) return false;    // no spaces
+  var at = val.indexOf('@');
+  if (at === -1) return true;          // no @: accept as search term
+  if (at === val.length - 1) return false; // @ at end: reject
+  if (val.indexOf('@', at + 1) !== -1) return false; // multiple @
+  return true;
+}
+function showMsg(id, type, text) {
+  var m = document.getElementById(id);
+  m.className = 'msg ' + type + ' show';
+  m.textContent = text;
+}
+
+// ---- Search Form: client-side validation ----
+document.querySelector('form[action="/search"]').addEventListener('submit', function(e) {
+  var phone  = this.querySelector('input[name="phone"]').value.trim();
+  var mobile = this.querySelector('input[name="mobile"]').value.trim();
+  var email  = this.querySelector('input[name="email"]').value.trim();
+  if (phone && !validatePhone(phone)) {
+    e.preventDefault();
+    alert('Invalid phone: only digits and hyphens allowed (1-20 chars).');
+    return false;
+  }
+  if (mobile && !validatePhone(mobile)) {
+    e.preventDefault();
+    alert('Invalid mobile: only digits and hyphens allowed (1-20 chars).');
+    return false;
+  }
+  if (email && !validateEmail(email)) {
+    e.preventDefault();
+    alert('Invalid email format. Use user@example.com format.');
+    return false;
+  }
+});
+
+// ---- Add User: POST CSV to /users ----
+document.getElementById('add-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var msg = document.getElementById('add-msg');
+  msg.className = 'msg';
+  void msg.offsetWidth;
+
+  var fields = [
+    document.getElementById('add-name').value.trim(),
+    document.getElementById('add-pass').value.trim(),
+    document.getElementById('add-birth').value.trim(),
+    document.getElementById('add-phone').value.trim(),
+    document.getElementById('add-mobile').value.trim(),
+    document.getElementById('add-email').value.trim()
+  ];
+
+  // Validate phone and email
+  if (fields[3] && !validatePhone(fields[3])) {
+    showMsg('add-msg', 'error', 'Invalid phone: only digits and hyphens (1-20 chars).');
+    return;
+  }
+  if (fields[4] && !validatePhone(fields[4])) {
+    showMsg('add-msg', 'error', 'Invalid mobile: only digits and hyphens (1-20 chars).');
+    return;
+  }
+  if (fields[5] && !validateEmail(fields[5])) {
+    showMsg('add-msg', 'error', 'Invalid email: use user@example.com format.');
+    return;
+  }
+
+  var csv = fields.join(',');
+
+  try {
+    var resp = await fetch('/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: csv
+    });
+    var text = await resp.text();
+    if (resp.ok && text.indexOf('ADDED') !== -1) {
+      msg.className = 'msg success show';
+      msg.textContent = 'User "' + fields[0] + '" added successfully.';
+      this.reset();
+    } else if (text.indexOf('EXISTS') !== -1) {
+      msg.className = 'msg error show';
+      msg.textContent = 'User "' + fields[0] + '" already exists.';
+    } else {
+      msg.className = 'msg error show';
+      msg.textContent = 'Error: ' + text.trim();
+    }
+  } catch(err) {
+    msg.className = 'msg error show';
+    msg.textContent = 'Network error: ' + err.message;
+  }
+});
+
+</script>
 
 </body>
 </html>

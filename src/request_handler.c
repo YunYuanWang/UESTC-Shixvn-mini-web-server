@@ -1,5 +1,6 @@
 #include "../include/config.h"
 #include "../include/request_handler.h"
+#include "../include/route_table.h"
 #include "../include/http_response.h"
 #include "../include/http_parser.h"
 #include "../include/log.h"
@@ -14,6 +15,9 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+/* v1.4: forward declaration for URL path decoding */
+static char *url_decode_path(char *src);
 
 /* ---- thread-local worker label (set by thread pool) ---- */
 static __thread int g_worker_id = 0;
@@ -210,6 +214,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
     if (strcmp(req->method, "GET") == 0 &&
         strncmp(req->path, "/users/find-index/", 18) == 0) {
         const char *name = req->path + 18;
+        url_decode_path((char *)name);
         ListNode *user = user_store_find_index(name);
         if (user != NULL) {
             written = snprintf(output + offset, size - offset,
@@ -231,6 +236,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
     if (strcmp(req->method, "GET") == 0 &&
         strncmp(req->path, "/users/compare-verbose/", 23) == 0) {
         const char *name = req->path + 23;
+        url_decode_path((char *)name);
         char cap[8192];
         g_compare_ctx.name = name;
         g_compare_ctx.verbose = 1;
@@ -249,6 +255,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
     if (strcmp(req->method, "GET") == 0 &&
         strncmp(req->path, "/users/compare/", 15) == 0) {
         const char *name = req->path + 15;
+        url_decode_path((char *)name);
         char cap[8192];
         g_compare_ctx.name = name;
         g_compare_ctx.verbose = 0;
@@ -267,6 +274,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
     if (strcmp(req->method, "GET") == 0 &&
         strncmp(req->path, "/user/", 6) == 0) {
         const char *name = req->path + 6;
+        url_decode_path((char *)name);
         if (name[0] == '\0') {
             written = snprintf(output + offset, size - offset,
                 "NOT_FOUND (empty name)\n");
@@ -319,6 +327,7 @@ int request_handler_process(const request_t *req, char *output, int size) {
     if (strcmp(req->method, "DELETE") == 0 &&
         strncmp(req->path, "/users/", 7) == 0) {
         const char *name = req->path + 7;
+        url_decode_path((char *)name);
         int ret;
         if (name[0] == '\0') {
             written = snprintf(output + offset, size - offset,
@@ -375,7 +384,7 @@ static int build_http_response(char *output, int size,
 
     written = snprintf(output, (size_t)size,
         "HTTP/1.1 %d %s\r\n"
-        "Content-Type: text/plain\r\n"
+        "Content-Type: text/plain; charset=utf-8\r\n"
         "Content-Length: %d\r\n"
         "Connection: Keep-Alive\r\n"
         "\r\n"
@@ -428,6 +437,7 @@ static int format_user_info(const ListNode *user, char *buf, int size) {
 static char g_body_buf[BLOG_BODY_MAX];
 
 /*
+/*
  * v1.4: URL-decode a form-encoded value string.
  * Handles %XX hex sequences and '+' -> ' ' conversion.
  * Stops at '&' (parameter delimiter).
@@ -463,11 +473,649 @@ static int url_decode(const char *src, char *dst, int dst_size) {
     return 0;
 }
 
+/*
+ * v1.4: URL-decode a path segment (only %XX, no + → space).
+ * Decodes in-place. Returns the decoded string (same pointer).
+ * Invalid %XX sequences are left as-is.
+ */
+static char *url_decode_path(char *src) {
+    char *p, *q;
+    if (src == NULL) return NULL;
+
+    p = src;
+    q = src;
+    while (*p != '\0') {
+        if (*p == '%' &&
+            isxdigit((unsigned char)p[1]) &&
+            isxdigit((unsigned char)p[2])) {
+            char hex[3];
+            hex[0] = p[1];
+            hex[1] = p[2];
+            hex[2] = '\0';
+            *q++ = (char)strtol(hex, NULL, 16);
+            p += 3;
+        } else {
+            *q++ = *p++;
+        }
+    }
+    *q = '\0';
+    return src;
+}
+
+/*
+ * v1.4: Validate phone — digits and hyphens only, 1-20 chars, >= 1 digit.
+ * Empty string is valid (means "no filter").
+ */
+static int validate_phone(const char *phone) {
+    int digits = 0, len = 0;
+    if (phone == NULL || phone[0] == '\0') return 1;
+    for (const char *p = phone; *p != '\0'; p++, len++) {
+        if (*p >= '0' && *p <= '9') digits++;
+        else if (*p != '-') return 0;
+    }
+    return (len >= 1 && len <= 20 && digits >= 1);
+}
+
+/*
+ * v1.4: Validate email — must have exactly one '@', local and domain parts,
+ * domain must contain '.'.  Empty string is valid (means "no filter").
+ */
+static int validate_email(const char *email) {
+    const char *at;
+    if (email == NULL || email[0] == '\0') return 1;
+    /* Must not contain spaces */
+    if (strchr(email, ' ') != NULL) return 0;
+    /* If no '@', accept as partial search term (e.g. domain search) */
+    at = strchr(email, '@');
+    if (at == NULL) return 1;
+    /* Has '@': must have at most one, with something after it */
+    if (strchr(at + 1, '@') != NULL) return 0;   /* multiple @ */
+    if (at[1] == '\0') return 0;                   /* nothing after @ */
+    /* '@' at start is OK for domain search like @example.com */
+    return 1;
+}
+
+/* ================================================================
+ *  v1.5: Route-table-based handler functions
+ *
+ *  Each handler encapsulates one route's logic.  They are called by
+ *  request_handler_process_http() via the route table dispatch.
+ *  All handlers share the signature defined in request_handler.h.
+ * ================================================================ */
+
+/* ---- API handlers ---- */
+
+static int handle_hello(const request_t *req, char *body, int body_size,
+                         const char *captured, char *output, int output_size) {
+    (void)req; (void)body; (void)body_size; (void)captured;
+    return build_http_response(output, output_size, 200, "OK",
+                               "Hello, Web!\n");
+}
+
+static int handle_help(const request_t *req, char *body, int body_size,
+                        const char *captured, char *output, int output_size) {
+    (void)req; (void)body; (void)body_size; (void)captured;
+    const char *help_text =
+        "MiniWebServer v1.5 — HTTP API\n"
+        "\n"
+        "  GET  /hello                          hello\n"
+        "  GET  /help                           this help\n"
+        "  GET  /users                          list all users (BST inorder)\n"
+        "  GET  /users/<name>                   find user by name\n"
+        "  GET  /users/find-index/<name>        find user via BST index\n"
+        "  GET  /users/compare/<name>           compare linked-list vs BST search\n"
+        "  GET  /users/compare-verbose/<name>   compare search (verbose)\n"
+        "  GET  /user/<name>                    find user by name\n"
+        "  POST /users                          add user (body: csv line)\n"
+        "  POST /search                         search users by partial name match\n"
+        "  DELETE /users/<name>                 delete user\n";
+    return build_http_response(output, output_size, 200, "OK", help_text);
+}
+
+static int handle_sleep(const request_t *req, char *body, int body_size,
+                         const char *captured, char *output, int output_size) {
+    (void)req;
+    int delay_ms = atoi(captured);
+    if (delay_ms <= 0) delay_ms = 100;
+    if (delay_ms > 5000) delay_ms = 5000;
+
+    {
+        char msg[128];
+        snprintf(msg, sizeof(msg), "%ssleeping %d ms", worker_prefix(), delay_ms);
+        log_info(msg);
+    }
+
+    usleep((unsigned int)(delay_ms * 1000));
+    snprintf(body, body_size, "Slept %d ms\n", delay_ms);
+    return build_http_response(output, output_size, 200, "OK", body);
+}
+
+/* ---- Index handler ---- */
+
+static int handle_index(const request_t *req, char *body, int body_size,
+                         const char *captured, char *output, int output_size) {
+    (void)captured;
+    const char *ct;
+    int file_len = http_serve_file(g_current_root, "/", body, body_size, &ct);
+    if (file_len > 0) {
+        return http_build_response(200, "OK", ct, body, file_len,
+                                   req->keep_alive > 0 ? req->keep_alive : 1,
+                                   output, output_size);
+    }
+    return build_http_response(output, output_size, 404, "NOT FOUND",
+                               "404 Not Found\n");
+}
+
+/* ---- User CRUD handlers ---- */
+
+static int handle_user_list(const request_t *req, char *body, int body_size,
+                             const char *captured, char *output, int output_size) {
+    (void)captured;
+    int total = 0;
+    int offset = 0;
+    (void)req;
+    user_store_format_users(body, body_size - 1, &total, &offset);
+    if (offset >= body_size - 200) {
+        offset += snprintf(body + offset, body_size - offset,
+                 "\n... (showing first entries out of %d total users)\n", total);
+    }
+    return build_http_response(output, output_size, 200, "OK", body);
+}
+
+static int handle_user_find_index(const request_t *req, char *body, int body_size,
+                                   const char *captured, char *output,
+                                   int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    ListNode *user = user_store_find_index(name);
+    if (user != NULL) {
+        if (format_user_info(user, body, body_size) < 0) return -1;
+        return build_http_response(output, output_size, 200, "OK", body);
+    }
+    snprintf(body, body_size, "NOT_FOUND %s\n", name);
+    return build_http_response(output, output_size, 404, "NOT FOUND", body);
+}
+
+static int handle_user_compare_verbose(const request_t *req, char *body,
+                                        int body_size, const char *captured,
+                                        char *output, int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    g_compare_ctx.name = name;
+    g_compare_ctx.verbose = 1;
+    if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
+        return build_http_response(output, output_size, 500,
+                                   "INTERNAL SERVER ERROR",
+                                   "500 Internal Server Error\n");
+    }
+    return build_http_response(output, output_size, 200, "OK", body);
+}
+
+static int handle_user_compare(const request_t *req, char *body, int body_size,
+                                const char *captured, char *output,
+                                int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    g_compare_ctx.name = name;
+    g_compare_ctx.verbose = 0;
+    if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
+        return build_http_response(output, output_size, 500,
+                                   "INTERNAL SERVER ERROR",
+                                   "500 Internal Server Error\n");
+    }
+    return build_http_response(output, output_size, 200, "OK", body);
+}
+
+static int handle_user_by_name(const request_t *req, char *body, int body_size,
+                                const char *captured, char *output,
+                                int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    if (name[0] == '\0') {
+        return build_http_response(output, output_size, 400, "BAD REQUEST",
+                                   "ERROR: empty user name\n");
+    }
+    {
+        ListNode *user = user_store_find(name);
+        if (user != NULL) {
+            if (format_user_info(user, body, body_size) < 0) return -1;
+            return build_http_response(output, output_size, 200, "OK", body);
+        }
+        snprintf(body, body_size, "NOT_FOUND %s\n", name);
+        return build_http_response(output, output_size, 404, "NOT FOUND", body);
+    }
+}
+
+static int handle_user_simple_find(const request_t *req, char *body,
+                                    int body_size, const char *captured,
+                                    char *output, int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    if (name[0] == '\0') {
+        return build_http_response(output, output_size, 400, "BAD REQUEST",
+                                   "ERROR: empty user name\n");
+    }
+    {
+        ListNode *user = user_store_find(name);
+        if (user != NULL) {
+            if (format_user_info(user, body, body_size) < 0) return -1;
+            return build_http_response(output, output_size, 200, "OK", body);
+        }
+        snprintf(body, body_size, "NOT_FOUND %s\n", name);
+        return build_http_response(output, output_size, 404, "NOT FOUND", body);
+    }
+}
+
+static int handle_user_add(const request_t *req, char *body, int body_size,
+                            const char *captured, char *output, int output_size) {
+    (void)captured;
+    int ret;
+    if (req->body[0] == '\0') {
+        return build_http_response(output, output_size, 400, "BAD REQUEST",
+            "ERROR: POST /users requires a body with CSV data\n");
+    }
+    ret = user_store_add(req->body);
+    if (ret == 0) {
+        return build_http_response(output, output_size, 200, "OK", "ADDED\n");
+    }
+    return build_http_response(output, output_size, 200, "OK", "EXISTS\n");
+}
+
+static int handle_user_delete(const request_t *req, char *body, int body_size,
+                               const char *captured, char *output,
+                               int output_size) {
+    (void)req;
+    const char *name = (captured && captured[0]) ? captured : "";
+    url_decode_path((char *)name);
+    int ret;
+    if (name[0] == '\0') {
+        return build_http_response(output, output_size, 400, "BAD REQUEST",
+                                   "ERROR: DELETE requires a user name\n");
+    }
+    ret = user_store_delete(name);
+    if (ret == 0) {
+        return build_http_response(output, output_size, 200, "OK", "DELETED\n");
+    }
+    return build_http_response(output, output_size, 404, "NOT FOUND",
+                               "NO_SUCH_USER\n");
+}
+
+static int handle_delete_form(const request_t *req, char *body, int body_size,
+                               const char *captured, char *output,
+                               int output_size) {
+    (void)captured;
+    char name_buf[64];
+    const char *n_ptr;
+    int ret;
+
+    memset(name_buf, 0, sizeof(name_buf));
+    n_ptr = strstr(req->body, "name=");
+    if (n_ptr != NULL) {
+        n_ptr += 5;
+        url_decode((char *)n_ptr, name_buf, sizeof(name_buf));
+    }
+
+    if (name_buf[0] == '\0') {
+        return build_http_response(output, output_size, 400, "BAD REQUEST",
+                                   "ERROR: DELETE requires a user name\n");
+    }
+    ret = user_store_delete(name_buf);
+    if (ret == 0) {
+        return build_http_response(output, output_size, 200, "OK", "DELETED\n");
+    }
+    return build_http_response(output, output_size, 404, "NOT FOUND",
+                               "NO_SUCH_USER\n");
+}
+
+static int handle_search(const request_t *req, char *body, int body_size,
+                          const char *captured, char *output, int output_size) {
+    (void)captured;
+
+    /* Check Content-Type */
+    if (req->content_type[0] == '\0' ||
+        strcasecmp(req->content_type,
+                   "application/x-www-form-urlencoded") != 0) {
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\"><head>\n"
+            "<meta charset=\"utf-8\">\n"
+            "<title>415 Unsupported Media Type</title>\n"
+            "<style>"
+            "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+            "padding:0 16px;text-align:center;}"
+            "h1{color:#dc2626;}"
+            "</style></head><body>\n"
+            "<h1>415 Unsupported Media Type</h1>\n"
+            "<p>This endpoint only accepts "
+            "<code>application/x-www-form-urlencoded</code>.</p>\n"
+            "<p><a href=\"/\">Back to Search</a></p>\n"
+            "</body></html>\n");
+        return http_build_response(415, "UNSUPPORTED MEDIA TYPE",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body), 0, output, output_size);
+    }
+
+    if (req->content_length_hdr < 0) {
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\"><head>\n"
+            "<meta charset=\"utf-8\">\n"
+            "<title>400 Bad Request</title>\n"
+            "<style>"
+            "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+            "padding:0 16px;text-align:center;}"
+            "h1{color:#dc2626;}"
+            "</style></head><body>\n"
+            "<h1>400 Bad Request</h1>\n"
+            "<p>Content-Length header is required.</p>\n"
+            "<p><a href=\"/\">Back to Search</a></p>\n"
+            "</body></html>\n");
+        return http_build_response(400, "BAD REQUEST",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body), 0, output, output_size);
+    }
+
+    if ((int)strlen(req->body) != req->content_length_hdr) {
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\"><head>\n"
+            "<meta charset=\"utf-8\">\n"
+            "<title>400 Bad Request</title>\n"
+            "<style>"
+            "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+            "padding:0 16px;text-align:center;}"
+            "h1{color:#dc2626;}"
+            "</style></head><body>\n"
+            "<h1>400 Bad Request</h1>\n"
+            "<p>Body length (%d bytes) does not match "
+            "Content-Length (%d bytes).</p>\n"
+            "<p><a href=\"/\">Back to Search</a></p>\n"
+            "</body></html>\n",
+            (int)strlen(req->body), req->content_length_hdr);
+        return http_build_response(400, "BAD REQUEST",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body), 0, output, output_size);
+    }
+
+    {
+        search_criteria_t criteria;
+        char name_buf[64], phone_buf[32], email_buf[64], mobile_buf[32];
+        char *p_ptr;
+        int match_count;
+        int has_criteria = 0;
+
+        memset(&criteria, 0, sizeof(criteria));
+        memset(name_buf, 0, sizeof(name_buf));
+        memset(phone_buf, 0, sizeof(phone_buf));
+        memset(email_buf, 0, sizeof(email_buf));
+        memset(mobile_buf, 0, sizeof(mobile_buf));
+
+        p_ptr = strstr(req->body, "name=");
+        if (p_ptr != NULL) {
+            p_ptr += 5;
+            if (url_decode(p_ptr, name_buf, sizeof(name_buf)) != 0) {
+                return build_http_response(output, output_size, 400,
+                    "BAD REQUEST", "URL encoding error in name parameter.\n");
+            }
+            if (name_buf[0] != '\0') {
+                strncpy(criteria.name, name_buf, sizeof(criteria.name) - 1);
+                has_criteria = 1;
+            }
+        }
+
+        p_ptr = strstr(req->body, "phone=");
+        if (p_ptr != NULL) {
+            p_ptr += 6;
+            if (url_decode(p_ptr, phone_buf, sizeof(phone_buf)) != 0) {
+                return build_http_response(output, output_size, 400,
+                    "BAD REQUEST", "URL encoding error in phone parameter.\n");
+            }
+            if (phone_buf[0] != '\0') {
+                if (!validate_phone(phone_buf)) {
+                    return build_http_response(output, output_size, 400,
+                        "BAD REQUEST", "Invalid phone format.\n");
+                }
+                strncpy(criteria.phone, phone_buf, sizeof(criteria.phone) - 1);
+                has_criteria = 1;
+            }
+        }
+
+        p_ptr = strstr(req->body, "mobile=");
+        if (p_ptr != NULL) {
+            p_ptr += 7;
+            if (url_decode(p_ptr, mobile_buf, sizeof(mobile_buf)) != 0) {
+                return build_http_response(output, output_size, 400,
+                    "BAD REQUEST", "URL encoding error in mobile parameter.\n");
+            }
+            if (mobile_buf[0] != '\0') {
+                if (!validate_phone(mobile_buf)) {
+                    return build_http_response(output, output_size, 400,
+                        "BAD REQUEST", "Invalid mobile format.\n");
+                }
+                strncpy(criteria.mobile, mobile_buf, sizeof(criteria.mobile) - 1);
+                has_criteria = 1;
+            }
+        }
+
+        p_ptr = strstr(req->body, "email=");
+        if (p_ptr != NULL) {
+            p_ptr += 6;
+            if (url_decode(p_ptr, email_buf, sizeof(email_buf)) != 0) {
+                return build_http_response(output, output_size, 400,
+                    "BAD REQUEST", "URL encoding error in email parameter.\n");
+            }
+            if (email_buf[0] != '\0') {
+                if (!validate_email(email_buf)) {
+                    return build_http_response(output, output_size, 400,
+                        "BAD REQUEST", "Invalid email format.\n");
+                }
+                strncpy(criteria.email, email_buf, sizeof(criteria.email) - 1);
+                has_criteria = 1;
+            }
+        }
+
+        if (!has_criteria) {
+            /* Return search form HTML (simplified) */
+            snprintf(body, body_size,
+                "<!DOCTYPE html>\n"
+                "<html lang=\"en\"><head>\n"
+                "<meta charset=\"utf-8\">\n"
+                "<title>User Search</title>\n"
+                "<style>"
+                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
+                "padding:0 16px;}"
+                "</style></head><body>\n"
+                "<h1>User Search</h1>\n"
+                "<form method=\"post\" action=\"/search\""
+                " enctype=\"application/x-www-form-urlencoded\">\n"
+                "<p><label>Name: <input type=\"text\" name=\"name\"></label></p>\n"
+                "<p><label>Phone: <input type=\"text\" name=\"phone\"></label></p>\n"
+                "<p><label>Email: <input type=\"text\" name=\"email\"></label></p>\n"
+                "<p><button type=\"submit\">Search</button></p>\n"
+                "</form>\n"
+                "<p>Please enter at least one search criterion.</p>\n"
+                "</body></html>\n");
+            return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                       body, (int)strlen(body),
+                                       req->keep_alive > 0 ? req->keep_alive : 1,
+                                       output, output_size);
+        }
+
+        match_count = user_store_search(&criteria, body, body_size);
+        if (match_count < 0) {
+            return http_build_response(500, "INTERNAL SERVER ERROR",
+                                       "text/plain; charset=utf-8",
+                                       "500 Internal Server Error\n", 25,
+                                       0, output, output_size);
+        }
+
+        return http_build_response(200, "OK", "text/html; charset=utf-8",
+                                   body, (int)strlen(body),
+                                   req->keep_alive > 0 ? req->keep_alive : 1,
+                                   output, output_size);
+    }
+}
+
+/* ---- Blog / static file handlers ---- */
+
+static int handle_blog(const request_t *req, char *body, int body_size,
+                        const char *captured, char *output, int output_size) {
+    (void)captured;
+
+    if (!http_is_safe_path(req->path)) {
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html><head><title>403 Forbidden</title></head>\n"
+            "<body><h1>403 Forbidden</h1></body></html>\n");
+        return http_build_response(403, "FORBIDDEN",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body), 0, output, output_size);
+    }
+
+    /* 301: /blog → /blog/ */
+    if (strcmp(req->path, "/blog") == 0) {
+        return http_build_redirect(301, "/blog/", output, output_size);
+    }
+
+    {
+        const char *ct;
+        const char *blog_path = req->path + 5;  /* skip "/blog" */
+        int file_len = http_serve_file("blog", blog_path, body, body_size, &ct);
+        if (file_len > 0) {
+            return http_build_response(200, "OK", ct, body, file_len,
+                                       req->keep_alive > 0 ? req->keep_alive : 1,
+                                       output, output_size);
+        }
+
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html><head><title>404 Not Found</title></head>\n"
+            "<body><h1>404 Not Found</h1>\n"
+            "<p>The requested URL %s was not found on this server.</p>\n"
+            "<p><a href=\"/blog/\">Back to Blog Home</a></p>\n"
+            "</body></html>\n",
+            req->path);
+        return http_build_response(404, "NOT FOUND",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body),
+                                   req->keep_alive > 0 ? req->keep_alive : 1,
+                                   output, output_size);
+    }
+}
+
+static int handle_static(const request_t *req, char *body, int body_size,
+                          const char *captured, char *output, int output_size) {
+    (void)captured;
+
+    if (!http_is_safe_path(req->path)) {
+        snprintf(body, body_size,
+            "<!DOCTYPE html>\n"
+            "<html><head><title>403 Forbidden</title></head>\n"
+            "<body><h1>403 Forbidden</h1></body></html>\n");
+        return http_build_response(403, "FORBIDDEN",
+                                   "text/html; charset=utf-8",
+                                   body, (int)strlen(body), 0, output, output_size);
+    }
+
+    {
+        const char *ct;
+        int file_len = http_serve_file(g_current_root, req->path,
+                                       body, body_size, &ct);
+        if (file_len > 0) {
+            return http_build_response(200, "OK", ct, body, file_len,
+                                       req->keep_alive > 0 ? req->keep_alive : 1,
+                                       output, output_size);
+        }
+    }
+
+    return -1;  /* signal: file not found, caller handles 404 */
+}
+
+/* ---- Handler registry (maps handler_type_t → handler_fn) ---- */
+
+typedef struct {
+    handler_type_t type;
+    handler_fn     fn;
+} handler_reg_t;
+
+static const handler_reg_t g_handler_registry[] = {
+    { HANDLER_HELLO,                handle_hello                },
+    { HANDLER_HELP,                 handle_help                 },
+    { HANDLER_SLEEP,                handle_sleep                },
+    { HANDLER_INDEX,                handle_index                },
+    { HANDLER_USER_LIST,            handle_user_list            },
+    { HANDLER_USER_FIND_INDEX,      handle_user_find_index      },
+    { HANDLER_USER_COMPARE_VERBOSE, handle_user_compare_verbose },
+    { HANDLER_USER_COMPARE,         handle_user_compare         },
+    { HANDLER_USER_BY_NAME,         handle_user_by_name         },
+    { HANDLER_USER_SIMPLE_FIND,     handle_user_simple_find     },
+    { HANDLER_USER_ADD,             handle_user_add             },
+    { HANDLER_USER_DELETE,          handle_user_delete          },
+    { HANDLER_DELETE_FORM,          handle_delete_form          },
+    { HANDLER_SEARCH,               handle_search               },
+    { HANDLER_BLOG,                 handle_blog                 },
+    { HANDLER_STATIC,               handle_static               },
+    { HANDLER_NONE,                 NULL                        }  /* sentinel */
+};
+
+handler_fn route_table_get_handler_fn(handler_type_t type) {
+    int i;
+    for (i = 0; g_handler_registry[i].type != HANDLER_NONE; i++) {
+        if (g_handler_registry[i].type == type) {
+            return g_handler_registry[i].fn;
+        }
+    }
+    return NULL;
+}
+
+/*
+ * Populate the route table with default routes matching the existing
+ * hardcoded behavior.  Called when no routes were configured.
+ */
+static void route_table_populate_defaults(route_table_t *rt) {
+    /* v1.5: one entry per (method, path).  Exact routes first, then prefix. */
+
+    /* ---- Exact routes ---- */
+    route_table_add(rt, "GET",    "/hello",   MATCH_EXACT, HANDLER_HELLO);
+    route_table_add(rt, "GET",    "/help",    MATCH_EXACT, HANDLER_HELP);
+    route_table_add(rt, "GET",    "/users",   MATCH_EXACT, HANDLER_USER_LIST);
+    route_table_add(rt, "POST",   "/users",   MATCH_EXACT, HANDLER_USER_ADD);
+    route_table_add(rt, "POST",   "/search",  MATCH_EXACT, HANDLER_SEARCH);
+    route_table_add(rt, "POST",   "/delete",  MATCH_EXACT, HANDLER_DELETE_FORM);
+    route_table_add(rt, "GET",    "/blog",    MATCH_EXACT, HANDLER_BLOG);
+    route_table_add(rt, "HEAD",   "/blog",    MATCH_EXACT, HANDLER_BLOG);
+    route_table_add(rt, "GET",    "/",        MATCH_EXACT, HANDLER_INDEX);
+    route_table_add(rt, "HEAD",   "/",        MATCH_EXACT, HANDLER_INDEX);
+
+    /* ---- Prefix routes (longer prefixes first) ---- */
+    route_table_add(rt, "GET",    "/users/find-index/",      MATCH_PREFIX, HANDLER_USER_FIND_INDEX);
+    route_table_add(rt, "GET",    "/users/compare-verbose/", MATCH_PREFIX, HANDLER_USER_COMPARE_VERBOSE);
+    route_table_add(rt, "GET",    "/users/compare/",         MATCH_PREFIX, HANDLER_USER_COMPARE);
+    route_table_add(rt, "GET",    "/users/",                 MATCH_PREFIX, HANDLER_USER_BY_NAME);
+    route_table_add(rt, "DELETE", "/users/",                 MATCH_PREFIX, HANDLER_USER_DELETE);
+    route_table_add(rt, "GET",    "/user/",                  MATCH_PREFIX, HANDLER_USER_SIMPLE_FIND);
+    route_table_add(rt, "GET",    "/sleep/",                 MATCH_PREFIX, HANDLER_SLEEP);
+    route_table_add(rt, "GET",    "/blog/",                  MATCH_PREFIX, HANDLER_BLOG);
+    route_table_add(rt, "HEAD",   "/blog/",                  MATCH_PREFIX, HANDLER_BLOG);
+
+    /* ---- Static file fallback (lowest priority) ---- */
+    route_table_add(rt, "GET",    "/", MATCH_PREFIX, HANDLER_STATIC);
+    route_table_add(rt, "HEAD",   "/", MATCH_PREFIX, HANDLER_STATIC);
+}
+
+/* ================================================================
+ *  request_handler_process_http (v1.5: route-table-based dispatch)
+ * ================================================================ */
 int request_handler_process_http(const request_t *req, char *output, int size) {
     char *body = g_body_buf;
     int body_size = BLOG_BODY_MAX;
-    int status;
-    const char *status_text;
+    route_find_result_t result;
+    route_table_t *rt;
 
     if (req == NULL || output == NULL || size <= 0) {
         return -1;
@@ -475,626 +1123,57 @@ int request_handler_process_http(const request_t *req, char *output, int size) {
 
     memset(body, 0, body_size);
 
-    /* ---- GET / (v1.2.1: serve from configurable root, default "www") ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        (strcmp(req->path, "/") == 0)) {
-        const char *ct;
-        int file_len = http_serve_file(g_current_root, "/", body, body_size, &ct);
-        if (file_len > 0) {
-            /* Use enhanced response builder with dynamic Content-Type */
-            return http_build_response(200, "OK", ct, body, file_len,
-                                     req->keep_alive > 0 ? req->keep_alive : 1,
-                                     output, size);
+    /* v1.5: get route table (from config, or fall back to defaults) */
+    rt = config_get_route_table();
+    if (rt == NULL || (rt->exact_count + rt->prefix_count) == 0) {
+        /* No routes configured — use defaults (backward compatible) */
+        static route_table_t default_rt;
+        static int default_rt_initialized = 0;
+        if (!default_rt_initialized) {
+            route_table_init(&default_rt);
+            route_table_populate_defaults(&default_rt);
+            default_rt_initialized = 1;
         }
-        /* file not found — fall through to 404 */
+        rt = &default_rt;
     }
 
-    /* ================================================================
-     *  GET /blog or /blog/* — serve blog static files (v1.2)
-     *
-     *  Status codes handled:
-     *    301 — /blog without trailing slash → redirect to /blog/
-     *    403 — path traversal attempt (.. in path)
-     *    404 — file not found
-     *    405 — method not allowed (non-GET/HEAD)
-     * ================================================================ */
-    if (strncmp(req->path, "/blog", 5) == 0) {
+    /* v1.5: dispatch via route table */
+    route_table_find(rt, req->method, req->path, &result);
 
-        /* ---- 405 Method Not Allowed ---- */
-        if (strcmp(req->method, "GET") != 0 &&
-            strcmp(req->method, "HEAD") != 0) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html><head><title>405 Method Not Allowed</title></head>\n"
-                "<body><h1>405 Method Not Allowed</h1>\n"
-                "<p>The method %s is not allowed for %s.</p>\n"
-                "</body></html>\n",
-                req->method, req->path);
-            return http_build_response(405, "METHOD NOT ALLOWED",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        /* ---- 403 Forbidden: path traversal check ---- */
-        if (!http_is_safe_path(req->path)) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html><head><title>403 Forbidden</title></head>\n"
-                "<body><h1>403 Forbidden</h1>\n"
-                "<p>Access to this resource is forbidden.</p>\n"
-                "</body></html>\n");
-            return http_build_response(403, "FORBIDDEN",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        /* ---- 301: /blog → /blog/ ---- */
-        if (strcmp(req->path, "/blog") == 0) {
-            return http_build_redirect(301, "/blog/", output, size);
-        }
-
-        /* ---- Serve static file from blog/ directory ---- */
+    if (result.is_405) {
+        /* Path matched but method not allowed → 405 Method Not Allowed */
+        char allow_header[512];
+        snprintf(allow_header, sizeof(allow_header),
+                 "HTTP/1.1 405 METHOD NOT ALLOWED\r\n"
+                 "Server: MiniWeb/1.5\r\n"
+                 "Content-Type: text/plain; charset=utf-8\r\n"
+                 "Content-Length: 0\r\n"
+                 "Allow: %s\r\n"
+                 "Connection: close\r\n"
+                 "\r\n",
+                 result.allow[0] ? result.allow : "GET");
         {
-            const char *ct;
-            int file_len;
-            const char *blog_path;
-
-            /*
-             * /blog URL prefix always serves from the blog/ physical
-             * directory (independent of virtual host root).  For
-             * name-based virtual hosting, configure a server block
-             * with "root blog;" and access it via the domain name.
-             */
-            /* req->path starts with "/blog" — strip the "/blog" prefix
-             * to get the relative path within blog/ directory.
-             * "/blog/"       → ""   → index.html
-             * "/blog/css/style.css" → "/css/style.css"
-             */
-            blog_path = req->path + 5;  /* skip "/blog" */
-
-            file_len = http_serve_file("blog", blog_path,
-                                       body, body_size, &ct);
-            if (file_len > 0) {
-                /* ---- 304 Not Modified (if client sent If-Modified-Since) ---- */
-                /* (v1.2: basic 304 support — compare file mtime with request header) */
-                /*
-                 * For full 304 support we would need access to the HTTP request
-                 * headers.  As a minimal implementation, we always serve the file
-                 * with a 200.  Future versions can add full caching support.
-                 */
-
-                return http_build_response(200, "OK", ct, body, file_len,
-                                           req->keep_alive > 0 ? req->keep_alive : 1,
-                                           output, size);
-            }
-
-            /* ---- 404 Not Found ---- */
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html><head><title>404 Not Found</title></head>\n"
-                "<body><h1>404 Not Found</h1>\n"
-                "<p>The requested URL %s was not found on this server.</p>\n"
-                "<p><a href=\"/blog/\">Back to Blog Home</a></p>\n"
-                "</body></html>\n",
-                req->path);
-            return http_build_response(404, "NOT FOUND",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       req->keep_alive > 0 ? req->keep_alive : 1,
-                                       output, size);
-        }
-    }
-
-    /* ---- v1.2.1: generic static file handler (CSS, JS, images, etc.) ---- */
-    if (strcmp(req->method, "GET") == 0 ||
-        strcmp(req->method, "HEAD") == 0) {
-        if (!http_is_safe_path(req->path)) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html><head><title>403 Forbidden</title></head>\n"
-                "<body><h1>403 Forbidden</h1></body></html>\n");
-            return http_build_response(403, "FORBIDDEN",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        {
-            const char *ct;
-            int file_len = http_serve_file(g_current_root, req->path,
-                                           body, body_size, &ct);
-            if (file_len > 0) {
-                return http_build_response(200, "OK", ct, body, file_len,
-                                           req->keep_alive > 0 ? req->keep_alive : 1,
-                                           output, size);
+            int hdr_len = (int)strlen(allow_header);
+            if (hdr_len < size) {
+                memcpy(output, allow_header, hdr_len);
+                output[hdr_len] = '\0';
+                return hdr_len;
             }
         }
+        return -1;
     }
 
-    /* ---- GET /hello ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strcmp(req->path, "/hello") == 0) {
-        return build_http_response(output, size, 200, "OK",
-                                   "Hello, Web!\n");
-    }
-
-    /* ---- GET /sleep/<ms> (for testing queue congestion) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/sleep/", 7) == 0) {
-        int delay_ms = atoi(req->path + 7);
-        if (delay_ms <= 0) {
-            delay_ms = 100;
-        }
-        if (delay_ms > 5000) {
-            delay_ms = 5000;  /* cap at 5 seconds */
-        }
-
-        {
-            char msg[128];
-            snprintf(msg, sizeof(msg),
-                     "%ssleeping %d ms", worker_prefix(), delay_ms);
-            log_info(msg);
-        }
-
-        /* busy-wait or usleep — use usleep for simplicity */
-        usleep((unsigned int)(delay_ms * 1000));
-
-        {
-            char body[64];
-            snprintf(body, body_size, "Slept %d ms\n", delay_ms);
-            return build_http_response(output, size, 200, "OK", body);
-        }
-    }
-
-    /* ---- GET /help ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strcmp(req->path, "/help") == 0) {
-        const char *help_text =
-            "MiniWebServer v0.6 — HTTP API\n"
-            "\n"
-            "  GET  /hello                          hello\n"
-            "  GET  /help                           this help\n"
-            "  GET  /users                          list all users (BST inorder)\n"
-            "  GET  /users/<name>                   find user by name\n"
-            "  GET  /users/find-index/<name>        find user via BST index\n"
-            "  GET  /users/compare/<name>           compare linked-list vs BST search\n"
-            "  GET  /users/compare-verbose/<name>   compare search (verbose)\n"
-            "  GET  /user/<name>                    find user by name\n"
-            "  POST /users                          add user (body: csv line)\n"
-            "  POST /search                        search users by partial name match\n"
-            "  DELETE /users/<name>                 delete user\n";
-        return build_http_response(output, size, 200, "OK", help_text);
-    }
-
-    /* ---- GET /users (list first 500, BST inorder — safe against pipe deadlock) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strcmp(req->path, "/users") == 0) {
-        /*
-         * v1.1 fix: capture_stdout() uses a pipe with limited kernel buffer (~64KB).
-         * 100K users = ~4MB output → pipe fills up → fflush blocks → deadlock.
-         * We generate the output directly into the body buffer with a safe limit.
-         */
-        int total = 0;
-        int offset = 0;
-        user_store_format_users(body, body_size - 1, &total, &offset);
-        if (offset >= body_size - 200) {
-            /* buffer near full — append truncation note */
-            offset += snprintf(body + offset, body_size - offset,
-                     "\n... (showing first entries out of %d total users)\n", total);
-        }
-        return build_http_response(output, size, 200, "OK", body);
-    }
-
-    /* ---- GET /users/find-index/<name> (before /users/<name> to
-     *      match longer prefix first) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/users/find-index/", 18) == 0) {
-        const char *name = req->path + 18;
-        ListNode *user = user_store_find_index(name);
-        if (user != NULL) {
-            if (format_user_info(user, body, body_size) < 0) {
-                return -1;
+    if (result.entry != NULL) {
+        /* Route matched — call the handler function */
+        handler_fn fn = route_table_get_handler_fn(result.entry->handler);
+        if (fn != NULL) {
+            int resp_len = fn(req, body, body_size,
+                              result.captured, output, size);
+            if (resp_len >= 0) {
+                return resp_len;
             }
-            return build_http_response(output, size, 200, "OK", body);
-        }
-        snprintf(body, body_size, "NOT_FOUND %s\n", name);
-        return build_http_response(output, size, 404, "NOT FOUND", body);
-    }
-
-    /* ---- GET /users/compare-verbose/<name> (before /compare/ and
-     *      /users/<name> to match longer prefix first) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/users/compare-verbose/", 23) == 0) {
-        const char *name = req->path + 23;
-        g_compare_ctx.name = name;
-        g_compare_ctx.verbose = 1;
-        if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
-            return build_http_response(output, size, 500,
-                                       "INTERNAL SERVER ERROR",
-                                       "500 Internal Server Error\n");
-        }
-        return build_http_response(output, size, 200, "OK", body);
-    }
-
-    /* ---- GET /users/compare/<name> (before /users/<name>) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/users/compare/", 15) == 0) {
-        const char *name = req->path + 15;
-        g_compare_ctx.name = name;
-        g_compare_ctx.verbose = 0;
-        if (capture_stdout(do_compare_search_wrapper, body, body_size) < 0) {
-            return build_http_response(output, size, 500,
-                                       "INTERNAL SERVER ERROR",
-                                       "500 Internal Server Error\n");
-        }
-        return build_http_response(output, size, 200, "OK", body);
-    }
-
-    /* ---- DELETE /users/<name> (before GET /users/<name>) ---- */
-    if (strcmp(req->method, "DELETE") == 0 &&
-        strncmp(req->path, "/users/", 7) == 0) {
-        const char *name = req->path + 7;
-        int ret;
-        if (name[0] == '\0') {
-            return build_http_response(output, size, 400, "BAD REQUEST",
-                                       "ERROR: DELETE requires a user name\n");
-        }
-        ret = user_store_delete(name);
-        if (ret == 0) {
-            return build_http_response(output, size, 200, "OK",
-                                       "DELETED\n");
-        }
-        return build_http_response(output, size, 404, "NOT FOUND",
-                                   "NO_SUCH_USER\n");
-    }
-
-    /* ---- GET /users/<name> (simple find by name) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/users/", 7) == 0) {
-        const char *name = req->path + 7;
-        if (name[0] == '\0') {
-            return build_http_response(output, size, 400, "BAD REQUEST",
-                                       "ERROR: empty user name\n");
-        }
-        {
-            ListNode *user = user_store_find(name);
-            if (user != NULL) {
-                if (format_user_info(user, body, body_size) < 0) {
-                    return -1;
-                }
-                return build_http_response(output, size, 200, "OK", body);
-            }
-            snprintf(body, body_size, "NOT_FOUND %s\n", name);
-            return build_http_response(output, size, 404, "NOT FOUND", body);
-        }
-    }
-
-    /* ---- GET /user/<name> (simple find, must be after /users/ routes) ---- */
-    if (strcmp(req->method, "GET") == 0 &&
-        strncmp(req->path, "/user/", 6) == 0) {
-        const char *name = req->path + 6;
-        if (name[0] == '\0') {
-            return build_http_response(output, size, 400, "BAD REQUEST",
-                                       "ERROR: empty user name\n");
-        }
-        {
-            ListNode *user = user_store_find(name);
-            if (user != NULL) {
-                if (format_user_info(user, body, body_size) < 0) {
-                    return -1;
-                }
-                return build_http_response(output, size, 200, "OK", body);
-            }
-            snprintf(body, body_size, "NOT_FOUND %s\n", name);
-            return build_http_response(output, size, 404, "NOT FOUND", body);
-        }
-    }
-
-    /* ---- POST /users (add user, body = csv line) ---- */
-    if (strcmp(req->method, "POST") == 0 &&
-        strcmp(req->path, "/users") == 0) {
-        int ret;
-        if (req->body[0] == '\0') {
-            return build_http_response(output, size, 400, "BAD REQUEST",
-                "ERROR: POST /users requires a body with CSV data\n");
-        }
-        ret = user_store_add(req->body);
-        if (ret == 0) {
-            return build_http_response(output, size, 200, "OK", "ADDED\n");
-        }
-        return build_http_response(output, size, 200, "OK", "EXISTS\n");
-    }
-
-    /* ---- POST /search (v1.4: user search with form data) ---- */
-    if (strcmp(req->method, "POST") == 0 &&
-        strcmp(req->path, "/search") == 0) {
-
-        /*
-         * 1. Check Content-Type: only accept application/x-www-form-urlencoded
-         */
-        if (req->content_type[0] == '\0' ||
-            strcasecmp(req->content_type,
-                       "application/x-www-form-urlencoded") != 0) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html lang=\"en\"><head>\n"
-                "<meta charset=\"utf-8\">\n"
-                "<title>415 Unsupported Media Type</title>\n"
-                "<style>"
-                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
-                "padding:0 16px;text-align:center;}"
-                "h1{color:#dc2626;}"
-                "</style></head><body>\n"
-                "<h1>415 Unsupported Media Type</h1>\n"
-                "<p>This endpoint only accepts "
-                "<code>application/x-www-form-urlencoded</code>.</p>\n"
-                "<p><a href=\"/\">Back to Search</a></p>\n"
-                "</body></html>\n");
-            return http_build_response(415, "UNSUPPORTED MEDIA TYPE",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        /*
-         * 2. Check Content-Length header is present
-         */
-        if (req->content_length_hdr < 0) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html lang=\"en\"><head>\n"
-                "<meta charset=\"utf-8\">\n"
-                "<title>400 Bad Request</title>\n"
-                "<style>"
-                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
-                "padding:0 16px;text-align:center;}"
-                "h1{color:#dc2626;}"
-                "</style></head><body>\n"
-                "<h1>400 Bad Request</h1>\n"
-                "<p>Content-Length header is required.</p>\n"
-                "<p><a href=\"/\">Back to Search</a></p>\n"
-                "</body></html>\n");
-            return http_build_response(400, "BAD REQUEST",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        /*
-         * 3. Check body length matches Content-Length
-         */
-        if ((int)strlen(req->body) != req->content_length_hdr) {
-            snprintf(body, body_size,
-                "<!DOCTYPE html>\n"
-                "<html lang=\"en\"><head>\n"
-                "<meta charset=\"utf-8\">\n"
-                "<title>400 Bad Request</title>\n"
-                "<style>"
-                "body{font-family:sans-serif;max-width:640px;margin:48px auto;"
-                "padding:0 16px;text-align:center;}"
-                "h1{color:#dc2626;}"
-                "</style></head><body>\n"
-                "<h1>400 Bad Request</h1>\n"
-                "<p>Body length (%d bytes) does not match "
-                "Content-Length (%d bytes).</p>\n"
-                "<p><a href=\"/\">Back to Search</a></p>\n"
-                "</body></html>\n",
-                (int)strlen(req->body), req->content_length_hdr);
-            return http_build_response(400, "BAD REQUEST",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       0, output, size);
-        }
-
-        /*
-         * 4. Extract and URL-decode form parameters (name, phone, email)
-         */
-        {
-            search_criteria_t criteria;
-            char name_buf[64], phone_buf[32], email_buf[64];
-            char *p_ptr;
-            int match_count;
-            int has_criteria = 0;
-
-            memset(&criteria, 0, sizeof(criteria));
-            memset(name_buf, 0, sizeof(name_buf));
-            memset(phone_buf, 0, sizeof(phone_buf));
-            memset(email_buf, 0, sizeof(email_buf));
-
-            /* parse "name=..." from body */
-            p_ptr = strstr(req->body, "name=");
-            if (p_ptr != NULL) {
-                p_ptr += 5;
-                if (url_decode(p_ptr, name_buf, sizeof(name_buf)) != 0) {
-                    snprintf(body, body_size,
-                        "<!DOCTYPE html>\n"
-                        "<html lang=\"en\"><head>\n"
-                        "<meta charset=\"utf-8\">\n"
-                        "<title>400 Bad Request</title>\n"
-                        "<style>"
-                        "body{font-family:sans-serif;max-width:640px;"
-                        "margin:48px auto;padding:0 16px;text-align:center;}"
-                        "h1{color:#dc2626;}"
-                        "</style></head><body>\n"
-                        "<h1>400 Bad Request</h1>\n"
-                        "<p>URL encoding error in name parameter.</p>\n"
-                        "<p><a href=\"/\">Back to Search</a></p>\n"
-                        "</body></html>\n");
-                    return http_build_response(400, "BAD REQUEST",
-                                               "text/html; charset=utf-8",
-                                               body, (int)strlen(body),
-                                               0, output, size);
-                }
-                if (name_buf[0] != '\0') {
-                    strncpy(criteria.name, name_buf, sizeof(criteria.name) - 1);
-                    has_criteria = 1;
-                }
-            }
-
-            /* parse "phone=..." from body */
-            p_ptr = strstr(req->body, "phone=");
-            if (p_ptr != NULL) {
-                p_ptr += 6;
-                if (url_decode(p_ptr, phone_buf, sizeof(phone_buf)) != 0) {
-                    snprintf(body, body_size,
-                        "<!DOCTYPE html>\n"
-                        "<html lang=\"en\"><head>\n"
-                        "<meta charset=\"utf-8\">\n"
-                        "<title>400 Bad Request</title>\n"
-                        "<style>"
-                        "body{font-family:sans-serif;max-width:640px;"
-                        "margin:48px auto;padding:0 16px;text-align:center;}"
-                        "h1{color:#dc2626;}"
-                        "</style></head><body>\n"
-                        "<h1>400 Bad Request</h1>\n"
-                        "<p>URL encoding error in phone parameter.</p>\n"
-                        "<p><a href=\"/\">Back to Search</a></p>\n"
-                        "</body></html>\n");
-                    return http_build_response(400, "BAD REQUEST",
-                                               "text/html; charset=utf-8",
-                                               body, (int)strlen(body),
-                                               0, output, size);
-                }
-                if (phone_buf[0] != '\0') {
-                    strncpy(criteria.phone, phone_buf, sizeof(criteria.phone) - 1);
-                    has_criteria = 1;
-                }
-            }
-
-            /* parse "email=..." from body */
-            p_ptr = strstr(req->body, "email=");
-            if (p_ptr != NULL) {
-                p_ptr += 6;
-                if (url_decode(p_ptr, email_buf, sizeof(email_buf)) != 0) {
-                    snprintf(body, body_size,
-                        "<!DOCTYPE html>\n"
-                        "<html lang=\"en\"><head>\n"
-                        "<meta charset=\"utf-8\">\n"
-                        "<title>400 Bad Request</title>\n"
-                        "<style>"
-                        "body{font-family:sans-serif;max-width:640px;"
-                        "margin:48px auto;padding:0 16px;text-align:center;}"
-                        "h1{color:#dc2626;}"
-                        "</style></head><body>\n"
-                        "<h1>400 Bad Request</h1>\n"
-                        "<p>URL encoding error in email parameter.</p>\n"
-                        "<p><a href=\"/\">Back to Search</a></p>\n"
-                        "</body></html>\n");
-                    return http_build_response(400, "BAD REQUEST",
-                                               "text/html; charset=utf-8",
-                                               body, (int)strlen(body),
-                                               0, output, size);
-                }
-                if (email_buf[0] != '\0') {
-                    strncpy(criteria.email, email_buf, sizeof(criteria.email) - 1);
-                    has_criteria = 1;
-                }
-            }
-
-            /* 5. No criteria -> show form with prompt */
-            if (!has_criteria) {
-                snprintf(body, body_size,
-                    "<!DOCTYPE html>\n"
-                    "<html lang=\"zh-CN\"><head>\n"
-                    "<meta charset=\"utf-8\">\n"
-                    "<meta name=\"viewport\" content=\"width=device-width,"
-                    "initial-scale=1\">\n"
-                    "<title>User Search</title>\n"
-                    "<link rel=\"icon\" href=\"/icon/favicon.ico\">\n"
-                    "<style>"
-                    ":root{--bg:#f5f5f5;--card-bg:#fff;--text:#333;"
-                    "--muted:#666;--border:#e0e0e0;--accent:#2563eb;}"
-                    "*{margin:0;padding:0;box-sizing:border-box;}"
-                    "body{font-family:-apple-system,BlinkMacSystemFont,"
-                    "\"Segoe UI\",Roboto,sans-serif;background:var(--bg);"
-                    "color:var(--text);line-height:1.6;}"
-                    "header{background:linear-gradient(135deg,#1e293b 0%%,"
-                    "#334155 100%%);color:#fff;padding:40px 24px;"
-                    "text-align:center;}"
-                    "header h1{font-size:1.8rem;}"
-                    "header p{margin-top:8px;opacity:0.8;}"
-                    ".container{max-width:640px;margin:0 auto;"
-                    "padding:32px 20px;}"
-                    ".search-card{background:var(--card-bg);"
-                    "border:1px solid var(--border);border-radius:12px;"
-                    "padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}"
-                    ".search-card .field{margin-bottom:12px;text-align:left;}"
-                    ".search-card label{display:block;font-size:0.85rem;"
-                    "color:var(--muted);margin-bottom:4px;}"
-                    ".search-card input[type=text]{padding:10px 16px;"
-                    "font-size:1rem;width:100%%;border:1px solid #ccc;"
-                    "border-radius:6px;outline:none;box-sizing:border-box;}"
-                    ".search-card input[type=text]:focus{"
-                    "border-color:var(--accent);}"
-                    ".search-card .btn-row{text-align:center;margin-top:20px;}"
-                    ".search-card button{padding:10px 32px;font-size:1rem;"
-                    "background:var(--accent);color:#fff;border:none;"
-                    "border-radius:6px;cursor:pointer;}"
-                    ".search-card button:hover{opacity:0.9;}"
-                    ".warning{color:#dc2626;margin-top:16px;text-align:center;"
-                    "font-size:0.9rem;}"
-                    ".hint{color:var(--muted);font-size:0.8rem;"
-                    "text-align:center;margin-top:8px;}"
-                    "footer{text-align:center;padding:24px 20px;"
-                    "color:var(--muted);font-size:0.82rem;}"
-                    "</style></head><body>\n"
-                    "<header>\n"
-                    "  <h1>&#128269; User Search</h1>\n"
-                    "  <p>100K Chinese Users &middot; RBT Index &middot; AND Search</p>\n"
-                    "</header>\n"
-                    "<div class=\"container\">\n"
-                    "<div class=\"search-card\">\n"
-                    "<form method=\"post\" action=\"/search\""
-                    " enctype=\"application/x-www-form-urlencoded\">\n"
-                    "<div class=\"field\">"
-                    "<label>Name</label>"
-                    "<input type=\"text\" name=\"name\""
-                    " placeholder=\"e.g. 赵安\" autofocus>"
-                    "</div>\n"
-                    "<div class=\"field\">"
-                    "<label>Phone</label>"
-                    "<input type=\"text\" name=\"phone\""
-                    " placeholder=\"e.g. 138\">"
-                    "</div>\n"
-                    "<div class=\"field\">"
-                    "<label>Email</label>"
-                    "<input type=\"text\" name=\"email\""
-                    " placeholder=\"e.g. @example.com\">"
-                    "</div>\n"
-                    "<div class=\"btn-row\">"
-                    "<button type=\"submit\">Search</button>"
-                    "</div>\n"
-                    "</form>\n"
-                    "<p class=\"hint\">All fields are combined with AND &middot; "
-                    "Case-insensitive &middot; Partial match &middot; UTF-8</p>\n"
-                    "<p class=\"warning\">"
-                    "Please enter at least one search criterion.</p>\n"
-                    "</div>\n</div>\n"
-                    "<footer>MiniWeb Server v1.4</footer>\n"
-                    "</body></html>\n");
-                return http_build_response(200, "OK",
-                                           "text/html; charset=utf-8",
-                                           body, (int)strlen(body),
-                                           req->keep_alive > 0 ? req->keep_alive : 1,
-                                           output, size);
-            }
-
-            /* 6. Multi-criteria AND search via RBT */
-            match_count = user_store_search(&criteria, body, body_size);
-            if (match_count < 0) {
-                return http_build_response(500, "INTERNAL SERVER ERROR",
-                                           "text/plain; charset=utf-8",
-                                           "500 Internal Server Error\n", 25,
-                                           0, output, size);
-            }
-
-            return http_build_response(200, "OK",
-                                       "text/html; charset=utf-8",
-                                       body, (int)strlen(body),
-                                       req->keep_alive > 0 ? req->keep_alive : 1,
-                                       output, size);
+            /* handler returned -1 (e.g. static file not found) */
+            /* fall through to 404 */
         }
     }
 
@@ -1245,7 +1324,7 @@ int request_handler_handle_connection(int conn_fd) {
                 log_error(msg);
                 snprintf(resp_buf, sizeof(resp_buf),
                          "HTTP/1.1 400 BAD REQUEST\r\n"
-                         "Content-Type: text/plain\r\n"
+                         "Content-Type: text/plain; charset=utf-8\r\n"
                          "Content-Length: 17\r\n"
                          "Connection: close\r\n"
                          "\r\n"
@@ -1429,7 +1508,7 @@ int request_handler_handle_connection(int conn_fd) {
                     log_error(msg);
                     resp_len = snprintf(resp_buf, sizeof(resp_buf),
                              "HTTP/1.1 500 INTERNAL SERVER ERROR\r\n"
-                             "Content-Type: text/plain\r\n"
+                             "Content-Type: text/plain; charset=utf-8\r\n"
                              "Content-Length: 25\r\n"
                              "Connection: close\r\n"
                              "\r\n"

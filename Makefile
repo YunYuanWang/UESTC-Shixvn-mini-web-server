@@ -1,19 +1,22 @@
 all: mini_web_server request_worker EpollServer epoll_client
 
-mini_web_server: obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o
-	gcc -g -o mini_web_server obj/config.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o -lm -lpthread
+mini_web_server: obj/config.o obj/route_table.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o
+	gcc -g -o mini_web_server obj/config.o obj/route_table.o obj/http_response.o obj/log.o obj/user_store.o obj/user_index.o obj/main.o obj/request_handler.o obj/process_server.o obj/tcp_server.o obj/tcp_fork_server.o obj/tcp_thread_server.o obj/thread_pool.o obj/tcp_pool_server.o obj/select_server.o obj/epoll_server.o obj/master_worker.o obj/http_parser.o -lm -lpthread
 
-request_worker: obj/request_worker.o obj/config.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o request_worker obj/request_worker.o obj/config.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+request_worker: obj/request_worker.o obj/config.o obj/route_table.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o request_worker obj/request_worker.o obj/config.o obj/route_table.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
-EpollServer: obj/epoll_server_main.o obj/config.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
-	gcc -g -o EpollServer obj/epoll_server_main.o obj/config.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
+EpollServer: obj/epoll_server_main.o obj/config.o obj/route_table.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o
+	gcc -g -o EpollServer obj/epoll_server_main.o obj/config.o obj/route_table.o obj/epoll_server.o obj/log.o obj/user_store.o obj/user_index.o obj/request_handler.o obj/http_response.o obj/http_parser.o -lm -lpthread
 
 epoll_client: obj/epoll_client.o
 	gcc -g -o epoll_client obj/epoll_client.o
 
-obj/config.o: src/config.c include/config.h
+obj/config.o: src/config.c include/config.h include/route_table.h
 	gcc -g -I./include -c src/config.c -o obj/config.o
+
+obj/route_table.o: src/route_table.c include/route_table.h include/request_handler.h
+	gcc -g -I./include -c src/route_table.c -o obj/route_table.o
 
 obj/http_response.o: src/http_response.c include/http_response.h
 	gcc -g -I./include -c src/http_response.c -o obj/http_response.o
@@ -30,7 +33,7 @@ obj/user_index.o: src/user_index.c include/user_index.h include/user_store.h
 obj/main.o: src/main.c include/config.h include/epoll_server.h include/http_response.h include/log.h include/process_server.h include/select_server.h include/tcp_fork_server.h include/tcp_pool_server.h include/tcp_thread_server.h include/user_store.h include/master_worker.h
 	gcc -g -I./include -c src/main.c -o obj/main.o
 
-obj/request_handler.o: src/request_handler.c include/request_handler.h include/http_response.h include/log.h include/user_store.h include/http_parser.h
+obj/request_handler.o: src/request_handler.c include/request_handler.h include/route_table.h include/http_response.h include/log.h include/user_store.h include/http_parser.h include/config.h
 	gcc -g -I./include -c src/request_handler.c -o obj/request_handler.o
 
 obj/process_server.o: src/process_server.c include/process_server.h include/log.h include/ipc_utils.h

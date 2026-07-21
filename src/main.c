@@ -573,6 +573,10 @@ int main(int argc, char *argv[]) {
 
         log_info("Master-Worker Mode (epoll I/O multiplexing) v1.2.1");
 
+        /* v1.5: apply log_level from config */
+        log_set_level(master_config.log_level);
+        log_infof("log_level set to: %d", (int)master_config.log_level);
+
         /* v1.2.1: store config globally for virtual host routing */
         config_set_global(&master_config);
 

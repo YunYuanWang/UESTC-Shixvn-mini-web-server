@@ -1,0 +1,110 @@
+# Mini Web Server v1.5 — YAML Configuration
+---
+worker_processes: 2
+worker_shutdown_timeout_ms: 3000
+max_connections: 256
+max_request_bytes: 4096
+user_file: "data/users_100000_c.csv"
+system_log: "logs/system.log"
+access_log: "logs/access.log"
+log_level: info
+error_log: "logs/error.log"
+log_max_lines: 10000
+log_max_roll_files: 5
+
+logging:
+  level: info
+  format: "[%(timestamp)s] [%(level)s] %(message)s"
+
+servers:
+  - listen: "0.0.0.0:8080 default_server"
+    server_name:
+      - localhost
+      - miniserver.local
+    root: www
+    access_log: "logs/www_access.log"
+
+  - listen: "0.0.0.0:8080"
+    server_name:
+      - blog.local
+      - blog.localhost
+    root: blog
+    access_log: "logs/blog_access.log"
+
+  - listen: "0.0.0.0:8080"
+    server_name:
+      - lab.local
+      - lab.localhost
+    root: lab
+    access_log: "logs/lab_access.log"
+
+  - listen: "0.0.0.0:8080"
+    server_name:
+      - users.localhost
+    root: search
+    access_log: "logs/search_access.log"
+
+routes:
+  - method: GET
+    path: /hello
+    handler: hello
+  - method: GET
+    path: /help
+    handler: help
+  - method: GET
+    path: /users
+    handler: user_list
+  - method: POST
+    path: /users
+    handler: user_add
+  - method: POST
+    path: /search
+    handler: search
+  - method: POST
+    path: /delete
+    handler: delete_form
+  - method: GET
+    path: /sleep/*
+    handler: sleep
+  - method: GET
+    path: /users/find-index/*
+    handler: user_find_index
+  - method: GET
+    path: /users/compare-verbose/*
+    handler: user_compare_verbose
+  - method: GET
+    path: /users/compare/*
+    handler: user_compare
+  - method: GET
+    path: /users/*
+    handler: user_by_name
+  - method: DELETE
+    path: /users/*
+    handler: user_delete
+  - method: GET
+    path: /user/*
+    handler: user_simple_find
+  - method: GET
+    path: /blog
+    handler: blog
+  - method: HEAD
+    path: /blog
+    handler: blog
+  - method: GET
+    path: /blog/*
+    handler: blog
+  - method: HEAD
+    path: /blog/*
+    handler: blog
+  - method: GET
+    path: /
+    handler: index
+  - method: HEAD
+    path: /
+    handler: index
+  - method: GET
+    path: /*
+    handler: static
+  - method: HEAD
+    path: /*
+    handler: static

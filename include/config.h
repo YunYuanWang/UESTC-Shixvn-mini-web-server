@@ -2,12 +2,21 @@
 #define CONFIG_H
 
 /*
- * config.h — Server configuration with Nginx-style virtual host support (v1.4)
+ * config.h — Server configuration with Nginx-style virtual host support (v1.5)
  *
  * Supports two config formats:
  *   1. Legacy flat key=value (backward compatible)
  *   2. Nginx-style server { } blocks with server_name for name-based virtual hosting
+ *
+ * v1.5 adds:
+ *   - log_level / error_log directives
+ *   - location { } blocks for config-based routing (via route_table_t)
  */
+
+#include "log.h"          /* log_level_t */
+
+/* ---- forward declarations ---- */
+typedef struct route_table_s route_table_t;  /* defined in route_table.h */
 
 /* ---- virtual host limits ---- */
 #define MAX_SERVER_BLOCKS    16
@@ -36,8 +45,11 @@ typedef struct {
     char log_path[128];         /* global fallback log path */
     char system_log[128];       /* system log path (v1.2) */
     char access_log[128];       /* global access log path (v1.2) */
-    int  log_max_lines;         /* rotate after N lines (0=no rotation, v1.2) */
-    int  log_max_roll_files;    /* keep N old log files (v1.2) */
+    log_level_t log_level;       /* minimum log level (v1.5) */
+    char error_log[128];         /* error log path (v1.5) */
+    log_level_t error_log_level; /* error log filter level (v1.5) */
+    int  log_max_lines;          /* rotate after N lines (0=no rotation, v1.2) */
+    int  log_max_roll_files;     /* keep N old log files (v1.2) */
     int  max_connections;       /* max concurrent connections (v0.10) */
     int  max_request_bytes;     /* max request body size in bytes (v0.10) */
 
@@ -48,6 +60,9 @@ typedef struct {
     /* ---- v1.2.1: virtual host server blocks ---- */
     server_block_t servers[MAX_SERVER_BLOCKS];
     int  server_count;
+
+    /* ---- v1.5: config-based route table ---- */
+    route_table_t *route_table;          /* populated from location { } blocks */
 
     /* ---- legacy field aliases (maintained for backward compatibility) ---- */
     char root[128];             /* deprecated — use www_root */
@@ -83,5 +98,11 @@ const server_config_t *config_get_global(void);
  */
 const server_block_t *config_find_server(const server_config_t *config,
                                           const char *host_header);
+
+/*
+ * v1.5: Retrieve the global route table (from the globally-stored config).
+ * Returns NULL if no config has been set.
+ */
+route_table_t *config_get_route_table(void);
 
 #endif
